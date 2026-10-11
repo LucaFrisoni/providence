@@ -1,0 +1,63 @@
+# Entorno de desarrollo de la extensión: Providence + MySQL + servicio Rust.
+# Solo Providence se publica en la computadora; el servicio Rust queda dentro de la red de Docker.
+# Requiere un archivo .env (copiar .env.example). Ver docker/README.md
+name: ca-extension
+
+x-db-env: &db-env
+  CA_DB_HOST: db
+  CA_DB_USER: ${CA_DB_USER:?Falta CA_DB_USER en .env}
+  CA_DB_PASSWORD: ${CA_DB_PASSWORD:?Falta CA_DB_PASSWORD en .env}
+  CA_DB_DATABASE: ${CA_DB_DATABASE:?Falta CA_DB_DATABASE en .env}
+
+services:
+  db:
+    image: mysql:8.4
+    command: ["--character-set-server=utf8mb4", "--collation-server=utf8mb4_unicode_ci"]
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?Falta MYSQL_ROOT_PASSWORD en .env}
+      MYSQL_DATABASE: ${CA_DB_DATABASE:?Falta CA_DB_DATABASE en .env}
+      MYSQL_USER: ${CA_DB_USER:?Falta CA_DB_USER en .env}
+      MYSQL_PASSWORD: ${CA_DB_PASSWORD:?Falta CA_DB_PASSWORD en .env}
+    volumes:
+      - db_data:/var/lib/mysql
+    healthcheck:
+      # Por TCP (127.0.0.1): en la primera inicialización MySQL levanta un servidor temporal sin red
+      # que respondería al ping por socket antes de estar listo.
+      # Seguridad:La contraseña se lee dentro del contenedor, no queda escrita en este archivo
+      test: ["CMD-SHELL", "MYSQL_PWD=\"$$MYSQL_ROOT_PASSWORD\" mysqladmin ping -h 127.0.0.1 -uroot"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+
+  providence:
+    build:
+      context: .
+      dockerfile: docker/providence/Dockerfile
+    ports:
+      - "127.0.0.1:${PROVIDENCE_PORT:-8080}:80"
+    environment:
+      <<: *db-env
+      CA_ADMIN_USERNAME: ${CA_ADMIN_USERNAME:?Falta CA_ADMIN_USERNAME en .env}
+      CA_ADMIN_EMAIL: ${CA_ADMIN_EMAIL:?Falta CA_ADMIN_EMAIL en .env}
+      CA_ADMIN_PASSWORD: ${CA_ADMIN_PASSWORD:?Falta CA_ADMIN_PASSWORD en .env}
+      CA_INSTALL_PROFILE: ${CA_INSTALL_PROFILE:-default}
+      CA_DEFAULT_LOCALE: ${CA_DEFAULT_LOCALE:-en_US}
+      EXTENSION_SERVICE_URL: http://extension-service:8000
+    volumes:
+      # El núcleo de Providence está dentro de la imagen; solo los plugins se editan en vivo
+      - ./app/plugins:/var/www/html/app/plugins
+      - media:/var/www/html/media
+      - uploads:/var/www/html/uploads
+    depends_on:
+      db:
+        condition: service_healthy
+      extension-service:
+        condition: service_started
+
+  extension-service:
+    build: ./rust/extension-service
+
+volumes:
+  db_data:
+  media:
+  uploads:

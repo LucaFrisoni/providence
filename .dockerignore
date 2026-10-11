@@ -1,0 +1,33 @@
+# Archivos que NUNCA deben entrar en la imagen de Providence (contexto de build = raíz del repo).
+
+# Secretos y configuración local
+.env
+.env.*
+setup.php
+
+# Control de versiones y herramientas locales
+.git
+.github
+.idea
+.vscode
+.vagrant*
+CLAUDE.md
+
+# Dependencias y datos generados (se instalan o crean dentro de la imagen/volúmenes)
+vendor
+node_modules
+media/*
+!media/.htaccess
+!media/README.md
+uploads/*
+app/log/*
+app/tmp/*
+!app/tmp/.htaccess
+!app/tmp/.keep
+!app/tmp/purifier
+app/tmp/purifier/*
+!app/tmp/purifier/.htaccess
+
+# Otros componentes de la extensión (tienen su propia imagen o no corresponden)
+rust
+compose.yaml

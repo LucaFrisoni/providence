@@ -1,0 +1,11 @@
+{
+    "config": {
+        "policy": {
+            "advisories": {
+                "ignore-id": {
+                    "PKSA-w9tt-7782-78jx": "CVE-2026-102601 (gravedad baja) afecta a todo league/flysystem <=3.35.2. Providence exige league/flysystem-cached-adapter, que solo funciona con flysystem 1.x. El resto de los avisos (incluido el critico PKSA-pwh8-d4fr-nywn) siguen bloqueando."
+                }
+            }
+        }
+    }
+}
