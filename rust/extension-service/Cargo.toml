@@ -1,0 +1,11 @@
+[package]
+name = "extension-service"
+version = "0.1.0"
+edition = "2021"
+description = "Servicio Rust de la extensión de CollectiveAccess Providence. Agrupa la lógica de los módulos."
+publish = false
+
+[dependencies]
+axum = "0.8"
+serde = { version = "1", features = ["derive"] }
+tokio = { version = "1", features = ["macros", "rt-multi-thread", "net"] }

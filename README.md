@@ -1,5 +1,49 @@
 # README: Providence version 2.0.11
 
+## Extensión Providence
+
+Realizada por **Luca Frisoni**, **Valentina Muchiutti** y **Fran Domina**, en el marco de un trabajo
+grupal para la Facultad de Filosofía y Letras de la Universidad de Buenos Aires (UBA).
+
+La extensión complementa CollectiveAccess Providence sin reemplazarlo: agrega funcionalidades
+mediante plugins de Providence y un servicio desarrollado en Rust.
+
+### Arquitectura
+
+- **Providence (cliente):** cada módulo de la extensión tiene su plugin en `app/plugins/`. El plugin
+  agrega las pantallas y menús dentro de Providence y se comunica con el servicio Rust.
+- **Servicio Rust (servidor):** es un único servicio, en `rust/extension-service/`, que expone una API
+  HTTP con la lógica de la extensión. La API está dividida en siete módulos:
+  1. Administración y exploración del modelo de información
+  2. Administración gráfica de configuraciones
+  3. Administración distribuida por institución o área
+  4. Semantización y correspondencias
+  5. Mappings e interoperabilidad
+  6. Servicios externos e identificadores
+  7. Recursos digitales, IIIF y 3D
+
+### Entorno de desarrollo
+
+El entorno de desarrollo se levanta con Docker. Las instrucciones completas (incluido el archivo `.env`
+obligatorio) están en [docker/README.md](docker/README.md). En resumen:
+
+```sh
+cp .env.example .env      # completar las credenciales
+docker compose up --build
+```
+
+Esto levanta tres contenedores:
+
+- **Providence**, con PHP, Apache y todo lo necesario para que funcione, accesible en
+  http://localhost:8080. En el primer arranque se instala automáticamente y crea el usuario
+  administrador definido en `.env`. El núcleo de Providence va dentro de la imagen sin modificarse;
+  solo los plugins de la extensión (`app/plugins/`) se editan en vivo.
+- **MySQL**, la base de datos de Providence.
+- **El servicio Rust**, con la API de la extensión. No se publica en la computadora: solo Providence
+  se conecta a él, dentro de la red de Docker.
+
+---
+
 ### About CollectiveAccess
 
 CollectiveAccess is collections management and presentation software maintained by Whirl-i-Gig and contributed to by the open-source community. The CollectiveAccess project began in 2003 as a response to the lack of non-commercial, affordable, open-source solutions for digital collections management. Almost two decades later, CollectiveAccess has projects on 5 continents, providing hundreds of institutions with configurable, up-to-date collections management software.
