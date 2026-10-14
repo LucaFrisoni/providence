@@ -6,6 +6,5 @@ description = "Servicio Rust de la extensión de CollectiveAccess Providence. Ag
 publish = false
 
 [dependencies]
-axum = "0.8"
-serde = { version = "1", features = ["derive"] }
-tokio = { version = "1", features = ["macros", "rt-multi-thread", "net"] }
+tiny_http = "0.12"
+json = "0.12"

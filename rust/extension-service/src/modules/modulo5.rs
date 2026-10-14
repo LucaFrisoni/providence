@@ -3,17 +3,16 @@
 //! Rutas montadas bajo `/api/modulo5` (ver `routes.rs`).
 //! Las rutas nuevas del módulo se agregan en `router()`.
 
-use axum::routing::get;
-use axum::{Json, Router};
+use tiny_http::Method;
 
-use super::{health_response, ModuleHealth};
+use super::health_response;
 use crate::constants::{HEALTH_ROUTE, MODULO5};
+use crate::respuesta::Respuesta;
 
-pub fn router() -> Router {
-    Router::new().route(HEALTH_ROUTE, get(health))
-}
-
-/// `GET /api/modulo5/health`
-async fn health() -> Json<ModuleHealth> {
-    health_response(MODULO5)
+//atiende las peticiones del modulo
+pub fn responder(metodo: &Method, ruta: &str) -> Respuesta {
+    match (metodo, ruta) {
+        (Method::Get, HEALTH_ROUTE) => health_response(MODULO5),
+        _ => Respuesta::no_encontrado("ruta inexistente"),
+    }
 }
