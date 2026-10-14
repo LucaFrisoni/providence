@@ -3,6 +3,8 @@
 # Requiere un archivo .env (copiar .env.example). Ver docker/README.md
 name: ca-extension
 
+# Bloque reutilizable ("x-" = Compose lo ignora como servicio). &db-env le da nombre y
+# Providence lo incluye con <<: *db-env. ${VAR:?msg} corta el arranque si VAR falta en .env
 x-db-env: &db-env
   CA_DB_HOST: db
   CA_DB_USER: ${CA_DB_USER:?Falta CA_DB_USER en .env}
@@ -12,6 +14,7 @@ x-db-env: &db-env
 services:
   db:
     image: mysql:8.4
+    # Parámetros de MySQL: utf8mb4 para guardar bien acentos, ñ y cualquier carácter Unicode
     command: ["--character-set-server=utf8mb4", "--collation-server=utf8mb4_unicode_ci"]
     environment:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?Falta MYSQL_ROOT_PASSWORD en .env}
@@ -19,6 +22,7 @@ services:
       MYSQL_USER: ${CA_DB_USER:?Falta CA_DB_USER en .env}
       MYSQL_PASSWORD: ${CA_DB_PASSWORD:?Falta CA_DB_PASSWORD en .env}
     volumes:
+      # Volumen con nombre: la base persiste aunque se borre el contenedor (se pierde con down -v)
       - db_data:/var/lib/mysql
     healthcheck:
       # Por TCP (127.0.0.1): en la primera inicialización MySQL levanta un servidor temporal sin red
@@ -34,6 +38,7 @@ services:
       context: .
       dockerfile: docker/providence/Dockerfile
     ports:
+      # pc:contenedor. 127.0.0.1 = solo accesible desde esta computadora, no desde la red
       - "127.0.0.1:${PROVIDENCE_PORT:-8080}:80"
     environment:
       <<: *db-env
@@ -42,12 +47,16 @@ services:
       CA_ADMIN_PASSWORD: ${CA_ADMIN_PASSWORD:?Falta CA_ADMIN_PASSWORD en .env}
       CA_INSTALL_PROFILE: ${CA_INSTALL_PROFILE:-default}
       CA_DEFAULT_LOCALE: ${CA_DEFAULT_LOCALE:-en_US}
+      # Dentro de la red de Docker cada servicio se alcanza por su nombre
       EXTENSION_SERVICE_URL: http://extension-service:8000
     volumes:
-      # El núcleo de Providence está dentro de la imagen; solo los plugins se editan en vivo
+      # Bind mount: la carpeta local de plugins aparece dentro del contenedor y los cambios se ven al
+      # instante, sin reconstruir. El núcleo de Providence queda dentro de la imagen
       - ./app/plugins:/var/www/html/app/plugins
+      # Volúmenes con nombre: persisten los archivos subidos a Providence
       - media:/var/www/html/media
       - uploads:/var/www/html/uploads
+    # Orden de arranque: espera a que el healthcheck de la base dé OK y a que el servicio Rust haya iniciado
     depends_on:
       db:
         condition: service_healthy
@@ -56,7 +65,9 @@ services:
 
   extension-service:
     build: ./rust/extension-service
+    # Sin "ports": no se publica en la computadora, solo Providence lo alcanza por la red interna
 
+# Declaración de los volúmenes con nombre usados arriba
 volumes:
   db_data:
   media:
