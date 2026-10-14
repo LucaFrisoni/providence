@@ -27,3 +27,12 @@ pub const MODULO4: &str = "modulo4";
 pub const MODULO5: &str = "modulo5";
 pub const MODULO6: &str = "modulo6";
 pub const MODULO7: &str = "modulo7";
+
+
+//codifos de estado http
+pub const CODIGO_OK: u16 = 200;
+pub const CODIGO_NO_ENCONTRADO: u16 = 404;
+
+//cabecera de la respuesta json
+pub const CABECERA_CONTENT_TYPE: &str = "Content-Type";
+pub const TIPO_JSON: &str = "application/json";
