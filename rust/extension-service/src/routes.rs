@@ -9,7 +9,7 @@ use crate::constants::{API_PREFIX, MODULO1, MODULO2, MODULO3, MODULO4, MODULO5, 
 use crate::modules::{modulo1, modulo2, modulo3, modulo4, modulo5, modulo6, modulo7};
 use crate::respuesta::Respuesta;
 
-//funcion que aiende las peticiones de los modulos
+//funcion que atiende las peticiones de los modulos
 type Manejador = fn(&Method, &str) -> Respuesta;
 
 //cada modulo con su funcion que atiende las rutas
@@ -44,7 +44,6 @@ fn module_path(name: &str) -> String {
 fn sin_parametros(ruta: &str) -> &str {
     ruta.split('?').next().unwrap_or(ruta)
 }
-
 
 #[cfg(test)]
 mod tests {
