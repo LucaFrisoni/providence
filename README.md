@@ -22,6 +22,54 @@ mediante plugins de Providence y un servicio desarrollado en Rust.
     6. Servicios externos e identificadores
     7. Recursos digitales, IIIF y 3D
 
+### Base de datos de la extensión
+
+La extensión guarda sus propios datos (versiones de configuración, registros de cambios,
+correspondencias, etc.) en una **base MySQL propia, `ca_extension`**, separada de la base de
+Providence pero en el mismo servidor MySQL.
+
+```
+                       ┌──────────────── MySQL ────────────────┐
+Providence (PHP) ────► │ base de Providence (collectiveaccess)  │
+     │                 │                                        │
+     │ HTTP            │                                        │
+     ▼                 │                                        │
+Servicio Rust ───────► │ base de la extensión (ca_extension)    │
+                       └────────────────────────────────────────┘
+```
+
+**Reglas:**
+
+- **El servicio Rust es el único dueño de `ca_extension`.** Crea sus tablas con sus propias
+  migraciones y es el único que las lee y escribe. Providence accede a esos datos solo a través de
+  la API del servicio (el plugin de cada módulo tiene su cliente HTTP).
+- **Cada base tiene su usuario de MySQL.** El usuario de la extensión solo tiene permisos sobre
+  `ca_extension`, y el de Providence solo sobre la suya. Así el servicio no puede modificar los
+  datos institucionales por error, y una reinstalación o actualización de Providence no toca las
+  tablas de la extensión.
+- **Las tablas se nombran con el prefijo del módulo** (`m2_*` para el módulo 2, `m4_*` para el
+  módulo 4, etc.), para que cada módulo evolucione sin pisar a los demás. Las tablas compartidas
+  entre módulos se acuerdan en equipo.
+- **Las referencias a datos de Providence se guardan por código o identificador** (por ejemplo, el
+  código de un elemento de metadatos o el `idno` de un registro), no con claves foráneas, porque
+  están en otra base. El servicio valida que esas referencias existan cuando hace falta.
+
+**Por qué no se usan modelos de Providence:** para que Providence trate una tabla como un modelo
+propio, la tabla tiene que registrarse en `app/conf/datamodel.conf` y la clase tiene que estar en
+`app/models/`: el autoloader solo busca ahí
+([app/helpers/preload.php](app/helpers/preload.php), [app/lib/Datamodel.php](app/lib/Datamodel.php)).
+Ambos son parte del núcleo, y los plugins no tienen un mecanismo para agregar modelos propios. Los
+modelos nativos sirven para editar, buscar e indexar registros catalográficos, algo que los datos
+de la extensión no necesitan.
+
+**Lectura de datos de Providence desde Rust:** el usuario de la extensión no tiene acceso a la base
+de Providence. Si un módulo necesita leerla (por ejemplo, el 1 para explorar el modelo o el 4 para
+validar referencias), se decide en ese módulo entre un usuario de MySQL de solo lectura o la API
+GraphQL de Providence.
+
+En Docker, la base y su usuario se crean automáticamente al levantar el entorno (ver
+[docker/README.md](docker/README.md)).
+
 ### Entorno de desarrollo
 
 El entorno de desarrollo se levanta con Docker. Las instrucciones completas (incluido el archivo `.env`
@@ -38,7 +86,8 @@ Esto levanta tres contenedores:
   http://localhost:8080. En el primer arranque se instala automáticamente y crea el usuario
   administrador definido en `.env`. El núcleo de Providence va dentro de la imagen sin modificarse;
   solo los plugins de la extensión (`app/plugins/`) se editan en vivo.
-- **MySQL**, la base de datos de Providence.
+- **MySQL**, con la base de Providence y la [base de la extensión](#base-de-datos-de-la-extensión).
+  Una tarea de inicio (`extension-db-init`) crea la base de la extensión y su usuario, y termina.
 - **El servicio Rust**, con la API de la extensión. No se publica en la computadora: solo Providence
   se conecta a él, dentro de la red de Docker.
 
@@ -47,15 +96,15 @@ Esto levanta tres contenedores:
 Cada módulo documenta su alcance, sus decisiones de diseño y su plan de trabajo en
 `docs/modulo<N>/README.md`:
 
-| #   | Módulo |
-| --- | ------ |
-| 1 | [Administración y exploración del modelo de información](docs/modulo1/README.md) |
-| 2 | [Administración gráfica de configuraciones](docs/modulo2/README.md) |
-| 3 | [Administración distribuida por institución o área](docs/modulo3/README.md) |
-| 4 | [Semantización y correspondencias](docs/modulo4/README.md) |
-| 5 | [Mappings e interoperabilidad](docs/modulo5/README.md) |
-| 6 | [Servicios externos e identificadores](docs/modulo6/README.md) |
-| 7 | [Recursos digitales, IIIF y 3D](docs/modulo7/README.md) |
+| #   | Módulo                                                                           |
+| --- | -------------------------------------------------------------------------------- |
+| 1   | [Administración y exploración del modelo de información](docs/modulo1/README.md) |
+| 2   | [Administración gráfica de configuraciones](docs/modulo2/README.md)              |
+| 3   | [Administración distribuida por institución o área](docs/modulo3/README.md)      |
+| 4   | [Semantización y correspondencias](docs/modulo4/README.md)                       |
+| 5   | [Mappings e interoperabilidad](docs/modulo5/README.md)                           |
+| 6   | [Servicios externos e identificadores](docs/modulo6/README.md)                   |
+| 7   | [Recursos digitales, IIIF y 3D](docs/modulo7/README.md)                          |
 
 ---
 

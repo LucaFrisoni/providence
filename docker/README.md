@@ -1,12 +1,13 @@
 # Entorno Docker de desarrollo
 
-Levanta tres contenedores:
+Levanta tres contenedores y una tarea de inicio:
 
 | Servicio            | Qué es                                                  | Acceso                                  |
 | ------------------- | ------------------------------------------------------- | --------------------------------------- |
 | `providence`        | Providence (PHP 8.3 + Apache)                           | http://localhost:8080                   |
 | `db`                | MySQL 8.4                                               | solo dentro de la red Docker            |
 | `extension-service` | Servicio Rust único de la extensión (todos los módulos) | solo desde Providence, dentro de Docker |
+| `extension-db-init` | Tarea de inicio: crea la base de la extensión y su usuario, y termina | no queda corriendo |
 
 Solo Providence se publica en la computadora (en `127.0.0.1`, no en la red local). El servicio Rust no
 se publica: solo Providence lo consulta, dentro de la red de Docker.
@@ -28,11 +29,13 @@ Completar en `.env`:
 | `CA_DB_DATABASE`      | Nombre de la base de Providence                                      |
 | `CA_DB_USER`          | Usuario de MySQL que usa Providence                                  |
 | `CA_DB_PASSWORD`      | Contraseña de ese usuario                                            |
+| `EXT_DB_PASSWORD`     | Contraseña del usuario de MySQL de la base de la extensión (sin comillas simples ni barras invertidas) |
 | `CA_ADMIN_USERNAME`   | Usuario administrador de Providence (letras, números, `.`, `-`, `_`) |
 | `CA_ADMIN_EMAIL`      | Email del administrador de Providence (debe ser un email válido)     |
 | `CA_ADMIN_PASSWORD`   | Contraseña del administrador. Debe cumplir la política de Providence (`app/conf/authentication.conf`): por defecto, al menos 6 caracteres |
 
-Opcionales: `CA_INSTALL_PROFILE` (`default`), `CA_DEFAULT_LOCALE` (`en_US`), `PROVIDENCE_PORT` (`8080`).
+Opcionales: `CA_INSTALL_PROFILE` (`default`), `CA_DEFAULT_LOCALE` (`en_US`), `PROVIDENCE_PORT` (`8080`),
+`EXT_DB_DATABASE` y `EXT_DB_USER` (`ca_extension`; deben ser distintos de `CA_DB_DATABASE` y `CA_DB_USER`).
 
 `.env` está en `.gitignore`: **nunca** subirlo al repositorio. Solo se versiona `.env.example`, sin valores.
 
@@ -77,7 +80,7 @@ Se guardan en volúmenes de Docker y sobreviven a `docker compose down` y a las 
 
 | Volumen   | Contenido                                       |
 | --------- | ----------------------------------------------- |
-| `db_data` | Base de datos MySQL                             |
+| `db_data` | MySQL: la base de Providence y la de la extensión |
 | `media`   | Archivos multimedia procesados por Providence   |
 | `uploads` | Archivos subidos por los usuarios               |
 | `conf_local` | Configuración local de Providence (`app/conf/local`), que escribe el módulo 2 |
@@ -86,6 +89,22 @@ Se guardan en volúmenes de Docker y sobreviven a `docker compose down` y a las 
 (Providence la excluye en `.gitignore`). Para verla: `docker compose exec providence ls -la app/conf/local`.
 Para volver a la configuración original sin borrar la base: `docker compose down`,
 `docker volume rm ca-extension_conf_local` y `docker compose up`.
+
+### Base de la extensión
+
+La tarea `extension-db-init` ([docker/db/init-extension-db.sh](db/init-extension-db.sh)) corre en cada
+`docker compose up`: crea la base `ca_extension` y su usuario si no existen, y sincroniza la contraseña
+con `EXT_DB_PASSWORD`. Por eso también funciona con una base de datos creada antes de agregar esta tarea.
+El servicio Rust arranca recién cuando la tarea terminó bien, y recibe la conexión en las variables
+`EXT_DB_HOST`, `EXT_DB_PORT`, `EXT_DB_DATABASE`, `EXT_DB_USER` y `EXT_DB_PASSWORD`.
+
+El usuario de la extensión solo tiene permisos sobre `ca_extension`. Para consultarla:
+
+```sh
+docker compose exec db mysql -uca_extension -p ca_extension
+```
+
+Ver las reglas de uso en [Base de datos de la extensión](../README.md#base-de-datos-de-la-extensión).
 
 Las cachés y los logs de Providence (`app/tmp`, `app/log`) quedan dentro del contenedor y se descartan
 al recrearlo. Para ver los logs: `docker compose exec providence ls app/log`.
@@ -103,6 +122,10 @@ variables de entorno y no contiene secretos.
 | `Falta la variable ...` o `... no es válido`        | Corregir `.env` y volver a ejecutar `docker compose up`      |
 | `La base tiene una instalación de Providence incompleta` | La instalación se interrumpió: reiniciar desde cero     |
 | `Providence quedó instalado pero el administrador no se pudo configurar` | Corregir `.env` y reiniciar desde cero |
+
+Si falta `EXT_DB_PASSWORD` en `.env`, `docker compose` no arranca e indica la variable. Si el servicio
+Rust no arranca, revisar `docker compose logs extension-db-init`: indica qué valor de `.env` no es
+válido. Corregirlo y volver a ejecutar `docker compose up`.
 
 ## Reiniciar desde cero
 

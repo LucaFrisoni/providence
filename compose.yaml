@@ -66,9 +66,40 @@ services:
       extension-service:
         condition: service_started
 
+  # Tarea de un solo uso: crea la base propia de la extensión y su usuario (ver docker/db/) y termina.
+  # Corre en cada "up", así también funciona con bases creadas antes de agregarla
+  extension-db-init:
+    image: mysql:8.4
+    # sed quita los fines de línea de Windows (CRLF) que puede agregar git al clonar
+    entrypoint: ["bash", "-c", "sed 's/\\r$$//' /docker/init-extension-db.sh | bash"]
+    environment:
+      DB_HOST: db
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?Falta MYSQL_ROOT_PASSWORD en .env}
+      CA_DB_DATABASE: ${CA_DB_DATABASE:?Falta CA_DB_DATABASE en .env}
+      CA_DB_USER: ${CA_DB_USER:?Falta CA_DB_USER en .env}
+      EXT_DB_DATABASE: ${EXT_DB_DATABASE:-ca_extension}
+      EXT_DB_USER: ${EXT_DB_USER:-ca_extension}
+      EXT_DB_PASSWORD: ${EXT_DB_PASSWORD:?Falta EXT_DB_PASSWORD en .env}
+    volumes:
+      - ./docker/db/init-extension-db.sh:/docker/init-extension-db.sh:ro
+    depends_on:
+      db:
+        condition: service_healthy
+
   extension-service:
     build: ./rust/extension-service
     # Sin "ports": no se publica en la computadora, solo Providence lo alcanza por la red interna
+    # Conexión a la base propia de la extensión (no tiene acceso a la base de Providence)
+    environment:
+      EXT_DB_HOST: db
+      EXT_DB_PORT: 3306
+      EXT_DB_DATABASE: ${EXT_DB_DATABASE:-ca_extension}
+      EXT_DB_USER: ${EXT_DB_USER:-ca_extension}
+      EXT_DB_PASSWORD: ${EXT_DB_PASSWORD:?Falta EXT_DB_PASSWORD en .env}
+    # Arranca cuando la base de la extensión ya está creada
+    depends_on:
+      extension-db-init:
+        condition: service_completed_successfully
 
 # Declaración de los volúmenes con nombre usados arriba
 volumes:
