@@ -1,9 +1,6 @@
 <?php
-/* ----------------------------------------------------------------------
- * app/plugins/modulo1/themes/default/views/explorer_index_html.php :
- * Vista general de elementos de metadatos (6.1): árbol que se expande y se contrae.
- * ----------------------------------------------------------------------
- */
+//Vista general de elementos de metadatos (6.1)
+ 
 $arbol = $this->getVar('arbol');
 $error = $this->getVar('error');
 

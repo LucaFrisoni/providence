@@ -1,26 +1,19 @@
 <?php
-/* ----------------------------------------------------------------------
- * app/plugins/modulo1/lib/Modulo1ServiceClient.php :
- * Cliente HTTP de las rutas del módulo 1 en el servicio Rust de la extensión
- * (rust/extension-service, rutas /api/modulo1).
- * ----------------------------------------------------------------------
- */
+// Cliente HTTP de las rutas del módulo 1 en el servicio Rust de la extensión
+
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\GuzzleException;
 
 class Modulo1ServiceException extends Exception {}
 
 class Modulo1ServiceClient {
-	# -------------------------------------------------------
-	/** Ruta del árbol de elementos de metadatos, relativa a la URL base del servicio */
+
+	//Ruta del árbol de elementos de metadatos, relativa a la URL base del servicio 
 	const ARBOL_ELEMENTOS_PATH = 'api/modulo1/elementos/arbol';
-	/** Código HTTP de una respuesta correcta */
 	const HTTP_OK = 200;
-	/** Profundidad máxima al decodificar JSON (valor por defecto de json_decode) */
 	const JSON_MAX_DEPTH = 512;
-	# -------------------------------------------------------
+	
 	private $client;
-	# -------------------------------------------------------
 	public function __construct(string $base_url, float $timeout) {
 		$this->client = new Client([
 			'base_uri' => rtrim($base_url, '/').'/',
@@ -28,23 +21,17 @@ class Modulo1ServiceClient {
 			'connect_timeout' => $timeout
 		]);
 	}
-	# -------------------------------------------------------
-	/**
-	 * Le manda el modelo al servicio y devuelve el árbol de elementos de metadatos
-	 * (POST /api/modulo1/elementos/arbol)
-	 *
-	 * @throws Modulo1ServiceException
-	 */
+	
+	//Le manda el modelo al servicio y devuelve el árbol de elementos de metadatos
+	//(POST /api/modulo1/elementos/arbol)
+	
 	public function getArbolElementos(array $modelo) : array {
 		return $this->postJson(self::ARBOL_ELEMENTOS_PATH, $modelo);
 	}
-	# -------------------------------------------------------
-	/**
-	 * Hace un POST con el cuerpo en JSON y decodifica la respuesta como array.
-	 * Si el servicio rechaza el pedido, el mensaje de error es el que devuelve el servicio.
-	 *
-	 * @throws Modulo1ServiceException
-	 */
+	
+	//Hace un POST con el cuerpo en json y decodifica la respuesta como array.
+	//Si el servicio rechaza el pedido, el mensaje de error es el que devuelve el servicio.
+	
 	private function postJson(string $path, array $cuerpo) : array {
 		try {
 			$response = $this->client->post($path, ['json' => $cuerpo, 'http_errors' => false]);
@@ -60,5 +47,5 @@ class Modulo1ServiceClient {
 		}
 		return $data;
 	}
-	# -------------------------------------------------------
+
 }
