@@ -5,6 +5,8 @@
  * (rust/extension-service, rutas /api/modulo2).
  * ----------------------------------------------------------------------
  */
+require_once(__DIR__.'/Modulo2Constants.php');
+
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\GuzzleException;
 
@@ -13,7 +15,7 @@ class Modulo2ServiceException extends Exception {}
 class Modulo2ServiceClient {
 	# -------------------------------------------------------
 	/** Ruta de estado del módulo 2, relativa a la URL base del servicio */
-	const HEALTH_PATH = 'api/modulo2/health';
+	const HEALTH_PATH = Modulo2Constants::API_PATH.'/health';
 	/** Profundidad máxima al decodificar JSON (valor por defecto de json_decode) */
 	const JSON_MAX_DEPTH = 512;
 	# -------------------------------------------------------

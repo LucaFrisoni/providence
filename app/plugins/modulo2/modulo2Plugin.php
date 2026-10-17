@@ -5,13 +5,15 @@
  * Agrega el menú del módulo y declara sus permisos.
  * ----------------------------------------------------------------------
  */
+require_once(__DIR__.'/lib/Modulo2Constants.php');
+
 class modulo2Plugin extends BaseApplicationPlugin {
 	# -------------------------------------------------------
 	private $config;
 	# -------------------------------------------------------
 	public function __construct($plugin_path) {
 		$this->description = _t('Módulo 2: administración gráfica de configuraciones');
-		$this->config = Configuration::load($plugin_path.'/conf/modulo2.conf');
+		$this->config = Configuration::load(Modulo2Constants::CONF_FILE);
 
 		parent::__construct();
 	}
@@ -30,7 +32,7 @@ class modulo2Plugin extends BaseApplicationPlugin {
 	 */
 	public function hookRenderMenuBar($menu_bar) {
 		$request = $this->getRequest();
-		if (!$request || !$request->user->canDoAction('can_use_modulo2')) { return $menu_bar; }
+		if (!$request || !$request->user->canDoAction(Modulo2Constants::PERMISSION)) { return $menu_bar; }
 
 		$menu_bar['modulo2'] = [
 			'displayName' => _t('Módulo 2'),
@@ -52,7 +54,7 @@ class modulo2Plugin extends BaseApplicationPlugin {
 	 */
 	static function getRoleActionList() {
 		return [
-			'can_use_modulo2' => [
+			Modulo2Constants::PERMISSION => [
 				'label' => _t('Puede usar el módulo 2'),
 				'description' => _t('El usuario puede acceder a la administración gráfica de configuraciones.')
 			]
