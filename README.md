@@ -219,6 +219,93 @@ Todas las validaciones y controles de autorización se hacen en el servidor.
 `app/conf/local/` se guarda en el volumen `conf_local`, así los cambios hechos desde el módulo
 sobreviven a las reconstrucciones de la imagen. Ver [docker/README.md](docker/README.md).
 
+#### Plan de trabajo
+
+Convenciones: `[x]` hecho, `[ ]` pendiente. Los números `#N` refieren al catálogo de configuraciones.
+
+##### Decisiones pendientes
+
+| ID  | Decisión                                                | Opciones | Propuesta | Quién decide | Estado |
+| --- | ------------------------------------------------------- | -------- | --------- | ------------ | ------ |
+| D1  | Reparto de responsabilidades entre PHP y Rust           | a) PHP lee, escribe y verifica; Rust valida contra el catálogo, genera el `.conf`, calcula diferencias y guarda versiones. b) Todo en PHP y Rust solo para versionado. c) Otra | a) | Cátedra | Pendiente |
+| D2  | Dónde se guardan las versiones y el registro de cambios | a) Tablas propias (`ext_m2_*`) en la base MySQL de Providence. b) Almacenamiento propio del servicio Rust (volumen con SQLite o archivos) | a): un único backup y una sola fuente de datos | Equipo | Pendiente |
+| D3  | Alcance de la restauración de la configuración en base  | a) Solo instantánea XML y comparación. b) Restauración parcial con `update-installation-profile` (solo agrega, no borra) | a) | Equipo / cátedra | Pendiente |
+| D4  | Propiedad de los archivos de `app/conf/local/`          | a) El módulo genera completos los archivos que administra; una edición manual se detecta por hash y se informa como conflicto. b) Combinar con ediciones manuales (requiere interpretar el formato `.conf` completo) | a) | Equipo | Pendiente |
+| D5  | Granularidad de permisos                                | a) Cuatro acciones: ver, editar, editar críticas, restaurar versiones. b) Una sola acción (la actual `can_use_modulo2`) | a) | Equipo | Pendiente |
+| D6  | Configuraciones que se implementan                      | Confirmar con la institución qué ítems de prioridad 1 y 2 responden a necesidades reales | Empezar por #1 a #4 | Institución / cátedra | Pendiente |
+| D7  | Persistencia de `app/conf/local` en Docker              | a) Volumen con nombre. b) Carpeta del repositorio montada en el contenedor | a), porque la configuración local es propia de cada instalación | Equipo | **Hecho** (`conf_local`) |
+
+##### Fase 0: infraestructura
+
+- [x] Plugin base, menú y permiso `can_use_modulo2`
+- [x] Conexión con el servicio Rust (`/api/modulo2/health`)
+- [x] Volumen `conf_local` para `app/conf/local`
+- [ ] Resolver D1, D2, D4 y D5 (bloquean las fases 1 a 3)
+
+##### Fase 1: catálogo y consulta (solo lectura)
+
+- [ ] Definir el formato del catálogo: clave, archivo, tipo, valores permitidos, valor por defecto, descripción, riesgo y efectos
+- [ ] Cargar en el catálogo las configuraciones #1 a #4
+- [ ] Leer en PHP el valor efectivo y el valor de la distribución de cada clave
+- [ ] Panel por áreas que muestre el valor actual y si difiere del valor de la distribución
+- [ ] Pruebas: lectura con y sin sobrescrituras en `app/conf/local`
+
+##### Fase 2: escritura segura
+
+- [ ] Validar en el servidor contra el catálogo
+- [ ] Generar el contenido `.conf` para `app/conf/local`
+- [ ] Escritura atómica, limpieza de caché y verificación posterior del valor efectivo
+- [ ] Registro de cambios: usuario, fecha, clave, valor anterior y nuevo, resultado
+- [ ] Permisos de edición en el servidor (D5)
+- [ ] Pruebas: valores inválidos, usuario sin permiso, falla de escritura, verificación fallida
+
+##### Fase 3: versionado
+
+- [ ] Crear una versión con nombre autocompletado (fecha, hora y usuario) y editable
+- [ ] Versión automática antes de cada cambio y de cada restauración
+- [ ] Lista de versiones y comparación entre dos versiones
+- [ ] Restauración con detección de conflictos (por hash)
+- [ ] Instantánea XML de la configuración en base asociada a cada versión (D3)
+- [ ] Pruebas: crear, comparar, restaurar y resolver conflictos
+
+##### Fase 4: configuraciones de prioridad 1
+
+Cada configuración se cierra cuando tiene: entrada en el catálogo, validación, interfaz, prueba de
+aplicar y verificar, prueba de restaurar y documentación.
+
+- [ ] #1 Activar o desactivar entidades
+- [ ] #2 Activar o desactivar funciones por entidad
+- [ ] #3 Menú "Nuevo"
+- [ ] #4 Menú "Buscar"
+- [ ] #5 Orden de entidades, listas y sublistas
+- [ ] #6 Automatización de identificadores
+- [ ] #7 Reglas de identificadores
+- [ ] #8 Textos y traducciones
+- [ ] #9 Presentación del inspector
+- [ ] #10 Presentación de resultados
+- [ ] #11 Identidad visual
+
+##### Fase 5: configuraciones de prioridad 2
+
+- [ ] #12 Reglas de etiquetas
+- [ ] #13 Jerarquías
+- [ ] #14 Visibilidad en resultados
+- [ ] #15 Bajas (deaccession)
+- [ ] #16 Módulos opcionales
+- [ ] #17 Autocompletado
+- [ ] #18 Editor de texto enriquecido
+- [ ] #19 Solo lectura condicional
+- [ ] #20 Preferencias por defecto
+- [ ] #21 Panel de configuración en base
+- [ ] #22 Instantánea y comparación de la configuración en base
+
+##### Fase 6: configuraciones críticas (sujeto a decisión)
+
+- [ ] #23 Control de acceso
+- [ ] #24 Indexación de búsqueda
+- [ ] #25 Procesamiento de medios
+- [ ] #26 Facetas de navegación
+
 ---
 
 ### About CollectiveAccess

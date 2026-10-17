@@ -29,6 +29,3 @@ build
 /CLAUDE.md
 /.env
 !/docker/providence/setup.php
-
-# Plan de trabajo del módulo 2 (seguimiento personal)
-docs/modulo2/PLAN.md
