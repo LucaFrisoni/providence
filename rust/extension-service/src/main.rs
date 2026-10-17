@@ -8,20 +8,20 @@
 mod constants;
 mod modules;
 mod routes;
-mod respuesta; 
 
 use std::env;
+use std::io::{self, Read};
 use std::net::SocketAddr;
 use std::thread;
 
-use constants::{ADDR_ENV_VAR, DEFAULT_ADDR, SERVICE_NAME, CABECERA_CONTENT_TYPE, TIPO_JSON};
-
-use tiny_http::{Header, Request, Response, Server};
+use constants::{ADDR_ENV_VAR, DEFAULT_ADDR, SERVICE_NAME,};
+use modules::peticion_incorrecta;
+use tiny_http::{Request, Server};
 
 fn main() {
     let addr = listen_addr();
-    let servidor = Server::http(addr)
-        .unwrap_or_else(|e| panic!("No se pudo escuchar en {addr}: {e}"));
+    let servidor =
+        Server::http(addr).unwrap_or_else(|e| panic!("No se pudo escuchar en {addr}: {e}"));
     println!("{SERVICE_NAME} escuchando en http://{addr}");
     for peticion in servidor.incoming_requests() {
         thread::spawn(move || atender(peticion));
@@ -35,16 +35,19 @@ fn listen_addr() -> SocketAddr {
         .unwrap_or_else(|e| panic!("{ADDR_ENV_VAR} inválida ({raw}): {e}"))
 }
 
-//resuelve la peticion y envia la respuesta json
-fn atender(peticion: Request){
-    let respuesta = routes::responder(peticion.method(), peticion.url());
-    let cabecera = Header::from_bytes(CABECERA_CONTENT_TYPE, TIPO_JSON)
-        .expect("La cabecera content-type es valida");
-    let respuesta_http = Response::from_string(respuesta.cuerpo)
-        .with_status_code(respuesta.estado)
-        .with_header(cabecera);
+fn leer_cuerpo(peticion: &mut Request) -> io::Result<String>{
+    let mut cuerpo = String::new();
+    peticion.as_reader().read_to_string(&mut cuerpo)?;
+    Ok(cuerpo)
+}
 
-    if let Err(e) = peticion.respond(respuesta_http) {
+//resuelve la peticion y envia la respuesta json
+fn atender(mut peticion: Request) {
+    let respuesta = match leer_cuerpo(&mut peticion){
+        Ok(cuerpo) => routes::responder(peticion.method(), peticion.url(), &cuerpo),
+        Err(_) => peticion_incorrecta("el cuerpo no es un texto valido")
+    };
+    if let Err(e) = peticion.respond(respuesta) {
         eprintln!("Error al responder: {e}");
     }
 }

@@ -6,11 +6,10 @@
 use tiny_http::Method;
 
 use crate::constants::{API_PREFIX, MODULO1, MODULO2, MODULO3, MODULO4, MODULO5, MODULO6, MODULO7};
-use crate::modules::{modulo1, modulo2, modulo3, modulo4, modulo5, modulo6, modulo7};
-use crate::respuesta::Respuesta;
+use crate::modules::{modulo1, modulo2, modulo3, modulo4, modulo5, modulo6, modulo7, no_encontrado, RespuestaHttp};
 
 //funcion que aiende las peticiones de los modulos
-type Manejador = fn(&Method, &str) -> Respuesta;
+type Manejador = fn(&Method, &str, &str) -> RespuestaHttp;
 
 //cada modulo con su funcion que atiende las rutas
 const MODULOS: [(&str, Manejador); 7] = [
@@ -24,16 +23,14 @@ const MODULOS: [(&str, Manejador); 7] = [
 ];
 
 //recibe una peticion, busca al modulo segun su prefijo y le pasa el resto de la ruta
-pub fn responder(metodo: &Method, ruta: &str) -> Respuesta {
+pub fn responder(metodo: &Method, ruta: &str, cuerpo: &str) -> RespuestaHttp {
     let ruta = sin_parametros(ruta);
     for (nombre, manejador) in MODULOS {
-        let prefijo = module_path(nombre);
-        if ruta.starts_with(&prefijo) {
-            let resto = &ruta[prefijo.len()..];
-            return manejador(metodo, resto);
+        if let Some(resto) = ruta.strip_prefix(&module_path(nombre)){
+            return manejador(metodo, resto, cuerpo);
         }
     }
-    Respuesta::no_encontrado("ruta inexistente")
+    no_encontrado("ruta inexistente")
 }
 
 /// Ruta base de un módulo: `/api/<nombre>`.
@@ -44,7 +41,6 @@ fn module_path(name: &str) -> String {
 fn sin_parametros(ruta: &str) -> &str {
     ruta.split('?').next().unwrap_or(ruta)
 }
-
 
 #[cfg(test)]
 mod tests {

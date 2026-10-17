@@ -1,0 +1,114 @@
+//tipos del modelo de informacion que se usan en el modulo1
+
+use crate::constants::{
+    TIPO_DATO_COLOR, TIPO_DATO_CONTAINER, TIPO_DATO_CURRENCY, TIPO_DATO_DATE_RANGE, TIPO_DATO_FILE,
+    TIPO_DATO_FILESIZE, TIPO_DATO_FLOORPLAN, TIPO_DATO_GEOCODE, TIPO_DATO_GEONAMES,
+    TIPO_DATO_INFORMATION_SERVICE, TIPO_DATO_INTEGER, TIPO_DATO_LCSH, TIPO_DATO_LENGTH,
+    TIPO_DATO_LIST, TIPO_DATO_MEDIA, TIPO_DATO_NUMERIC, TIPO_DATO_TEXT, TIPO_DATO_TIME_CODE,
+    TIPO_DATO_URL, TIPO_DATO_WEIGHT,
+};
+
+//tipo de dato de un elemento de metadatos
+//se pueden ver en app/lib/Attributes/Attribute.php de providence
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum TipoDato {
+    Container,
+    Text,
+    DateRange,
+    List,
+    Geocode,
+    Url,
+    Currency,
+    Length,
+    Weight,
+    TimeCode,
+    Integer,
+    Numeric,
+    Lcsh,
+    GeoNames,
+    File,
+    Media,
+    InformationService,
+    Floorplan,
+    Color,
+    Filesize,
+    Otro(u32),
+}
+
+//tipo de dato y nombre con que se muestra
+const TIPOS_DE_DATO: [(u32, TipoDato, &str); 20] = [
+    (TIPO_DATO_CONTAINER, TipoDato::Container, "Contenedor"),
+    (TIPO_DATO_TEXT, TipoDato::Text, "Texto"),
+    (TIPO_DATO_DATE_RANGE, TipoDato::DateRange, "Rango de fechas"),
+    (TIPO_DATO_LIST, TipoDato::List, "Lista"),
+    (TIPO_DATO_GEOCODE, TipoDato::Geocode, "Geocódigo"),
+    (TIPO_DATO_URL, TipoDato::Url, "URL"),
+    (TIPO_DATO_CURRENCY, TipoDato::Currency, "Moneda"),
+    (TIPO_DATO_LENGTH, TipoDato::Length, "Longitud"),
+    (TIPO_DATO_WEIGHT, TipoDato::Weight, "Peso"),
+    (TIPO_DATO_TIME_CODE, TipoDato::TimeCode, "Código de tiempo"),
+    (TIPO_DATO_INTEGER, TipoDato::Integer, "Entero"),
+    (TIPO_DATO_NUMERIC, TipoDato::Numeric, "Numérico"),
+    (TIPO_DATO_LCSH, TipoDato::Lcsh, "LCSH"),
+    (TIPO_DATO_GEONAMES, TipoDato::GeoNames, "GeoNames"),
+    (TIPO_DATO_FILE, TipoDato::File, "Archivo"),
+    (TIPO_DATO_MEDIA, TipoDato::Media, "Media"),
+    (
+        TIPO_DATO_INFORMATION_SERVICE,
+        TipoDato::InformationService,
+        "Servicio de información",
+    ),
+    (TIPO_DATO_FLOORPLAN, TipoDato::Floorplan, "Plano de planta"),
+    (TIPO_DATO_COLOR, TipoDato::Color, "Color"),
+    (TIPO_DATO_FILESIZE, TipoDato::Filesize, "Tamaño de archivo"),
+];
+
+const NOMBRE_TIPO_OTRO: &str = "Otro";
+
+impl TipoDato {
+    //convierte el codigo numerico de providence en un tipo de dato de rust
+    pub fn desde_codigo(codigo: u32) -> Self {
+        TIPOS_DE_DATO
+            .iter()
+            .find(|(c, _, _)| *c == codigo)
+            .map_or(Self::Otro(codigo), |(_, tipo, _)| *tipo)
+    }
+
+    //nombre con q se muestra el tipo de dato
+    pub fn nombre(&self) -> &str {
+        TIPOS_DE_DATO
+            .iter()
+            .find(|(_, tipo, _)| tipo == self)
+            .map_or(NOMBRE_TIPO_OTRO, |(_, _, nombre)| nombre)
+    }
+
+    pub fn es_contenedor(&self) -> bool {
+        *self == Self::Container
+    }
+}
+
+//tipo de entidad, corresponde a una tabla en providence por ej ca_objects (estan en install/inc/schema_mysql.sql)
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Entidad {
+    pub codigo: String,    //nombre en la tabla en providence
+    pub numero_tabla: u32, //numero que providence le asigna a la tabla, pueden verse en app/conf/datamodel.conf
+    pub nombre: String,
+}
+
+//elemento de metadato, es una fila en la tabla de ca_metadata_elements de sql de providence
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Elemento {
+    pub codigo: String,
+    pub nombre: String,
+    pub tipo: TipoDato,
+    pub padre: Option<String>, //si tiene padre es un subelemento y esta dentro de un contenedor
+}
+
+//un mismo elemento puede llamarse distinto segun la entidad, puede verse en detalle en la seccion 6.3 del documento del cliente
+//asignacion es el uso de un elemento en una entidad con la etiqueta propa de ese contexto
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Asignacion {
+    pub entidad: String,          //codigo de la entidad
+    pub elemento: String,         //codigo del elemento
+    pub etiqueta: Option<String>, //nombre con que se muestra en ese contexto
+}
