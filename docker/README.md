@@ -80,6 +80,12 @@ Se guardan en volúmenes de Docker y sobreviven a `docker compose down` y a las 
 | `db_data` | Base de datos MySQL                             |
 | `media`   | Archivos multimedia procesados por Providence   |
 | `uploads` | Archivos subidos por los usuarios               |
+| `conf_local` | Configuración local de Providence (`app/conf/local`), que escribe el módulo 2 |
+
+`app/conf/local` no se monta desde el repositorio porque es configuración propia de cada instalación
+(Providence la excluye en `.gitignore`). Para verla: `docker compose exec providence ls -la app/conf/local`.
+Para volver a la configuración original sin borrar la base: `docker compose down`,
+`docker volume rm ca-extension_conf_local` y `docker compose up`.
 
 Las cachés y los logs de Providence (`app/tmp`, `app/log`) quedan dentro del contenedor y se descartan
 al recrearlo. Para ver los logs: `docker compose exec providence ls app/log`.
@@ -101,6 +107,6 @@ variables de entorno y no contiene secretos.
 ## Reiniciar desde cero
 
 ```sh
-docker compose down -v   # borra la base de datos, media y uploads
+docker compose down -v   # borra la base de datos, media, uploads y la configuración local
 docker compose up --build
 ```

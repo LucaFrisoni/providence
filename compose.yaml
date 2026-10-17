@@ -56,6 +56,9 @@ services:
       # Volúmenes con nombre: persisten los archivos subidos a Providence
       - media:/var/www/html/media
       - uploads:/var/www/html/uploads
+      # Configuración local de Providence (sobrescrituras de app/conf). La escribe el módulo 2 y
+      # persiste aunque se reconstruya la imagen
+      - conf_local:/var/www/html/app/conf/local
     # Orden de arranque: espera a que el healthcheck de la base dé OK y a que el servicio Rust haya iniciado
     depends_on:
       db:
@@ -72,3 +75,4 @@ volumes:
   db_data:
   media:
   uploads:
+  conf_local:
