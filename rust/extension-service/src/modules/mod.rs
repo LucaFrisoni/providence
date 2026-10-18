@@ -55,6 +55,7 @@ mod tests {
     use super::*;
     use crate::constants::MODULO2;
 
+    /// El JSON de /health incluye el módulo, el estado y la versión del servicio.
     #[test]
     fn health_response_reports_module_and_version() {
         let respuesta = health_response(MODULO2);

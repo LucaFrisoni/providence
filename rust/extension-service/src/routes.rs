@@ -11,6 +11,7 @@ use crate::modules::{modulo1, modulo2, modulo3, modulo4, modulo5, modulo6, modul
 //funcion que aiende las peticiones de los modulos
 type Manejador = fn(&Method, &str, &str) -> RespuestaHttp;
 
+
 //cada modulo con su funcion que atiende las rutas
 const MODULOS: [(&str, Manejador); 7] = [
     (MODULO1, modulo1::responder),
@@ -46,8 +47,36 @@ fn sin_parametros(ruta: &str) -> &str {
 mod tests {
     use super::*;
 
+    use crate::constants::{CODIGO_NO_ENCONTRADO, CODIGO_OK, HEALTH_ROUTE};
+    use crate::modules::health_response;
+
+    /// La ruta base de un módulo es /api/<modulo>.
     #[test]
     fn module_path_uses_api_prefix() {
         assert_eq!(module_path(MODULO2), "/api/modulo2");
+    }
+
+    /// GET /api/<modulo>/health llega al módulo correcto, para los siete módulos.
+    #[test]
+    fn dispatches_health_to_every_module() {
+        for (nombre, _) in MODULOS {
+            let ruta = format!("{}{HEALTH_ROUTE}", module_path(nombre));
+            assert_eq!(responder(&Method::Get, &ruta), health_response(nombre), "{ruta}");
+        }
+    }
+
+    /// Los parámetros de la URL (?x=1) no impiden encontrar la ruta.
+    #[test]
+    fn ignores_query_parameters() {
+        let respuesta = responder(&Method::Get, "/api/modulo2/health?x=1");
+        assert_eq!(respuesta.estado, CODIGO_OK);
+    }
+
+    /// Las rutas fuera de /api/<modulo> devuelven 404.
+    #[test]
+    fn unknown_module_or_path_returns_not_found() {
+        for ruta in ["/", "/api", "/api/inexistente/health", "/otra/modulo2/health"] {
+            assert_eq!(responder(&Method::Get, ruta).estado, CODIGO_NO_ENCONTRADO, "{ruta}");
+        }
     }
 }

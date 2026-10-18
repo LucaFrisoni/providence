@@ -6,6 +6,7 @@
 //el servidor es sync, cada peticion se atiende en un hilo.
 
 mod constants;
+mod db;
 mod modules;
 mod routes;
 
@@ -17,8 +18,11 @@ use std::thread;
 use constants::{ADDR_ENV_VAR, DEFAULT_ADDR, SERVICE_NAME,};
 use modules::peticion_incorrecta;
 use tiny_http::{Request, Server};
+use mysql::Pool;
 
 fn main() {
+    // Todavía ninguna ruta usa la base: se conecta al iniciar para fallar temprano si no responde
+    let _pool = connect_database();
     let addr = listen_addr();
     let servidor =
         Server::http(addr).unwrap_or_else(|e| panic!("No se pudo escuchar en {addr}: {e}"));
@@ -26,6 +30,15 @@ fn main() {
     for peticion in servidor.incoming_requests() {
         thread::spawn(move || atender(peticion));
     }
+}
+
+/// Conecta a la base propia de la extensión con la configuración de las variables `EXT_DB_*`.
+fn connect_database() -> Pool {
+    let config = db::DbConfig::from_env().unwrap_or_else(|e| panic!("{e}"));
+    let pool = db::connect(&config)
+        .unwrap_or_else(|e| panic!("No se pudo conectar a la base {}: {e}", config.database));
+    println!("{SERVICE_NAME} conectado a la base {} en {}:{}", config.database, config.host, config.port);
+    pool
 }
 
 /// Lee la dirección de la variable de entorno o usa la dirección por defecto.

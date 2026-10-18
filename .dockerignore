@@ -31,3 +31,5 @@ app/tmp/purifier/*
 # Otros componentes de la extensión (tienen su propia imagen o no corresponden)
 rust
 compose.yaml
+docs
+tests/extension

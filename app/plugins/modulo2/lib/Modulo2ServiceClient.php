@@ -5,25 +5,33 @@
  * (rust/extension-service, rutas /api/modulo2).
  * ----------------------------------------------------------------------
  */
+require_once(__DIR__.'/Modulo2Constants.php');
+
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\GuzzleException;
+use GuzzleHttp\HandlerStack;
 
 class Modulo2ServiceException extends Exception {}
 
 class Modulo2ServiceClient {
 	# -------------------------------------------------------
 	/** Ruta de estado del módulo 2, relativa a la URL base del servicio */
-	const HEALTH_PATH = 'api/modulo2/health';
+	const HEALTH_PATH = Modulo2Constants::API_PATH.'/health';
 	/** Profundidad máxima al decodificar JSON (valor por defecto de json_decode) */
 	const JSON_MAX_DEPTH = 512;
 	# -------------------------------------------------------
 	private $client;
 	# -------------------------------------------------------
-	public function __construct(string $base_url, float $timeout) {
+	/**
+	 * @param HandlerStack|null $handler Manejador HTTP de Guzzle. Solo lo pasan las pruebas unitarias,
+	 *                                   para simular respuestas sin el servicio; null usa la red
+	 */
+	public function __construct(string $base_url, float $timeout, ?HandlerStack $handler = null) {
 		$this->client = new Client([
 			'base_uri' => rtrim($base_url, '/').'/',
 			'timeout' => $timeout,
-			'connect_timeout' => $timeout
+			'connect_timeout' => $timeout,
+			'handler' => $handler
 		]);
 	}
 	# -------------------------------------------------------

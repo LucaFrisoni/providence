@@ -1,15 +1,16 @@
 # Entorno Docker de desarrollo
 
-Levanta tres contenedores:
+Levanta tres contenedores y una tarea de inicio:
 
-| Servicio            | Qué es                                                  | Acceso                                  |
-| ------------------- | ------------------------------------------------------- | --------------------------------------- |
-| `providence`        | Providence (PHP 8.3 + Apache)                           | http://localhost:8080                   |
-| `db`                | MySQL 8.4                                               | solo dentro de la red Docker            |
-| `extension-service` | Servicio Rust único de la extensión (todos los módulos) | solo desde Providence, dentro de Docker |
+| Servicio            | Qué es                                                                | Acceso                                  |
+| ------------------- | --------------------------------------------------------------------- | --------------------------------------- |
+| `providence`        | Providence (PHP 8.3 + Apache)                                         | http://localhost:8080                   |
+| `db`                | MySQL 8.4                                                             | `127.0.0.1:DB_PORT` (DBeaver, etc.)        |
+| `extension-service` | Servicio Rust único de la extensión (todos los módulos)               | solo desde Providence, dentro de Docker |
+| `extension-db-init` | Tarea de inicio: crea la base de la extensión y su usuario, y termina | no queda corriendo                      |
 
-Solo Providence se publica en la computadora (en `127.0.0.1`, no en la red local). El servicio Rust no
-se publica: solo Providence lo consulta, dentro de la red de Docker.
+Providence y MySQL se publican solo en `127.0.0.1` (accesibles desde esta computadora, no desde la red
+local). El servicio Rust no se publica: solo Providence lo consulta, dentro de la red de Docker.
 
 ## 1. Crear el archivo `.env` (obligatorio)
 
@@ -20,19 +21,28 @@ variable falta.
 cp .env.example .env
 ```
 
-Completar en `.env`:
+Completar en `.env`. Está dividido en las mismas secciones que esta tabla. Las obligatorias que ya
+tienen un valor en `.env.example` se pueden dejar así; las opcionales, si no se definen, usan el valor
+por defecto:
 
-| Variable              | Uso                                                                  |
-| --------------------- | -------------------------------------------------------------------- |
-| `MYSQL_ROOT_PASSWORD` | Contraseña de root de MySQL                                          |
-| `CA_DB_DATABASE`      | Nombre de la base de Providence                                      |
-| `CA_DB_USER`          | Usuario de MySQL que usa Providence                                  |
-| `CA_DB_PASSWORD`      | Contraseña de ese usuario                                            |
-| `CA_ADMIN_USERNAME`   | Usuario administrador de Providence (letras, números, `.`, `-`, `_`) |
-| `CA_ADMIN_EMAIL`      | Email del administrador de Providence (debe ser un email válido)     |
-| `CA_ADMIN_PASSWORD`   | Contraseña del administrador. Debe cumplir la política de Providence (`app/conf/authentication.conf`): por defecto, al menos 6 caracteres |
+| Sección                     | Variable              | Uso                                                                                                                                       | Por defecto    |
+| --------------------------- | --------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- | -------------- |
+| Servidor MySQL              | `MYSQL_ROOT_PASSWORD` | Contraseña del usuario `root` de MySQL                                                                                                    | obligatoria    |
+|                             | `DB_PORT`             | Puerto de MySQL en esta computadora (DBeaver)                                                                                             | obligatoria (`3307` en `.env.example`) |
+| Base de Providence          | `CA_DB_DATABASE`      | Nombre de la base                                                                                                                         | obligatoria    |
+|                             | `CA_DB_USER`          | Usuario de MySQL de Providence                                                                                                            | obligatoria    |
+|                             | `CA_DB_PASSWORD`      | Contraseña de ese usuario                                                                                                                 | obligatoria    |
+| Base de la extensión        | `EXT_DB_DATABASE`     | Nombre de la base (distinto de `CA_DB_DATABASE`)                                                                                          | obligatoria (`ca_extension` en `.env.example`) |
+|                             | `EXT_DB_USER`         | Usuario de MySQL del servicio Rust (distinto de `CA_DB_USER`)                                                                             | obligatoria (`ca_extension` en `.env.example`) |
+|                             | `EXT_DB_PASSWORD`     | Contraseña de ese usuario (sin comillas simples ni barras invertidas)                                                                     | obligatoria    |
+| Administrador de Providence | `CA_ADMIN_USERNAME`   | Usuario para ingresar a Providence (letras, números, `.`, `-`, `_`)                                                                       | obligatoria    |
+|                             | `CA_ADMIN_EMAIL`      | Email del administrador (debe ser válido)                                                                                                 | obligatoria    |
+|                             | `CA_ADMIN_PASSWORD`   | Contraseña del administrador. Debe cumplir la política de Providence (`app/conf/authentication.conf`): por defecto, al menos 6 caracteres | obligatoria    |
+| Providence                  | `PROVIDENCE_PORT`     | Puerto de Providence en esta computadora                                                                                                  | `8080`         |
+|                             | `CA_INSTALL_PROFILE`  | Perfil de instalación                                                                                                                     | `default`      |
+|                             | `CA_DEFAULT_LOCALE`   | Idioma por defecto                                                                                                                        | `en_US`        |
 
-Opcionales: `CA_INSTALL_PROFILE` (`default`), `CA_DEFAULT_LOCALE` (`en_US`), `PROVIDENCE_PORT` (`8080`).
+Para conectarse a las bases desde DBeaver, ver [Base de datos local](../README.md#base-de-datos-local).
 
 `.env` está en `.gitignore`: **nunca** subirlo al repositorio. Solo se versiona `.env.example`, sin valores.
 
@@ -54,7 +64,8 @@ menos de un minuto. Para seguir el progreso: `docker compose logs -f providence`
 
 Ingresar con `CA_ADMIN_USERNAME` y `CA_ADMIN_PASSWORD` de `.env`.
 
-Para probar el módulo 2: menú **Módulo 2 → Estado del servicio**.
+Cada módulo que ya tiene plugin agrega su menú **Módulo N** en la barra principal. Su opción
+**Estado del servicio** verifica la conexión con el servicio Rust.
 
 ## 3. Cómo se monta el código
 
@@ -62,24 +73,52 @@ El núcleo de Providence se **copia dentro de la imagen** y solo `app/plugins/` 
 repositorio. Así no se modifica Providence y se evita la lentitud de leer miles de archivos desde
 Windows/macOS (con todo el repositorio montado, cada página tardaba varios segundos).
 
-| Qué se modifica                                                 | Cómo se ve el cambio                                   |
-| --------------------------------------------------------------- | ------------------------------------------------------ |
-| Cualquier archivo dentro de `app/plugins/` (controladores, vistas, modelos, librerías y configuración de los plugins) | Al recargar la página |
-| Código del servicio Rust (`rust/`)                              | `docker compose up --build extension-service`          |
-| Cualquier otro archivo del repositorio (núcleo de Providence, `composer.json`, archivos de `docker/`) | `docker compose up --build providence` |
+| Qué se modifica                                                                                                       | Cómo se ve el cambio                          |
+| --------------------------------------------------------------------------------------------------------------------- | --------------------------------------------- |
+| Cualquier archivo dentro de `app/plugins/` (controladores, vistas, librerías, configuración y pruebas de los plugins) | Al recargar la página                         |
+| Código del servicio Rust (`rust/`)                                                                                    | `docker compose up --build extension-service` |
+| Cualquier otro archivo del repositorio (núcleo de Providence, `composer.json`, archivos de `docker/`)                 | `docker compose up --build providence`        |
 
-Por eso, todo el código de la extensión (incluidos los modelos que se agreguen) debe vivir dentro de
-la carpeta del plugin del módulo correspondiente.
+Por eso, todo el código PHP de la extensión debe vivir dentro de la carpeta del plugin del módulo
+correspondiente. Los datos propios de la extensión no se guardan con modelos de Providence sino en la
+[base de la extensión](../README.md#base-de-datos-de-la-extensión), a través del servicio Rust.
 
 ### Datos que se conservan
 
 Se guardan en volúmenes de Docker y sobreviven a `docker compose down` y a las reconstrucciones:
 
-| Volumen   | Contenido                                       |
-| --------- | ----------------------------------------------- |
-| `db_data` | Base de datos MySQL                             |
-| `media`   | Archivos multimedia procesados por Providence   |
-| `uploads` | Archivos subidos por los usuarios               |
+| Volumen      | Contenido                                                                     |
+| ------------ | ----------------------------------------------------------------------------- |
+| `db_data`    | MySQL: la base de Providence y la de la extensión                             |
+| `media`      | Archivos multimedia procesados por Providence                                 |
+| `uploads`    | Archivos subidos por los usuarios                                             |
+| `conf_local` | Configuración local de Providence (`app/conf/local`), que escribe el módulo 2 |
+
+`app/conf/local` no se monta desde el repositorio porque es configuración propia de cada instalación
+(Providence la excluye en `.gitignore`). Para verla: `docker compose exec providence ls -la app/conf/local`.
+Para volver a la configuración original sin borrar la base: `docker compose down`,
+`docker volume rm ca-extension_conf_local` y `docker compose up`.
+
+### Base de la extensión
+
+La tarea `extension-db-init` ([docker/db/init-extension-db.sh](db/init-extension-db.sh)) corre en cada
+`docker compose up`: crea la base `ca_extension` y su usuario si no existen, y sincroniza la contraseña
+con `EXT_DB_PASSWORD`. Por eso también funciona con una base de datos creada antes de agregar esta tarea.
+El servicio Rust arranca recién cuando la tarea terminó bien, y recibe la conexión en las variables
+`EXT_DB_HOST`, `EXT_DB_DATABASE`, `EXT_DB_USER` y `EXT_DB_PASSWORD`. El puerto es el de MySQL dentro
+de la red de Docker (3306): el servicio lo usa por defecto, y `EXT_DB_PORT` solo hace falta si cambia.
+
+El usuario de la extensión solo tiene permisos sobre `ca_extension`. Para consultarla desde la terminal:
+
+```sh
+docker compose exec db mysql -uca_extension -p ca_extension
+```
+
+### Conectarse desde DBeaver
+
+Los datos de conexión a cada base están en [Base de datos local](../README.md#base-de-datos-local).
+
+Ver las reglas de uso en [Base de datos de la extensión](../README.md#base-de-datos-de-la-extensión).
 
 Las cachés y los logs de Providence (`app/tmp`, `app/log`) quedan dentro del contenedor y se descartan
 al recrearlo. Para ver los logs: `docker compose exec providence ls app/log`.
@@ -92,15 +131,24 @@ variables de entorno y no contiene secretos.
 
 ## Problemas frecuentes
 
-| Mensaje en `docker compose logs providence`         | Solución                                                    |
-| --------------------------------------------------- | ----------------------------------------------------------- |
-| `Falta la variable ...` o `... no es válido`        | Corregir `.env` y volver a ejecutar `docker compose up`      |
-| `La base tiene una instalación de Providence incompleta` | La instalación se interrumpió: reiniciar desde cero     |
-| `Providence quedó instalado pero el administrador no se pudo configurar` | Corregir `.env` y reiniciar desde cero |
+| Mensaje en `docker compose logs providence`                              | Solución                                                |
+| ------------------------------------------------------------------------ | ------------------------------------------------------- |
+| `Falta la variable ...` o `... no es válido`                             | Corregir `.env` y volver a ejecutar `docker compose up` |
+| `La base tiene una instalación de Providence incompleta`                 | La instalación se interrumpió: reiniciar desde cero     |
+| `Providence quedó instalado pero el administrador no se pudo configurar` | Corregir `.env` y reiniciar desde cero                  |
+
+Si falta una variable obligatoria en `.env` (por ejemplo `DB_PORT` o `EXT_DB_PASSWORD`), `docker compose`
+no arranca e indica cuál. Si el servicio
+Rust no arranca, revisar `docker compose logs extension-db-init`: indica qué valor de `.env` no es
+válido. Corregirlo y volver a ejecutar `docker compose up`.
+
+Si un script falla con `$' ': command not found`, el archivo tiene fines de línea de Windows (CRLF).
+`.gitattributes` obliga a usar LF en los `.sh`; en un clon anterior a ese archivo, borrar el script y
+restaurarlo para que se regenere con LF (por ejemplo: `rm tests/extension/*.sh && git checkout -- tests/extension`).
 
 ## Reiniciar desde cero
 
 ```sh
-docker compose down -v   # borra la base de datos, media y uploads
+docker compose down -v   # borra la base de datos, media, uploads y la configuración local
 docker compose up --build
 ```

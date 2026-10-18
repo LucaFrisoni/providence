@@ -42,8 +42,9 @@ check_admin_credentials() {
 }
 
 prepare_writable_dirs() {
-    # media y uploads son volúmenes de Docker: al crearse vacíos hay que darle permisos a Apache
-    chown www-data:www-data media uploads
+    # media, uploads y app/conf/local son volúmenes de Docker: al crearse hay que darle permisos a Apache
+    # (app/conf/local lo escribe el módulo 2)
+    chown www-data:www-data media uploads app/conf/local
 }
 
 db_query() {
