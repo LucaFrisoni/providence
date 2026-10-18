@@ -112,3 +112,49 @@ pub struct Asignacion {
     pub elemento: String,         //codigo del elemento
     pub etiqueta: Option<String>, //nombre con que se muestra en ese contexto
 }
+
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn reconoce_los_codigos_de_providence() {
+        assert_eq!(TipoDato::desde_codigo(0), TipoDato::Container);
+        assert_eq!(TipoDato::desde_codigo(1), TipoDato::Text);
+        assert_eq!(TipoDato::desde_codigo(2), TipoDato::DateRange);
+        assert_eq!(TipoDato::desde_codigo(3), TipoDato::List);
+        assert_eq!(TipoDato::desde_codigo(31), TipoDato::Floorplan);
+    }
+
+    #[test]
+    fn un_codigo_desconocido_se_conserva_como_otro() {
+        assert_eq!(TipoDato::desde_codigo(22), TipoDato::Otro(22));
+        assert_eq!(TipoDato::Otro(22).nombre(), NOMBRE_TIPO_OTRO);
+    }
+
+    #[test]
+    fn cada_tipo_de_la_tabla_vuelve_a_si_mismo() {
+        for (codigo, tipo, nombre) in TIPOS_DE_DATO {
+            assert_eq!(TipoDato::desde_codigo(codigo), tipo);
+            assert_eq!(tipo.nombre(), nombre);
+        }
+    }
+
+    #[test]
+    fn los_codigos_de_la_tabla_no_se_repiten() {
+        for (i, (codigo, _, _)) in TIPOS_DE_DATO.iter().enumerate() {
+            let repetidos = TIPOS_DE_DATO[i + 1..]
+                .iter()
+                .filter(|(c, _, _)| c == codigo);
+            assert_eq!(repetidos.count(), 0, "código repetido: {codigo}");
+        }
+    }
+
+    #[test]
+    fn solo_el_contenedor_es_contenedor() {
+        assert!(TipoDato::Container.es_contenedor());
+        assert!(!TipoDato::Text.es_contenedor());
+        assert!(!TipoDato::Otro(0).es_contenedor());
+    }
+}

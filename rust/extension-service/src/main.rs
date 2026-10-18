@@ -10,7 +10,7 @@ mod modules;
 mod routes;
 
 use std::env;
-use std::io::{self, Read};
+use std::io;
 use std::net::SocketAddr;
 use std::thread;
 

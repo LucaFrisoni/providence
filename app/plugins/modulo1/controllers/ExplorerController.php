@@ -4,6 +4,7 @@
 
 require_once(__CA_APP_DIR__.'/plugins/modulo1/lib/Modulo1ServiceClient.php');
 require_once(__CA_APP_DIR__.'/plugins/modulo1/lib/Modulo1ModeloReader.php');
+require_once(__CA_APP_DIR__.'/plugins/modulo1/lib/Modulo1Html.php');
 class ExplorerController extends ActionController {
 	
 	const SERVICE_URL_ENV_VAR = 'EXTENSION_SERVICE_URL';
@@ -22,15 +23,26 @@ class ExplorerController extends ActionController {
 
 	//6.1: vista general de los elementos de metadatos
 	public function Index() {
+		$this->mostrar('getArbolElementos', 'arbol', 'explorer_index_html.php');
+	}
+	# -------------------------------------------------------
+	//6.2: vista por tipo de entidad, con los elementos asignados a cada una
+	public function Entidades() {
+		$this->mostrar('getVistaEntidades', 'vista', 'explorer_entidades_html.php');
+	}
+
+	// Lee el modelo, se lo manda al servicio y muestra la vista.
+	private function mostrar(string $metodo_cliente, string $variable, string $vista) {
 		if (!$this->request->user->canDoAction('can_use_modulo1')) { return; }
 		try {
 			$modelo = (new Modulo1ModeloReader())->leerModelo();
-			$this->view->setVar('arbol', $this->createClient()->getArbolElementos($modelo));
+			$this->view->setVar($variable, $this->createClient()->$metodo_cliente($modelo));
 		} catch (Modulo1ServiceException $e) {
 			$this->view->setVar('error', $e->getMessage());
 		}
-		$this->render('explorer_index_html.php');
+		$this->render($vista);
 	}
+
 	private function createClient() : Modulo1ServiceClient {
 		return new Modulo1ServiceClient(
 			$this->serviceUrl(),

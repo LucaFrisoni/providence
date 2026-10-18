@@ -44,6 +44,13 @@ pub fn health_response(module: &'static str) -> RespuestaHttp {
 }
 
 #[cfg(test)]
+pub fn cuerpo_de(respuesta: RespuestaHttp) -> String {
+        let mut texto = String::new();
+        std::io::Read::read_to_string(&mut respuesta.into_reader(), &mut texto).unwrap();
+        texto
+    }
+
+#[cfg(test)]
 mod tests {
     use super::*;
     use crate::constants::MODULO2;
@@ -54,6 +61,6 @@ mod tests {
         let esperado = format!(
             r#"{{"module":"{MODULO2}","status":"{STATUS_OK}","version":"{SERVICE_VERSION}"}}"#
         );
-        assert_eq!(respuesta.cuerpo, esperado);
+        assert_eq!(cuerpo_de(respuesta), esperado);
     }
 }

@@ -79,3 +79,4 @@ pub const CAMPO_HIJOS: &str = "hijos";
 //cant maxima de contenedores dentro de contenedores, para no tener jerarquias muy grandes
 pub const PROFUNDIDAD_MAX_ARBOL: usize = 16;
 pub const RUTA_ARBOL_ELEMENTOS: &str = "/elementos/arbol";
+pub const RUTA_VISTA_ENTIDADES: &str = "/entidades";

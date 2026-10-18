@@ -33,6 +33,13 @@ class modulo1Plugin extends BaseApplicationPlugin {
 					'is_enabled' => 1,
 					'requires' => [],
 					'parameters' => []
+				],
+				'entidades' => [
+					'displayName' => _t('Vista por tipo de entidad'),
+					'default' => ['module' => 'modulo1', 'controller' => 'Explorer', 'action' => 'Entidades'],
+					'is_enabled' => 1,
+					'requires' => [],
+					'parameters' => []
 				]
 			]
 		];
