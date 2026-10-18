@@ -113,6 +113,13 @@ pub struct Asignacion {
     pub etiqueta: Option<String>, //nombre con que se muestra en ese contexto
 }
 
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Campo {
+    pub entidad: String, //codigo de la entidad
+    pub codigo: String, //nombre de la columna en la bdd
+    pub nombre: String,
+}
+
 
 #[cfg(test)]
 mod tests {

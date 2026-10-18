@@ -4,11 +4,11 @@
 use std::collections::{HashMap, HashSet};
 use std::fmt;
 
-use super::dominio::{Asignacion, Elemento, Entidad, TipoDato};
+use super::dominio::{Asignacion, Elemento, Entidad, TipoDato, Campo};
 use crate::constants::{
     CAMPO_ASIGNACIONES, CAMPO_CODIGO, CAMPO_ELEMENTO, CAMPO_ELEMENTOS, CAMPO_ENTIDAD,
     CAMPO_ENTIDADES, CAMPO_ETIQUETA, CAMPO_NOMBRE, CAMPO_NUMERO_TABLA, CAMPO_PADRE, CAMPO_TIPO,
-    PROFUNDIDAD_MAX_ARBOL,
+    PROFUNDIDAD_MAX_ARBOL, CAMPO_CAMPOS
 };
 use json::JsonValue;
 
@@ -32,6 +32,7 @@ pub struct Modelo {
     pub entidades: Vec<Entidad>,
     pub elementos: Vec<Elemento>,
     pub asignaciones: Vec<Asignacion>,
+    pub campos: Vec<Campo>,
 }
 
 impl Modelo {
@@ -42,6 +43,7 @@ impl Modelo {
             entidades: leer_lista(&raiz, CAMPO_ENTIDADES, leer_entidad)?,
             elementos: leer_lista(&raiz, CAMPO_ELEMENTOS, leer_elemento)?,
             asignaciones: leer_lista(&raiz, CAMPO_ASIGNACIONES, leer_asignacion)?,
+            campos: leer_lista(&raiz, CAMPO_CAMPOS, leer_campo)?,
         };
         modelo.validar()?;
         Ok(modelo)
@@ -52,6 +54,7 @@ impl Modelo {
         buscar_repetido(self.elementos.iter().map(|e| e.codigo.as_str()), "elemento")?;
         self.validar_padres()?;
         self.validar_asignaciones()?;
+        self.validar_campos()?;
         self.validar_profundidad()
     }
 
@@ -70,25 +73,33 @@ impl Modelo {
         Ok(())
     }
 
+     //valida que la asignacion nombre una entidad y elemento que existan
     fn validar_asignaciones(&self) -> Result<(), ErrorModelo> {
-        let entidades: HashSet<&str> = self.entidades.iter().map(|e| e.codigo.as_str()).collect();
         let elementos = self.codigos_de_elementos();
-
-        for asignacion in &self.asignaciones {
-            if !entidades.contains(asignacion.entidad.as_str()) {
+        for a in &self.asignaciones {
+            self.validar_entidad(&a.entidad)?;
+            if !elementos.contains(a.elemento.as_str()) {
                 return Err(inconsistente(format!(
-                    "la entidad {} no existe",
-                    asignacion.entidad
-                )));
-            }
-            if !elementos.contains(asignacion.elemento.as_str()) {
-                return Err(inconsistente(format!(
-                    "el elemento {} no existe",
-                    asignacion.elemento
+                    "el elemento '{}' no existe",
+                    a.elemento
                 )));
             }
         }
         Ok(())
+    }
+
+     //todo campo intrinseco debe pertenecer a una entidad que exista
+    fn validar_campos(&self) -> Result<(), ErrorModelo> {
+        self.campos
+            .iter()
+            .try_for_each(|c| self.validar_entidad(&c.entidad))
+    }
+
+    fn validar_entidad(&self, codigo: &str) -> Result<(), ErrorModelo> {
+        if self.entidades.iter().any(|e| e.codigo == codigo) {
+            return Ok(());
+        }
+        Err(inconsistente(format!("la entidad '{codigo}' no existe")))
     }
 
     //se fija q tenga el maximo permitido
@@ -174,6 +185,14 @@ fn leer_asignacion(valor: &JsonValue) -> Result<Asignacion, ErrorModelo> {
     })
 }
 
+fn leer_campo(valor: &JsonValue) -> Result<Campo, ErrorModelo> {
+    Ok(Campo {
+        entidad: texto(valor, CAMPO_ENTIDAD)?,
+        codigo: texto(valor, CAMPO_CODIGO)?,
+        nombre: texto(valor, CAMPO_NOMBRE)?,
+    })
+}
+
 fn texto(valor: &JsonValue, campo: &str) -> Result<String, ErrorModelo> {
     valor[campo]
         .as_str()
@@ -216,6 +235,9 @@ mod tests {
         "asignaciones": [
             { "entidad": "ca_objects", "elemento": "date", "etiqueta": null },
             { "entidad": "ca_objects", "elemento": "ISOdate", "etiqueta": "Fecha ISO" }
+        ],
+        "campos": [
+            { "entidad": "ca_objects", "codigo": "idno", "nombre": "Identificador" }
         ]
     }"#;
 
@@ -247,6 +269,24 @@ mod tests {
             modelo.asignaciones[1].etiqueta.as_deref(),
             Some("Fecha ISO")
         );
+    }
+
+    #[test]
+    fn lee_los_campos_intrinsecos() {
+        let modelo = Modelo::desde_json(MODELO_VALIDO).unwrap();
+        assert_eq!(modelo.campos.len(), 1);
+        assert_eq!(modelo.campos[0].codigo, "idno");
+        assert_eq!(modelo.campos[0].nombre, "Identificador");
+    }
+
+    #[test]
+    fn rechaza_un_campo_de_una_entidad_que_no_existe() {
+        let mal = modelo_con(
+            r#""entidad": "ca_objects", "codigo": "idno""#,
+            r#""entidad": "ca_x", "codigo": "idno""#,
+        );
+        let resultado = Modelo::desde_json(&mal);
+        assert!(matches!(resultado, Err(ErrorModelo::Inconsistente(m)) if m.contains("ca_x")));
     }
 
     #[test]
@@ -345,7 +385,7 @@ mod tests {
             })
             .collect();
         format!(
-            r#"{{ "entidades": [], "elementos": [{}], "asignaciones": [] }}"#,
+            r#"{{ "entidades": [], "elementos": [{}], "asignaciones": [], "campos": [] }}"#,
             elementos.join(",")
         )
     }

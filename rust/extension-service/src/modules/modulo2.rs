@@ -19,28 +19,30 @@ pub fn responder(metodo: &Method, ruta: &str, _cuerpo: &str) -> RespuestaHttp {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::modules::cuerpo_de;
     use crate::constants::{CODIGO_NO_ENCONTRADO, CODIGO_OK};
 
     /// GET /health responde 200 con el estado del módulo 2.
     #[test]
     fn get_health_returns_module_status() {
-        let respuesta = responder(&Method::Get, HEALTH_ROUTE);
-        assert_eq!(respuesta.estado, CODIGO_OK);
-        assert_eq!(respuesta, health_response(MODULO2));
+        let respuesta = responder(&Method::Get, HEALTH_ROUTE, "");
+        assert_eq!(respuesta.status_code().0, CODIGO_OK);
+        assert_eq!(cuerpo_de(respuesta), cuerpo_de(health_response(MODULO2)));
     }
 
     /// /health con otro método (POST) devuelve 404.
     #[test]
     fn health_only_accepts_get() {
-        assert_eq!(responder(&Method::Post, HEALTH_ROUTE).estado, CODIGO_NO_ENCONTRADO);
+        assert_eq!(responder(&Method::Post, HEALTH_ROUTE, "").status_code().0, CODIGO_NO_ENCONTRADO);
     }
 
     /// Una ruta inexistente del módulo devuelve 404 con un JSON de error.
     #[test]
     fn unknown_route_returns_not_found() {
-        let respuesta = responder(&Method::Get, "/inexistente");
-        assert_eq!(respuesta.estado, CODIGO_NO_ENCONTRADO);
-        assert!(respuesta.cuerpo.contains("error"), "{}", respuesta.cuerpo);
+        let respuesta = responder(&Method::Get, "/inexistente", "");
+        assert_eq!(respuesta.status_code().0, CODIGO_NO_ENCONTRADO);
+        let texto = cuerpo_de(respuesta);
+        assert!(texto.contains("error"), "{texto}");
     }
 }
 

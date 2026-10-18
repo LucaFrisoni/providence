@@ -53,7 +53,8 @@ mod tests {
             { "codigo": "date", "nombre": "Fecha", "tipo": 0, "padre": null },
             { "codigo": "ISOdate", "nombre": "Formato ISO", "tipo": 2, "padre": "date" }
         ],
-        "asignaciones": []
+        "asignaciones": [],
+        "campos": []
     }"#;
 
     #[test]

@@ -4,9 +4,9 @@
 use json::JsonValue;
 
 use super::arbol::nodo;
-use super::dominio::Entidad;
+use super::dominio::{Campo, Entidad};
 use super::modelo::Modelo;
-use crate::constants::{CAMPO_CODIGO, CAMPO_ELEMENTOS, CAMPO_ENTIDADES, CAMPO_NOMBRE};
+use crate::constants::{CAMPO_CODIGO, CAMPO_ELEMENTOS, CAMPO_ENTIDADES, CAMPO_NOMBRE, CAMPO_CAMPOS};
 
 ///todas las entidades del modelo
 pub fn vista_de_entidades(modelo: &Modelo) -> JsonValue {
@@ -32,14 +32,30 @@ fn vista_de_entidad(entidad: &Entidad, modelo: &Modelo) -> JsonValue {
     let mut vista = JsonValue::new_object();
     vista[CAMPO_CODIGO] = entidad.codigo.as_str().into();
     vista[CAMPO_NOMBRE] = entidad.nombre.as_str().into();
+    vista[CAMPO_CAMPOS] = campos_de(&entidad.codigo, &modelo.campos);
     vista[CAMPO_ELEMENTOS] = JsonValue::Array(elementos);
     vista
+}
+
+//campos intrinsecos de una entidad [{"codigo":..., "nombre":...}]
+fn campos_de(entidad: &str, campos: &[Campo]) -> JsonValue {
+    let lista: Vec<JsonValue> = campos
+        .iter()
+        .filter(|c| c.entidad == entidad)
+        .map(|c| {
+            let mut campo = JsonValue::new_object();
+            campo[CAMPO_CODIGO] = c.codigo.as_str().into();
+            campo[CAMPO_NOMBRE] = c.nombre.as_str().into();
+            campo
+        })
+        .collect();
+    JsonValue::Array(lista)
 }
 
 #[cfg(test)]
 mod tests {
     use super::super::dominio::TipoDato;
-    use super::super::pruebas::{asignacion, elemento, entidad, modelo};
+    use super::super::pruebas::{asignacion, elemento, entidad, modelo, campo};
     use super::*;
 
     #[test]
@@ -54,7 +70,7 @@ mod tests {
         let vista = vista_de_entidades(&modelo);
         assert_eq!(
             vista.dump(),
-            r#"{"entidades":[{"codigo":"ca_objects","nombre":"Objetos","elementos":[]}]}"#
+            r#"{"entidades":[{"codigo":"ca_objects","nombre":"Objetos","campos":[],"elementos":[]}]}"#
         );
     }
 
@@ -124,5 +140,26 @@ mod tests {
         let vista = vista_de_entidades(&modelo);
         assert_eq!(vista[CAMPO_ENTIDADES][0][CAMPO_ELEMENTOS].len(), 1);
         assert_eq!(vista[CAMPO_ENTIDADES][1][CAMPO_ELEMENTOS].len(), 1);
+    }
+
+    #[test]
+    fn cada_entidad_muestra_sus_campos_intrinsecos() {
+        let mut modelo = modelo(
+            vec![
+                entidad("ca_objects", "Objetos"),
+                entidad("ca_places", "Lugares"),
+            ],
+            vec![],
+            vec![],
+        );
+        modelo.campos = vec![
+            campo("ca_objects", "idno", "Identificador"),
+            campo("ca_places", "hierarchy_id", "Jerarquía"),
+        ];
+        let vista = vista_de_entidades(&modelo);
+        let objetos = &vista[CAMPO_ENTIDADES][0][CAMPO_CAMPOS];
+        assert_eq!(objetos.len(), 1);
+        assert_eq!(objetos[0][CAMPO_CODIGO], "idno");
+        assert_eq!(objetos[0][CAMPO_NOMBRE], "Identificador");
     }
 }
