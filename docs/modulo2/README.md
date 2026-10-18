@@ -65,7 +65,8 @@ cambios de Providence (`ca_change_log`).
 
 - Preferencias de cada usuario (menú Preferences).
 - Perfiles XML de instalación (`install/profiles/xml/`) y comandos de `caUtils`: `export-profile`,
-  `update-installation-profile` (solo agrega elementos, nunca borra), `push-config-changes`,
+  `update-installation-profile` (aplica un perfil sobre una instalación existente: crea, actualiza
+  y borra los elementos marcados con `deleted`), `push-config-changes`,
   `do-configuration-check`, `clear-caches`.
 - Traducciones de la interfaz: `app/locale/<idioma>/messages.po`.
 
@@ -76,7 +77,8 @@ cambios de Providence (`ca_change_log`).
   de `app/conf/` nunca se modifican.
 - **Consulta:** la configuración guardada en base. El módulo muestra su estado y ofrece un enlace al
   editor nativo, sin duplicarlo.
-- **Versionado, registro y permisos** de todo lo que se edita desde el módulo.
+- **Versionado, registro y permisos** de toda la configuración: la que se edita desde el módulo y
+  la que se edita con los editores nativos de Providence.
 
 Se eligió una sección central, en lugar de agregar controles en cada pantalla de Providence, por
 dos razones:
@@ -156,18 +158,35 @@ riesgo y efectos secundarios (por ejemplo, si requiere limpiar la caché o reind
 6. Volver a leer el valor efectivo para confirmar que Providence aplicó el cambio.
 7. Registrar quién hizo el cambio, cuándo, qué se modificó, sobre qué versión y con qué resultado.
 
-**Versiones:**
+**Versiones:** cubren toda la configuración, sin importar desde dónde se editó.
 
-- Cada versión contiene los archivos de `app/conf/local/` administrados por el módulo, junto con
-  sus metadatos: nombre, autor, fecha, descripción, hash del contenido y versión anterior. El nombre
-  se completa automáticamente con fecha, hora y usuario (por ejemplo, `2026-10-17 14:32 – usuario`)
-  y se puede editar.
-- **Restaurar** reemplaza esos archivos por los de la versión elegida. Antes se guarda el estado
-  actual y se verifica que la configuración no haya cambiado desde que se cargó la pantalla. Si
-  cambió, se informa el conflicto y no se aplica nada.
-- La configuración en base solo se guarda como instantánea XML para consulta y comparación. No se
-  restaura, porque Providence no permite volver atrás de forma completa:
-  `update-installation-profile` agrega elementos, pero no borra ni revierte.
+- Cada versión contiene:
+  - **Archivos:** todo `app/conf/local/`.
+  - **Base:** un perfil XML generado con el exportador nativo (`ConfigurationExporter`): idiomas,
+    listas, elementos de metadatos, interfaces de edición, tipos de relación, roles, grupos,
+    displays, formularios de búsqueda y diccionario de datos. Se excluyen los usuarios.
+  - **Metadatos:** nombre, autor, fecha, descripción, hash del contenido y versión anterior. El
+    nombre se completa automáticamente con fecha, hora y usuario (por ejemplo,
+    `2026-10-17 14:32 – usuario`) y se puede editar.
+- Las versiones se guardan en la [base de la extensión](../../README.md#base-de-datos-de-la-extensión).
+- **Restaurar** una versión:
+  1. Se guarda una versión automática del estado actual, para poder deshacer la restauración.
+  2. Se verifica que la configuración no haya cambiado desde que se cargó la pantalla. Si cambió,
+     se informa el conflicto y no se aplica nada.
+  3. **Archivos:** se reemplaza `app/conf/local/` por el de la versión elegida.
+  4. **Base:** se compara la versión elegida con el estado actual y se arma un perfil con lo que hay
+     que crear, actualizar y borrar (los elementos que hoy existen y en la versión no se marcan con
+     `deleted`). Ese perfil se aplica con el instalador nativo de Providence en modo actualización,
+     el mismo que usa `caUtils update-installation-profile` ([install/inc/Installer.php](../../install/inc/Installer.php)).
+  5. Se vuelve a exportar la configuración y se compara con la versión elegida para confirmar que
+     se aplicó.
+- **Riesgo de pérdida de datos:** borrar un elemento de metadatos, un ítem de lista o un tipo que
+  ya se usa en registros afecta datos catalogados. Antes de restaurar se muestra qué se va a borrar
+  y cuántos registros lo usan. Si alguno está en uso, la restauración se bloquea o requiere el
+  permiso de configuraciones críticas.
+- **Pendiente de verificar con una prueba de concepto:** que el instalador en modo actualización
+  revierta todas las propiedades (opciones, ubicaciones en pantallas, restricciones por tipo) y no
+  solo las etiquetas y los valores principales.
 
 **Permisos:** acciones de rol propias del módulo, asignables desde Administrate → Access → Roles.
 Todas las validaciones y controles de autorización se hacen en el servidor.
@@ -181,24 +200,28 @@ sobreviven a las reconstrucciones de la imagen. Ver [docker/README.md](../../doc
 
 Convenciones: `[x]` hecho, `[ ]` pendiente. Los números `#N` refieren al catálogo de configuraciones.
 
-### Decisiones pendientes
+### Decisiones
 
-| ID  | Decisión                                                | Opciones                                                                                                                                                                                                             | Propuesta                                                       | Quién decide          | Estado                   |
-| --- | ------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------- | --------------------- | ------------------------ |
-| D1  | Reparto de responsabilidades entre PHP y Rust           | a) PHP lee, escribe y verifica; Rust valida contra el catálogo, genera el `.conf`, calcula diferencias y guarda versiones. b) Todo en PHP y Rust solo para versionado. c) Otra                                       | a)                                                              | Cátedra               | Pendiente                |
-| D2  | Dónde se guardan las versiones y el registro de cambios | a) Tablas propias (`ext_m2_*`) en la base MySQL de Providence. b) Almacenamiento propio del servicio Rust (volumen con SQLite o archivos)                                                                            | a): un único backup y una sola fuente de datos                  | Equipo                | Pendiente                |
-| D3  | Alcance de la restauración de la configuración en base  | a) Solo instantánea XML y comparación. b) Restauración parcial con `update-installation-profile` (solo agrega, no borra)                                                                                             | a)                                                              | Equipo / cátedra      | Pendiente                |
-| D4  | Propiedad de los archivos de `app/conf/local/`          | a) El módulo genera completos los archivos que administra; una edición manual se detecta por hash y se informa como conflicto. b) Combinar con ediciones manuales (requiere interpretar el formato `.conf` completo) | a)                                                              | Equipo                | Pendiente                |
-| D5  | Granularidad de permisos                                | a) Cuatro acciones: ver, editar, editar críticas, restaurar versiones. b) Una sola acción (la actual `can_use_modulo2`)                                                                                              | a)                                                              | Equipo                | Pendiente                |
-| D6  | Configuraciones que se implementan                      | Confirmar con la institución qué ítems de prioridad 1 y 2 responden a necesidades reales                                                                                                                             | Empezar por #1 a #4                                             | Institución / cátedra | Pendiente                |
-| D7  | Persistencia de `app/conf/local` en Docker              | a) Volumen con nombre. b) Carpeta del repositorio montada en el contenedor                                                                                                                                           | a), porque la configuración local es propia de cada instalación | Equipo                | **Hecho** (`conf_local`) |
+| ID  | Decisión                                                | Opciones                                                                                                                                                                                                             | Propuesta                                      | Quién decide          | Estado                                                                  |
+| --- | ------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------- | --------------------- | ----------------------------------------------------------------------- |
+| D1  | Reparto de responsabilidades entre PHP y Rust           | a) PHP lee, escribe y verifica; Rust valida contra el catálogo, genera el `.conf`, calcula diferencias y guarda versiones. b) Todo en PHP y Rust solo para versionado. c) Otra                                       | a)                                             | Cátedra               | Opciona a aprobada                                                      |
+| D2  | Dónde se guardan las versiones y el registro de cambios | a) Tablas propias en la base de Providence. b) Base MySQL propia de la extensión (`ca_extension`), en el mismo servidor, de la que el servicio Rust es el único dueño | b) | Equipo | Opción b aprobada (ver [Base de datos de la extensión](../../README.md#base-de-datos-de-la-extensión)) |
+| D3  | Alcance del versionado y la restauración | a) Versionar solo los archivos; la base, solo como foto para comparar. b) Versionar y restaurar toda la configuración (archivos y base), restaurando la base con el instalador nativo en modo actualización | b), con control de borrados en uso | Equipo | Opción b aprobada, sujeta a la prueba de concepto de la Fase 3 |
+| D4  | Propiedad de los archivos de `app/conf/local/`          | a) El módulo genera completos los archivos que administra; una edición manual se detecta por hash y se informa como conflicto. b) Combinar con ediciones manuales (requiere interpretar el formato `.conf` completo) | a)                                             | Equipo                | Opcion a aprobada                                                       |
+| D5  | Granularidad de permisos                                | a) Cuatro acciones: ver, editar, editar críticas, restaurar versiones. b) Una sola acción (la actual `can_use_modulo2`)                                                                                              | a)                                             | Equipo                | Opcion de tener varios tipos de permisos(falta definir cuales) aprobada |
+| D6  | Configuraciones que se implementan                      | Confirmar con la institución qué ítems de prioridad 1 y 2 responden a necesidades reales                                                                                                                             | Empezar por #1 a #4                            | Institución / cátedra | Aprobado                                                                |
 
 ### Fase 0: infraestructura
 
 - [x] Plugin base, menú y permiso `can_use_modulo2`
 - [x] Conexión con el servicio Rust (`/api/modulo2/health`)
 - [x] Volumen `conf_local` para `app/conf/local`
-- [ ] Resolver D1, D2, D4 y D5 (bloquean las fases 1 a 3)
+- [x] Base propia de la extensión (`ca_extension`) creada en Docker
+- [x] Conexión del servicio Rust a la base de la extensión
+- [x] Estructura de pruebas (Rust y PHP) y pruebas de aislamiento entre las bases
+- [ ] Migraciones de las tablas del módulo 2 en la base de la extensión
+- [x] Resolver D1, D2, D3, D4 y D6
+- [ ] Definir qué permisos tiene el módulo (D5)
 
 ### Fase 1: catálogo y consulta (solo lectura)
 
@@ -223,7 +246,9 @@ Convenciones: `[x]` hecho, `[ ]` pendiente. Los números `#N` refieren al catál
 - [ ] Versión automática antes de cada cambio y de cada restauración
 - [ ] Lista de versiones y comparación entre dos versiones
 - [ ] Restauración con detección de conflictos (por hash)
-- [ ] Instantánea XML de la configuración en base asociada a cada versión (D3)
+- [ ] Prueba de concepto: restaurar la configuración en base con el instalador en modo actualización (D3)
+- [ ] Exportación XML de la configuración en base en cada versión (sin usuarios)
+- [ ] Restauración de la configuración en base con aviso y bloqueo de borrados en uso
 - [ ] Pruebas: crear, comparar, restaurar y resolver conflictos
 
 ### Fase 4: configuraciones de prioridad 1

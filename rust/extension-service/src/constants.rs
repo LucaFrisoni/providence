@@ -6,6 +6,16 @@ pub const ADDR_ENV_VAR: &str = "EXTENSION_SERVICE_ADDR";
 /// Dirección por defecto: solo localhost.
 pub const DEFAULT_ADDR: &str = "127.0.0.1:8000";
 
+/// Variables de entorno con la conexión a la base propia de la extensión (ver compose.yaml).
+pub const DB_HOST_ENV_VAR: &str = "EXT_DB_HOST";
+pub const DB_PORT_ENV_VAR: &str = "EXT_DB_PORT";
+pub const DB_NAME_ENV_VAR: &str = "EXT_DB_DATABASE";
+pub const DB_USER_ENV_VAR: &str = "EXT_DB_USER";
+pub const DB_PASSWORD_ENV_VAR: &str = "EXT_DB_PASSWORD";
+
+/// Puerto de MySQL si no se define `EXT_DB_PORT`.
+pub const DEFAULT_DB_PORT: u16 = 3306;
+
 /// Nombre y versión del servicio, tomados de Cargo.toml.
 pub const SERVICE_NAME: &str = env!("CARGO_PKG_NAME");
 pub const SERVICE_VERSION: &str = env!("CARGO_PKG_VERSION");

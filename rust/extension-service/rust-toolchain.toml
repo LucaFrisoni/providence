@@ -1,0 +1,5 @@
+# Versión de Rust del proyecto: la usan cargo local, los scripts de prueba y el CI.
+# Debe coincidir con la imagen del Dockerfile (rust:1.98). rustup la instala sola la primera vez
+[toolchain]
+channel = "1.98"
+components = ["clippy"]

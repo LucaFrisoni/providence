@@ -9,6 +9,7 @@ require_once(__DIR__.'/Modulo2Constants.php');
 
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\GuzzleException;
+use GuzzleHttp\HandlerStack;
 
 class Modulo2ServiceException extends Exception {}
 
@@ -21,11 +22,16 @@ class Modulo2ServiceClient {
 	# -------------------------------------------------------
 	private $client;
 	# -------------------------------------------------------
-	public function __construct(string $base_url, float $timeout) {
+	/**
+	 * @param HandlerStack|null $handler Manejador HTTP de Guzzle. Solo lo pasan las pruebas unitarias,
+	 *                                   para simular respuestas sin el servicio; null usa la red
+	 */
+	public function __construct(string $base_url, float $timeout, ?HandlerStack $handler = null) {
 		$this->client = new Client([
 			'base_uri' => rtrim($base_url, '/').'/',
 			'timeout' => $timeout,
-			'connect_timeout' => $timeout
+			'connect_timeout' => $timeout,
+			'handler' => $handler
 		]);
 	}
 	# -------------------------------------------------------
