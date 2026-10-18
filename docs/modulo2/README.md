@@ -217,7 +217,9 @@ Convenciones: `[x]` hecho, `[ ]` pendiente. Los números `#N` refieren al catál
 - [x] Conexión con el servicio Rust (`/api/modulo2/health`)
 - [x] Volumen `conf_local` para `app/conf/local`
 - [x] Base propia de la extensión (`ca_extension`) creada en Docker
-- [ ] Conexión del servicio Rust a la base de la extensión y migraciones de las tablas del módulo 2
+- [x] Conexión del servicio Rust a la base de la extensión
+- [x] Estructura de pruebas (Rust y PHP) y pruebas de aislamiento entre las bases
+- [ ] Migraciones de las tablas del módulo 2 en la base de la extensión
 - [x] Resolver D1, D2, D3, D4 y D6
 - [ ] Definir qué permisos tiene el módulo (D5)
 

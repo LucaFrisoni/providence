@@ -32,3 +32,4 @@ app/tmp/purifier/*
 rust
 compose.yaml
 docs
+tests/extension

@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Pruebas PHP de la extensión. Se ejecutan con tests/extension/test-php.sh (ver docker/README.md, "Pruebas").
+  Los comodines incluyen las carpetas tests/unit y tests/integration de todos los módulos, así un
+  módulo nuevo no necesita modificar este archivo.
+-->
+<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:noNamespaceSchemaLocation="../../../vendor/phpunit/phpunit/phpunit.xsd"
+         bootstrap="bootstrap.php"
+         cacheDirectory="/tmp/phpunit-extension"
+         colors="true"
+         failOnWarning="true">
+  <testsuites>
+    <!-- Sin servicios externos: no usan la base ni el servicio Rust -->
+    <testsuite name="unit">
+      <directory>../*/tests/unit</directory>
+    </testsuite>
+    <!-- Contra el entorno Docker: base de datos y servicio Rust reales -->
+    <testsuite name="integration">
+      <directory>integration</directory>
+      <directory>../*/tests/integration</directory>
+    </testsuite>
+  </testsuites>
+</phpunit>
