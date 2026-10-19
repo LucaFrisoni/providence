@@ -11,9 +11,8 @@ CREATE TABLE m2_versions (
     created_by_user_name VARCHAR(255) NOT NULL,
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (version_id),
-    KEY idx_m2_versions_created_at (created_at),
     CONSTRAINT fk_m2_versions_parent FOREIGN KEY (parent_version_id) REFERENCES m2_versions (version_id)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- Contenido de cada archivo de una versión
 CREATE TABLE m2_version_files (
@@ -22,7 +21,7 @@ CREATE TABLE m2_version_files (
     content MEDIUMTEXT NOT NULL,
     PRIMARY KEY (version_id, file_name),
     CONSTRAINT fk_m2_version_files_version FOREIGN KEY (version_id) REFERENCES m2_versions (version_id) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- Registro de cambios: qué se cambió, quién, cuándo, sobre qué versión y con qué resultado
 CREATE TABLE m2_change_log (
@@ -40,8 +39,6 @@ CREATE TABLE m2_change_log (
     result ENUM('applied', 'rejected', 'failed', 'conflict') NOT NULL,
     message TEXT NULL COMMENT 'Motivo del rechazo o detalle del error',
     PRIMARY KEY (change_id),
-    KEY idx_m2_change_log_changed_at (changed_at),
-    KEY idx_m2_change_log_config_key (config_key),
     CONSTRAINT fk_m2_change_log_before FOREIGN KEY (version_before_id) REFERENCES m2_versions (version_id),
     CONSTRAINT fk_m2_change_log_after FOREIGN KEY (version_after_id) REFERENCES m2_versions (version_id)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;

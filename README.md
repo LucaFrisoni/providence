@@ -90,8 +90,12 @@ obligatorio) están en [docker/README.md](docker/README.md). En resumen:
 
 ```sh
 cp .env.example .env      # completar las credenciales
-docker compose up --build
+docker compose up -d --build
 ```
+
+Con `-d` los contenedores quedan corriendo en segundo plano aunque se cierre la terminal. Sin `-d`,
+cerrar la terminal o presionar Ctrl+C los detiene. Los logs se ven con `docker compose logs -f` y el
+entorno se apaga con `docker compose down` (ver [docker/README.md](docker/README.md#2-levantar)).
 
 Esto levanta tres contenedores:
 

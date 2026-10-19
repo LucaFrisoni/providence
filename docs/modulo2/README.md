@@ -176,6 +176,18 @@ resalta las configuraciones cuyo valor efectivo es distinto del valor por defect
       búsqueda y diccionario de datos), hecha con el exportador de Providence. Sin los usuarios.
     - **Datos de la versión:** nombre, autor, fecha y descripción. El nombre se completa solo con
       fecha, hora y usuario (por ejemplo, `2026-10-17 14:32 – usuario`) y se puede editar.
+- **Sin versiones repetidas:** cada versión guarda un hash (SHA-256) de su contenido, y la base no
+  admite dos versiones con el mismo hash.
+    - **Escritura canónica:** el módulo escribe siempre las claves en el mismo orden (alfabético),
+      así el mismo estado da el mismo texto aunque las configuraciones se hayan editado en otro
+      orden. El hash se calcula sobre todos los archivos ordenados por nombre.
+    - **Búsqueda por índice:** para saber si el estado actual ya existe se busca su hash en el índice
+      de `m2_versions`, sin recorrer las versiones. El costo no crece con la cantidad de versiones.
+    - **Si ya existe:** no se crea otra. Al crear una versión a mano se avisa cuál es la idéntica
+      (por ejemplo, "Ya existe: versión #9"); antes de un cambio se usa esa versión como estado
+      anterior.
+    - **Ediciones a mano:** un cambio solo de comentarios o espacios en un `.conf` cambia el hash y
+      genera una versión nueva, porque el archivo cambió.
 - **Restaurar** una versión:
     1. Se guarda una versión automática del estado actual, para poder deshacer la restauración.
     2. Se verifica que nadie haya cambiado la configuración desde que se abrió la pantalla. Si
@@ -296,7 +308,7 @@ Convenciones: `[x]` hecho, `[ ]` pendiente. Los números `#N` refieren al
 - [x] Base propia de la extensión (`ca_extension`) creada en Docker
 - [x] Conexión del servicio Rust a la base de la extensión
 - [x] Estructura de pruebas (Rust y PHP) y pruebas de aislamiento entre las bases
-- [x] Migraciones de la base de la extensión y tablas del módulo 2 (`creando_tablas_modulo2`)
+- [x] Migraciones de la base de la extensión y tablas del módulo 2 (`creando_tablas_modulo2` y `creando_indices_modulo2`)
 
 ### Fase 1: creación del catálogo y lectura
 
@@ -325,6 +337,8 @@ Convenciones: `[x]` hecho, `[ ]` pendiente. Los números `#N` refieren al
 - [ ] Prueba de concepto: restaurar la configuración en base con el instalador en modo actualización
 - [ ] Exportación XML de la configuración en base en cada versión (sin usuarios)
 - [ ] Restauración de la configuración en base con aviso y bloqueo de borrados en uso
+- [ ] Escritura canónica de los `.conf` (claves en orden alfabético) y hash de la versión completa
+- [ ] No crear versiones repetidas: buscar el hash en el índice y avisar cuál es la versión idéntica
 - [ ] Pruebas: crear, comparar, restaurar y resolver conflictos
 
 ### Fase 4: configuraciones de prioridad 1

@@ -41,7 +41,7 @@ run_sql() {
 
 # ALTER USER mantiene la contraseña sincronizada con .env si se cambia después de crear el usuario
 create_database_and_user() {
-    run_sql "CREATE DATABASE IF NOT EXISTS \`$EXT_DB_DATABASE\` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+    run_sql "CREATE DATABASE IF NOT EXISTS \`$EXT_DB_DATABASE\` CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
         CREATE USER IF NOT EXISTS '$EXT_DB_USER'@'%' IDENTIFIED BY '$EXT_DB_PASSWORD';
         ALTER USER '$EXT_DB_USER'@'%' IDENTIFIED BY '$EXT_DB_PASSWORD';
         GRANT ALL PRIVILEGES ON \`$EXT_DB_DATABASE\`.* TO '$EXT_DB_USER'@'%';"

@@ -26,12 +26,20 @@ pub struct Migration {
 }
 
 /// Todas las migraciones, agrupadas por módulo y en orden de versión.
-pub const MIGRATIONS: &[Migration] = &[Migration {
-    module: MODULO2,
-    version: 1,
-    name: "creando_tablas_modulo2",
-    sql: include_str!("migrations/modulo2/0001_creando_tablas_modulo2.sql"),
-}];
+pub const MIGRATIONS: &[Migration] = &[
+    Migration {
+        module: MODULO2,
+        version: 1,
+        name: "creando_tablas_modulo2",
+        sql: include_str!("migrations/modulo2/0001_creando_tablas_modulo2.sql"),
+    },
+    Migration {
+        module: MODULO2,
+        version: 2,
+        name: "creando_indices_modulo2",
+        sql: include_str!("migrations/modulo2/0002_creando_indices_modulo2.sql"),
+    },
+];
 
 /// Error al aplicar las migraciones.
 #[derive(Debug)]
@@ -109,7 +117,7 @@ fn ensure_registry(conn: &mut impl Queryable) -> Result<(), mysql::Error> {
             checksum CHAR(16) NOT NULL,
             applied_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
             PRIMARY KEY (module, version)
-        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci"
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci"
     ))
 }
 
