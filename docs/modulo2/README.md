@@ -95,25 +95,25 @@ cambios de Providence (`ca_change_log`).
 | **Tipo de dato**  | Lo que se crea desde el menú "Nuevo". En Providence es una tabla                                                                   | Objetos (`ca_objects`), lugares (`ca_places`), préstamos (`ca_loans`)      |
 | **Subtipo**       | Clasificación dentro de un tipo de dato, definida en las listas de Providence (Providence los llama _types_)                       | Un objeto puede ser "obra de arte" (`artwork`) o "libro" (`book`)          |
 | **Configuración** | Una opción con el mismo significado para varios tipos de dato. Su clave en Providence es `<tipo de dato>_<id de la configuración>` | `disable_delete` aplicada a lugares es la clave `ca_places_disable_delete` |
-| **Sección**       | Grupo de configuraciones relacionadas que el panel muestra juntas (#1 a #4 de la tabla de abajo)                                   | "Menú Nuevo"                                                               |
+| **Sección**       | Grupo de configuraciones relacionadas que el panel muestra juntas                                                                  | "Menú Nuevo"                                                               |
 
 En las claves de las tablas de abajo, `*` reemplaza el tipo de dato.
 
 **Prioridad 1: configuraciones candidatas del módulo**
 
-| #   | Configuración                              | Mecanismo / claves                                                                                                                                                                | Objetivo                                                                   |
-| --- | ------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------- |
-| 1   | Activar o desactivar tipos de dato         | `*_disable`                                                                                                                                                                       | Ocultar los módulos que la institución no usa (lugares, préstamos, tours…) |
+| #   | Configuración                                   | Mecanismo / claves                                                                                                                                                                | Objetivo                                                                   |
+| --- | ----------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------- |
+| 1   | Activar o desactivar tipos de dato              | `*_disable`                                                                                                                                                                       | Ocultar los módulos que la institución no usa (lugares, préstamos, tours…) |
 | 2   | Activar o desactivar funciones por tipo de dato | `*_disable_quickadd`, `*_disable_delete`, `*_disable_duplication_of_items`, `*_disable_browse`, `*_disable_basic_search`, `*_disable_advanced_search`, `*_disable_search_builder` | Simplificar la interfaz según el uso institucional                         |
-| 3   | Menú "Nuevo"                               | `*_dont_show_in_new_menu`, `*_navigation_new_menu_limit_types_to`, `*_navigation_new_menu_exclude_types`, `*_navigation_new_menu_shows_top_level_types_only`                      | Controlar qué registros y tipos se pueden crear desde el menú              |
-| 4   | Menú "Buscar"                              | `*_dont_show_in_find_menu`, `*_breakout_find_by_type_in_menu`, `*_breakout_find_by_type_in_submenu`, `*_navigation_find_menu_limit_types_to`                                      | Organizar la navegación de búsqueda                                        |
-| 5   | Orden de tipos de dato, listas y sublistas | Orden de los menús por configuración; el orden de los elementos de una lista se edita con el editor nativo (enlace)                                                               | Ordenar lo que se muestra                                                  |
-| 6   | Automatización de identificadores          | `multipart_id_numbering.conf` (formatos por tabla y tipo: `CONSTANT`, `YEAR`, `SERIAL`, `LIST`, etc.)                                                                             | Armar formatos de identificador visualmente, con vista previa              |
-| 7   | Reglas de identificadores                  | `require_valid_id_number_for_*`, `allow_duplicate_id_number_for_*`                                                                                                                | Calidad de datos                                                           |
-| 8   | Textos y traducciones                      | `translations.conf` (`strings`, `replacements`, por idioma)                                                                                                                       | Adaptar la terminología institucional sin editar los `.po`                 |
-| 9   | Presentación del inspector                 | `*_inspector_display_flags`, `*_show_related_counts_in_inspector_for`, `*_inspector_display_idno_sequence_navigation`                                                             | Elegir qué información muestra la ficha                                    |
-| 10  | Presentación de resultados                 | `*_results_thumbnail_caption_template`, `*_include_result_sorts`, `quicksearch_default_results`, `quicksearch_breakout_by_type`                                                   | Mejorar la búsqueda y la navegación                                        |
-| 11  | Identidad visual                           | `menu_color`, `footer_color`, `branding`, `report_*`                                                                                                                              | Aplicar la identidad de la institución                                     |
+| 3   | Menú "Nuevo"                                    | `*_dont_show_in_new_menu`, `*_navigation_new_menu_limit_types_to`, `*_navigation_new_menu_exclude_types`, `*_navigation_new_menu_shows_top_level_types_only`                      | Controlar qué registros y tipos se pueden crear desde el menú              |
+| 4   | Menú "Buscar"                                   | `*_dont_show_in_find_menu`, `*_breakout_find_by_type_in_menu`, `*_breakout_find_by_type_in_submenu`, `*_navigation_find_menu_limit_types_to`                                      | Organizar la navegación de búsqueda                                        |
+| 5   | Orden de tipos de dato, listas y sublistas      | Orden de los menús por configuración; el orden de los elementos de una lista se edita con el editor nativo (enlace)                                                               | Ordenar lo que se muestra                                                  |
+| 6   | Automatización de identificadores               | `multipart_id_numbering.conf` (formatos por tabla y tipo: `CONSTANT`, `YEAR`, `SERIAL`, `LIST`, etc.)                                                                             | Armar formatos de identificador visualmente, con vista previa              |
+| 7   | Reglas de identificadores                       | `require_valid_id_number_for_*`, `allow_duplicate_id_number_for_*`                                                                                                                | Calidad de datos                                                           |
+| 8   | Textos y traducciones                           | `translations.conf` (`strings`, `replacements`, por idioma)                                                                                                                       | Adaptar la terminología institucional sin editar los `.po`                 |
+| 9   | Presentación del inspector                      | `*_inspector_display_flags`, `*_show_related_counts_in_inspector_for`, `*_inspector_display_idno_sequence_navigation`                                                             | Elegir qué información muestra la ficha                                    |
+| 10  | Presentación de resultados                      | `*_results_thumbnail_caption_template`, `*_include_result_sorts`, `quicksearch_default_results`, `quicksearch_breakout_by_type`                                                   | Mejorar la búsqueda y la navegación                                        |
+| 11  | Identidad visual                                | `menu_color`, `footer_color`, `branding`, `report_*`                                                                                                                              | Aplicar la identidad de la institución                                     |
 
 **Prioridad 2: mejoras de uso**
 
@@ -131,7 +131,7 @@ En las claves de las tablas de abajo, `*` reemplaza el tipo de dato.
 | 21  | Panel de configuración en base                        | Consulta de listas, elementos, interfaces, relaciones, idiomas y displays, con enlace al editor nativo                                           | Ver todo el estado desde un único lugar            |
 | 22  | Instantánea y comparación de la configuración en base | `ConfigurationExporter` (perfil XML)                                                                                                             | Ver qué cambió entre versiones                     |
 
-**Prioridad 3: configuraciones críticas (solo administradores, fases posteriores)**
+**Prioridad 3: configuraciones críticas**
 
 | #   | Configuración           | Claves                                                         | Riesgo                                      |
 | --- | ----------------------- | -------------------------------------------------------------- | ------------------------------------------- |
@@ -195,10 +195,10 @@ tablas en la [base de la extensión](../../README.md#base-de-datos-de-la-extensi
 configuraciones en sí no se guardan ahí (están en los `.conf` de Providence), ni el catálogo (que es
 código):
 
-| Tabla              | Qué guarda |
-| ------------------ | ---------- |
-| `m2_versions`      | Cada versión: nombre, descripción, si se creó sola antes de un cambio, versión anterior, usuario y fecha |
-| `m2_version_files` | El contenido de cada archivo de `app/conf/local/` en esa versión |
+| Tabla              | Qué guarda                                                                                                                                            |
+| ------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `m2_versions`      | Cada versión: nombre, descripción, si se creó sola antes de un cambio, versión anterior, usuario y fecha                                              |
+| `m2_version_files` | El contenido de cada archivo de `app/conf/local/` en esa versión                                                                                      |
 | `m2_change_log`    | Cada cambio: usuario, fecha, acción (editar o restaurar), configuración, valor anterior y nuevo, y resultado (aplicado, rechazado, falló o conflicto) |
 
 Los usuarios son los de Providence, que están en otra base: se guarda su id y su nombre.
@@ -210,13 +210,13 @@ Todas las validaciones y controles de permisos se hacen en el servidor, no solo 
 
 El desarrollo se organizó en fases, de lo más simple y seguro a lo más complejo:
 
-| Fase | Qué se hace |
-| ---- | ----------- |
-| 0. Infraestructura | Plugin, servicio Rust, base de la extensión y pruebas |
-| 1. Creación del catálogo y lectura | Definir el catálogo y mostrar los valores actuales, sin modificar nada |
-| 2. Edición del catálogo | Modificar configuraciones del catálogo, con validación y registro de cambios |
-| 3. Versionado | Crear versiones, compararlas y restaurarlas |
-| 4 a 6. Ampliar el catálogo | Sumar configuraciones de prioridad 1, 2 y 3 |
+| Fase                                 | Qué se hace                                                                  |
+| ------------------------------------ | ---------------------------------------------------------------------------- |
+| 0. Infraestructura                   | Plugin, servicio Rust, base de la extensión y pruebas                        |
+| 1. Creación del catálogo y lectura   | Definir el catálogo y mostrar los valores actuales, sin modificar nada       |
+| 2. Edición del catálogo              | Modificar configuraciones del catálogo, con validación y registro de cambios |
+| 3. Versionado                        | Crear versiones, compararlas y restaurarlas                                  |
+| 4 a 6. Configuraciones por prioridad | Testeo completo del catalogo por pioridad y documentacion final              |
 
 Al final de este documento hay una lista de tareas por fase, que se va marcando a medida que se
 avanza.
@@ -259,15 +259,24 @@ Pantalla de Configuraciones ── pide el catálogo ──►  catálogo (model
 
 ```json
 {
-  "file": "app.conf",
-  "sections": [{
-    "id": "features", "name": "Funciones por tipo de dato", "description": "...",
-    "settings": [{
-      "id": "disable_delete", "label": "Sin borrado", "description": "...",
-      "kind": "boolean", "risk": "low",
-      "entries": [{ "data_type": "ca_objects", "key": "ca_objects_disable_delete" }]
-    }]
-  }]
+    "file": "app.conf",
+    "sections": [
+        {
+            "id": "features",
+            "name": "Funciones por tipo de dato",
+            "description": "...",
+            "settings": [
+                {
+                    "id": "disable_delete",
+                    "label": "Sin borrado",
+                    "description": "...",
+                    "kind": "boolean",
+                    "risk": "low",
+                    "entries": [{ "data_type": "ca_objects", "key": "ca_objects_disable_delete" }]
+                }
+            ]
+        }
+    ]
 }
 ```
 
@@ -320,8 +329,7 @@ Convenciones: `[x]` hecho, `[ ]` pendiente. Los números `#N` refieren al
 
 ### Fase 4: configuraciones de prioridad 1
 
-Cada configuración se cierra cuando tiene: entrada en el catálogo, validación, interfaz, prueba de
-aplicar y verificar, prueba de restaurar y documentación.
+Cada configuración se cierra cuando tiene: entrada en el catálogo, validación, interfaz, set completo de pruebas unitarias y de integracion, y documentación.
 
 - [ ] #1 Activar o desactivar tipos de dato
 - [ ] #2 Activar o desactivar funciones por tipo de dato
@@ -346,7 +354,7 @@ aplicar y verificar, prueba de restaurar y documentación.
 - [ ] #18 Editor de texto enriquecido
 - [ ] #19 Solo lectura condicional
 - [ ] #20 Preferencias por defecto
-- [ ] #21 Panel de configuración en base
+- [ ] #21 Panel de configuración de las que ya se encuentran en Providence
 - [ ] #22 Instantánea y comparación de la configuración en base
 
 ### Fase 6: configuraciones críticas
