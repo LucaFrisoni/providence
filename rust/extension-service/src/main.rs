@@ -7,6 +7,7 @@
 
 mod constants;
 mod db;
+mod models;
 mod modules;
 mod routes;
 mod respuesta; 
@@ -22,7 +23,9 @@ use tiny_http::{Header, Request, Response, Server};
 
 fn main() {
     // Todavía ninguna ruta usa la base: se conecta al iniciar para fallar temprano si no responde
-    let _pool = connect_database();
+    // y para crear o actualizar sus tablas
+    let pool = connect_database();
+    run_migrations(&pool);
     let addr = listen_addr();
     let servidor = Server::http(addr)
         .unwrap_or_else(|e| panic!("No se pudo escuchar en {addr}: {e}"));
@@ -39,6 +42,17 @@ fn connect_database() -> Pool {
         .unwrap_or_else(|e| panic!("No se pudo conectar a la base {}: {e}", config.database));
     println!("{SERVICE_NAME} conectado a la base {} en {}:{}", config.database, config.host, config.port);
     pool
+}
+
+/// Aplica las migraciones pendientes de la base de la extensión (ver `db/migrations.rs`).
+fn run_migrations(pool: &Pool) {
+    let mut conn = pool
+        .get_conn()
+        .unwrap_or_else(|e| panic!("No se pudo obtener una conexión para las migraciones: {e}"));
+    let applied = db::migrations::run(&mut conn, db::migrations::MIGRATIONS).unwrap_or_else(|e| panic!("{e}"));
+    for migration in applied {
+        println!("{SERVICE_NAME} aplicó la migración {migration}");
+    }
 }
 
 /// Lee la dirección de la variable de entorno o usa la dirección por defecto.

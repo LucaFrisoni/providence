@@ -17,10 +17,6 @@ use PHPUnit\Framework\TestCase;
 #[TestDox('Módulo 2 · cliente del servicio (respuestas simuladas)')]
 final class Modulo2ServiceClientTest extends TestCase {
 	# -------------------------------------------------------
-	/** URL base ficticia: las respuestas las da el MockHandler */
-	const BASE_URL = 'http://servicio-simulado';
-	const TIMEOUT = 1;
-	# -------------------------------------------------------
 	/** Peticiones enviadas por el cliente, registradas por Middleware::history */
 	private array $history = [];
 	# -------------------------------------------------------
@@ -33,8 +29,18 @@ final class Modulo2ServiceClientTest extends TestCase {
 		$this->assertSame(['module' => 'modulo2', 'status' => 'ok'], $health);
 		$request = $this->history[0]['request'];
 		$this->assertSame('GET', $request->getMethod());
-		$this->assertSame('/'.Modulo2ServiceClient::HEALTH_PATH, $request->getUri()->getPath());
+		$this->assertSame('/'.Modulo2Constants::HEALTH_PATH, $request->getUri()->getPath());
 		$this->assertSame('application/json', $request->getHeaderLine('Accept'));
+	}
+	# -------------------------------------------------------
+	#[TestDox('getCatalog() hace GET a la ruta del catálogo y devuelve la respuesta decodificada')]
+	public function testGetCatalogRequestsCatalogRoute() : void {
+		$client = $this->clientReturning(new Response(200, [], '{"file":"app.conf","sections":[]}'));
+
+		$catalog = $client->getCatalog();
+
+		$this->assertSame(['file' => 'app.conf', 'sections' => []], $catalog);
+		$this->assertSame('/'.Modulo2Constants::CATALOG_PATH, $this->history[0]['request']->getUri()->getPath());
 	}
 	# -------------------------------------------------------
 	#[TestDox('Una respuesta que no es JSON lanza Modulo2ServiceException')]
@@ -67,7 +73,7 @@ final class Modulo2ServiceClientTest extends TestCase {
 	private function clientReturning(Response $response) : Modulo2ServiceClient {
 		$handler = HandlerStack::create(new MockHandler([$response]));
 		$handler->push(Middleware::history($this->history));
-		return new Modulo2ServiceClient(self::BASE_URL, self::TIMEOUT, $handler);
+		return new Modulo2ServiceClient(Modulo2Constants::TEST_FAKE_SERVICE_URL, Modulo2Constants::TEST_TIMEOUT, $handler);
 	}
 	# -------------------------------------------------------
 }

@@ -37,6 +37,13 @@ class modulo2Plugin extends BaseApplicationPlugin {
 		$menu_bar['modulo2'] = [
 			'displayName' => _t('Módulo 2'),
 			'navigation' => [
+				'configurations' => [
+					'displayName' => _t('Configuraciones'),
+					'default' => ['module' => 'modulo2', 'controller' => 'Configurations', 'action' => 'Index'],
+					'is_enabled' => 1,
+					'requires' => [],
+					'parameters' => []
+				],
 				'status' => [
 					'displayName' => _t('Estado del servicio'),
 					'default' => ['module' => 'modulo2', 'controller' => 'Status', 'action' => 'Index'],

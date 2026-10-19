@@ -40,8 +40,8 @@ Servicio Rust ───────► │ base de la extensión (ca_extension) 
 
 **Reglas:**
 
-- **El servicio Rust es el único dueño de `ca_extension`.** Crea sus tablas con sus propias
-  migraciones y es el único que las lee y escribe. Providence accede a esos datos solo a través de
+- **El servicio Rust es el único dueño de `ca_extension`.** Crea sus tablas con migraciones (ver
+  abajo) y es el único que las lee y escribe. Providence accede a esos datos solo a través de
   la API del servicio (el plugin de cada módulo tiene su cliente HTTP).
 - **Cada base tiene su usuario de MySQL.** El usuario de la extensión solo tiene permisos sobre
   `ca_extension`, y el de Providence solo sobre la suya. Así el servicio no puede modificar los
@@ -49,10 +49,23 @@ Servicio Rust ───────► │ base de la extensión (ca_extension) 
   tablas de la extensión.
 - **Las tablas se nombran con el prefijo del módulo** (`m2_*` para el módulo 2, `m4_*` para el
   módulo 4, etc.), para que cada módulo evolucione sin pisar a los demás. Las tablas compartidas
-  entre módulos se acuerdan en equipo.
+  entre módulos llevan el prefijo `ext_` (por ejemplo, `ext_migrations`) y se acuerdan en equipo.
 - **Las referencias a datos de Providence se guardan por código o identificador** (por ejemplo, el
   código de un elemento de metadatos o el `idno` de un registro), no con claves foráneas, porque
   están en otra base. El servicio valida que esas referencias existan cuando hace falta.
+
+**Migraciones.** Las tablas se crean y modifican con archivos SQL, en
+`rust/extension-service/src/db/migrations/moduloN/<NNNN>_<nombre>.sql`:
+
+1. Crear el archivo con el número siguiente del módulo (cada módulo numera las suyas desde `0001`,
+   así no chocan entre ramas) y un nombre que describa el cambio, por ejemplo
+   `0001_creando_tablas_modulo2.sql`.
+2. Registrarlo en `MIGRATIONS`, en [db/migrations.rs](rust/extension-service/src/db/migrations.rs).
+3. Reconstruir el servicio (`docker compose up -d --build extension-service`): al arrancar aplica las
+   migraciones pendientes y las anota en la tabla `ext_migrations`.
+
+Una migración ya aplicada no se modifica: si su SQL cambia, el servicio no arranca y avisa. Los
+cambios van en una migración nueva.
 
 **Por qué no se usan modelos de Providence:** para que Providence trate una tabla como un modelo
 propio, la tabla tiene que registrarse en `app/conf/datamodel.conf` y la clase tiene que estar en
@@ -99,20 +112,17 @@ Un solo servidor MySQL, en Docker, tiene las dos bases: la de Providence y la de
 [extensión](#base-de-datos-de-la-extensión). Cada una tiene su propio usuario, que solo puede ver su
 base. Los datos de conexión salen de `.env`:
 
-| Campo (DBeaver)  | Base de la extensión | Base de Providence | Administración (root) |
-| ---------------- | -------------------- | ------------------ | --------------------- |
-| Server Host      | `127.0.0.1`          | `127.0.0.1`        | `127.0.0.1`           |
-| Port             | `DB_PORT`            | `DB_PORT`          | `DB_PORT`             |
-| Database         | `EXT_DB_DATABASE`    | `CA_DB_DATABASE`   | vacío                 |
-| Username         | `EXT_DB_USER`        | `CA_DB_USER`       | `root`                |
-| Password         | `EXT_DB_PASSWORD`    | `CA_DB_PASSWORD`   | `MYSQL_ROOT_PASSWORD` |
+| Campo (DBeaver) | Base de la extensión | Base de Providence | Administración (root) |
+| --------------- | -------------------- | ------------------ | --------------------- |
+| Server Host     | `127.0.0.1`          | `127.0.0.1`        | `127.0.0.1`           |
+| Port            | `DB_PORT`            | `DB_PORT`          | `DB_PORT`             |
+| Database        | `EXT_DB_DATABASE`    | `CA_DB_DATABASE`   | vacío                 |
+| Username        | `EXT_DB_USER`        | `CA_DB_USER`       | `root`                |
+| Password        | `EXT_DB_PASSWORD`    | `CA_DB_PASSWORD`   | `MYSQL_ROOT_PASSWORD` |
 
 - **Host:** siempre `127.0.0.1`. MySQL se publica solo en esta computadora, no en la red local.
 - **Puerto:** `DB_PORT` es el puerto en esta computadora (3307 en `.env.example`, para no chocar con
   un MySQL instalado localmente). Dentro de Docker, los contenedores se conectan a `db:3306`.
-- **Driver properties** (pestaña de la conexión en DBeaver): `allowPublicKeyRetrieval=true` y
-  `useSSL=false`. MySQL 8 usa `caching_sha2_password` y la conexión local no usa SSL.
-- **Root** ve todas las bases: usarlo solo para administrar MySQL, no para modificar datos a mano.
 
 Desde la terminal, sin cliente gráfico:
 
@@ -135,10 +145,16 @@ En lo que sigue, `moduloN` es la carpeta o el archivo de cada módulo (`modulo1`
 
 ```
 rust/extension-service/src/
+├── constants.rs             Constantes del servicio (variables de entorno, rutas, nombres)
 ├── routes.rs                Despacho de rutas a cada módulo, con sus pruebas al final del archivo
 ├── modules/moduloN.rs       Rutas del módulo N, con sus pruebas al final del archivo
-├── db.rs                    Configuración de la conexión, con sus pruebas al final del archivo
-└── db/access_tests.rs       De integración con la base, marcadas con #[ignore]
+├── models/moduloN/          Definiciones del módulo N (por ejemplo, el catálogo del módulo 2),
+│                            con sus pruebas al final de cada archivo
+└── db/                      Base de datos de la extensión
+    ├── config.rs            Conexión
+    ├── migrations.rs        Aplicación de las migraciones
+    ├── migrations/moduloN/  SQL de las migraciones del módulo N
+    └── tests/               Pruebas de la base: unitarias y de integración (#[ignore])
 
 app/plugins/
 ├── tests/
@@ -158,21 +174,21 @@ tests/extension/             Scripts para ejecutar las pruebas (ver "Cómo ejecu
 `tests/` es la carpeta de pruebas de Providence; la extensión solo agrega `tests/extension/`.
 
 **Rust.** La convención de Rust es poner las pruebas en el mismo archivo que el código, en un bloque
-`#[cfg(test)] mod tests` al final. Hay tres clases de pruebas:
+`#[cfg(test)] mod tests` al final. La excepción es `db/`, que tiene varios archivos y muchas pruebas
+de integración: sus pruebas están juntas en `db/tests/`. Hay tres clases de pruebas:
 
-| Qué se prueba | Cómo | Tipo |
-| ------------- | ---- | ---- |
-| **Lógica** (validaciones, cálculos, lectura de configuración) | Se llama a la función directamente | Unitaria |
-| **Rutas** | Se llama a `responder` con un método y una ruta, y se revisa el código de estado y el JSON de la `Respuesta`. No levanta el servidor HTTP | Unitaria, mientras la ruta no use la base |
-| **Base de datos** | Se conecta al MySQL de Docker | Integración |
+| Qué se prueba                                                 | Cómo                                                                                                                                      | Tipo                                      |
+| ------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------- |
+| **Lógica** (validaciones, cálculos, lectura de configuración) | Se llama a la función directamente                                                                                                        | Unitaria                                  |
+| **Rutas**                                                     | Se llama a `responder` con un método y una ruta, y se revisa el código de estado y el JSON de la `Respuesta`. No levanta el servidor HTTP | Unitaria, mientras la ruta no use la base |
+| **Base de datos**                                             | Se conecta al MySQL de Docker                                                                                                             | Integración                               |
 
 - Cada módulo prueba sus rutas en `modules/moduloN.rs`, llamando a su `responder` con la ruta
   relativa al módulo (por ejemplo, `/health`). `routes.rs` prueba que cada petición a
   `/api/moduloN/...` llegue al módulo correcto.
 - Las pruebas que necesitan la base se marcan con `#[ignore = "requiere el MySQL de Docker"]`, así
   `cargo test` sin Docker solo ejecuta las unitarias. Una ruta que lee o escribe la base se prueba
-  como integración. Si un archivo tiene muchas pruebas de integración, van en un submódulo propio,
-  como `db/access_tests.rs`.
+  como integración.
 - El recorrido HTTP completo (plugin de Providence → servicio Rust) no se prueba en Rust: lo cubren
   las pruebas de integración PHP de cada módulo.
 
@@ -186,21 +202,17 @@ Para simular el servicio Rust en una prueba unitaria se usa el `MockHandler` de 
 #### Cómo escribir una prueba
 
 - **Una descripción de una línea** de qué verifica cada prueba, que es lo que se ve en la consola:
-  - Rust: un comentario `///` arriba de la prueba, por ejemplo
-    `/// /health con otro método (POST) devuelve 404.`
-  - PHP: el atributo `#[TestDox('...')]` en la prueba y en la clase, por ejemplo
-    `#[TestDox('Un error 500 del servicio lanza Modulo2ServiceException')]`. PHPUnit lo muestra en
-    lugar del nombre del método.
+    - Rust: un comentario `///` arriba de la prueba, por ejemplo
+      `/// /health con otro método (POST) devuelve 404.`
+    - PHP: el atributo `#[TestDox('...')]` en la prueba y en la clase, por ejemplo
+      `#[TestDox('Un error 500 del servicio lanza Modulo2ServiceException')]`. PHPUnit lo muestra en
+      lugar del nombre del método.
 - **El nombre describe el comportamiento esperado:** `health_only_accepts_get` en Rust,
   `testUnreachableServiceThrowsModuleException` en PHP.
 - **Dejar la base como estaba:** las pruebas usan la base de desarrollo, así que si crean datos (tablas,
   registros) los borran al terminar.
 
 #### Cómo ejecutarlas
-
-Las pruebas se ejecutan **localmente antes de cada push**, con los scripts de `tests/extension/`. Más adelante,
-el CI va a ejecutar los mismos scripts y será obligatorio que pasen para aceptar un PR a una rama
-protegida.
 
 Requisitos:
 
@@ -215,35 +227,21 @@ Se ejecutan desde la raíz del repositorio. Los scripts son de bash y funcionan 
 Windows, desde Git Bash. Si un script no tiene permiso de ejecución, se puede correr con
 `bash tests/extension/test-php.sh ...`.
 
-| Comando | Qué ejecuta |
-| ------- | ----------- |
-| `tests/extension/test-rust.sh` | Todas las pruebas de Rust |
-| `tests/extension/test-rust.sh unit` | Las unitarias de Rust (lógica y rutas) |
-| `tests/extension/test-rust.sh integration` | Las de integración de Rust (base de datos) |
-| `tests/extension/test-rust.sh all moduloN` | Las de Rust del módulo N (filtra por nombre) |
-| `tests/extension/test-php.sh` | Todas las pruebas PHP |
-| `tests/extension/test-php.sh unit` | Las unitarias de todos los módulos |
-| `tests/extension/test-php.sh integration` | Las de integración (compartidas y de todos los módulos) |
-| `tests/extension/test-php.sh unit moduloN` | Las unitarias del módulo N |
-| `tests/extension/test-php.sh integration moduloN` | Las de integración del módulo N |
-| `tests/extension/test-php.sh all moduloN` | Todas las del módulo N |
+| Comando                                           | Qué ejecuta                                             |
+| ------------------------------------------------- | ------------------------------------------------------- |
+| `tests/extension/test-rust.sh`                    | Todas las pruebas de Rust                               |
+| `tests/extension/test-rust.sh unit`               | Las unitarias de Rust (lógica y rutas)                  |
+| `tests/extension/test-rust.sh integration`        | Las de integración de Rust (base de datos)              |
+| `tests/extension/test-rust.sh all moduloN`        | Las de Rust del módulo N (filtra por nombre)            |
+| `tests/extension/test-php.sh`                     | Todas las pruebas PHP                                   |
+| `tests/extension/test-php.sh unit`                | Las unitarias de todos los módulos                      |
+| `tests/extension/test-php.sh integration`         | Las de integración (compartidas y de todos los módulos) |
+| `tests/extension/test-php.sh unit moduloN`        | Las unitarias del módulo N                              |
+| `tests/extension/test-php.sh integration moduloN` | Las de integración del módulo N                         |
+| `tests/extension/test-php.sh all moduloN`         | Todas las del módulo N                                  |
 
 Para ejecutar una sola prueba: `tests/extension/test-rust.sh all <parte del nombre>` o
 `tests/extension/test-php.sh unit moduloN --filter <nombre del método>`.
-
-Las dos salidas tienen el mismo formato: las pruebas agrupadas por archivo o clase, cada una con su
-descripción (✔ pasó, ✘ falló, ○ omitida). En Rust, la descripción es el comentario `///` de la
-prueba; para ver la salida original de cargo, ejecutar con `RAW=1 tests/extension/test-rust.sh`.
-
-Cada script muestra un título con lo que se ejecuta y, al final, si pasaron todas las pruebas
-(✔ en verde) o si alguna falló (✘ en rojo), y devuelve un código de salida distinto de 0 si algo
-falló, que es lo que va a usar el CI. Los colores se desactivan solos cuando la salida no es una
-terminal, o con `NO_COLOR=1`.
-
-Cómo se conectan los scripts con Docker: ver [docker/README.md](docker/README.md#4-pruebas).
-
-Los archivos `.sh` se guardan siempre con fin de línea LF (lo fuerza [.gitattributes](.gitattributes)):
-con el fin de línea de Windows (CRLF), bash falla en Linux y dentro de los contenedores.
 
 ### Módulos
 

@@ -5,18 +5,16 @@
 - **Plugin:** [app/plugins/modulo2/](../../app/plugins/modulo2/)
 - **Rutas del servicio Rust:** `/api/modulo2`
 
-El módulo agrega a Providence una sección para **consultar, modificar, versionar y auditar**
-configuraciones mediante una interfaz gráfica. Complementa los mecanismos nativos de configuración y
-no los reemplaza.
+El módulo agrega a Providence una sección para **consultar, modificar y versionar** configuraciones
+desde una interfaz gráfica, con registro de quién cambió qué y cuándo. Complementa los mecanismos de
+configuración de Providence: no los reemplaza.
 
 ## Grupos de configuración de Providence
 
-Relevamiento hecho sobre el código de la versión instalada (`app/version.php`: 2.0.12). Providence
-tiene cuatro grupos de configuración, que se administran de formas distintas.
+Providence tiene cuatro grupos de configuración, que se administran de formas distintas.
 
-**1. Archivos `.conf`: no tienen interfaz gráfica nativa.** Son 38 archivos en `app/conf/`.
-`Configuration::load()` ([app/lib/Configuration.php](../../app/lib/Configuration.php)) los lee en cadena,
-y cada nivel sobrescribe al anterior:
+**1. Archivos `.conf`: no tienen interfaz gráfica nativa.** Son 38 archivos en `app/conf/`. Providence
+los lee en cadena, y cada nivel sobrescribe al anterior:
 
 | Orden | Ubicación                                 | Uso                                       |
 | ----- | ----------------------------------------- | ----------------------------------------- |
@@ -25,8 +23,7 @@ y cada nivel sobrescribe al anterior:
 | 3     | `themes/<tema>/conf/<archivo>.conf`       | Cambios del tema                          |
 | 4     | `app/conf/local/<archivo>_<appname>.conf` | Cambios específicos de la aplicación      |
 
-La clase solo lee: Providence no tiene ningún mecanismo para escribir estos archivos. La caché se
-invalida sola cuando cambia la fecha de modificación de un archivo.
+Providence solo los lee: no tiene una pantalla ni un mecanismo para modificarlos. Se editan a mano.
 
 | Archivo                                                                                                                  | Qué configura                                                                                                                                                                             |
 | ------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -70,47 +67,47 @@ cambios de Providence (`ca_change_log`).
   `do-configuration-check`, `clear-caches`.
 - Traducciones de la interfaz: `app/locale/<idioma>/messages.po`.
 
-## Qué centraliza el módulo
+## Cómo trabaja el módulo
 
-- **Edición:** las claves de archivos `.conf` incluidas en el catálogo (ver abajo). Los cambios se
-  escriben **solo** en `app/conf/local/`, el punto de extensión que prevé Providence. Los archivos
-  de `app/conf/` nunca se modifican.
-- **Consulta:** la configuración guardada en base. El módulo muestra su estado y ofrece un enlace al
-  editor nativo, sin duplicarlo.
-- **Versionado, registro y permisos** de toda la configuración: la que se edita desde el módulo y
-  la que se edita con los editores nativos de Providence.
-
-Se eligió una sección central, en lugar de agregar controles en cada pantalla de Providence, por
-dos razones:
-
-- Muchas claves de `app.conf` ya activan, desactivan u ocultan funciones en las demás secciones
-  (`ca_places_disable`, `*_disable_quickadd`, `*_dont_show_in_new_menu`, etc.). Editarlas desde un
-  único lugar alcanza para que el resto de la interfaz cambie.
-- Insertar controles en cada pantalla obligaría a modificar vistas del núcleo.
-
-## Qué no se modifica
-
-- Los archivos base de `app/conf/` (solo se escriben sobrescrituras en `app/conf/local/`).
-- `setup.php`: credenciales e infraestructura.
-- `authentication.conf`, `datamodel.conf`, `access_restrictions.conf` y `user_actions.conf`: afectan
-  la seguridad o el modelo de datos del núcleo.
-- Rutas, volúmenes de medios, credenciales y claves de API de servicios externos.
-- Las claves que no estén en el catálogo: la interfaz solo permite editar claves de una lista blanca.
-- La configuración en base: se edita con los editores nativos de Providence.
+- **Trabaja con una lista blanca.** El módulo solo muestra y modifica las configuraciones de su
+  [catálogo](#catálogo-de-configuraciones): una lista elegida de configuraciones de los archivos
+  `.conf`, verificadas en el código de Providence. La lista empieza por las de prioridad 1 y se puede
+  ampliar con el tiempo.
+- **Escribe solo en `app/conf/local/`.** Es el lugar que Providence prevé para los cambios propios de
+  cada instalación: lo que se define ahí reemplaza al valor de `app/conf/`. Los archivos de
+  `app/conf/` quedan siempre como vienen con Providence, así que volver al valor original es tan
+  simple como sacar la configuración de `app/conf/local/`. En Docker, esa carpeta se guarda en el
+  volumen `conf_local` y no se pierde al reconstruir la imagen.
+- **La configuración que está en la base de Providence** (listas, elementos de metadatos, interfaces
+  de edición...) se sigue editando con las pantallas de Providence. El módulo la incluye en las
+  versiones y, más adelante, la va a mostrar con un enlace a su editor (#21 del catálogo).
+- **Todo desde un solo lugar.** Muchas configuraciones ya activan, desactivan u ocultan funciones en
+  el resto de Providence (por ejemplo, `ca_places_disable` oculta los lugares en todos los menús).
+  Editarlas desde una única sección alcanza para que el resto de la interfaz cambie, sin modificar
+  las pantallas de Providence.
 
 ## Catálogo de configuraciones
 
-En las claves, `*` reemplaza el nombre de la tabla (por ejemplo, `ca_places_disable`).
+**Vocabulario:**
+
+| Término           | Qué es                                                                                                                             | Ejemplo                                                                    |
+| ----------------- | ---------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------- |
+| **Tipo de dato**  | Lo que se crea desde el menú "Nuevo". En Providence es una tabla                                                                   | Objetos (`ca_objects`), lugares (`ca_places`), préstamos (`ca_loans`)      |
+| **Subtipo**       | Clasificación dentro de un tipo de dato, definida en las listas de Providence (Providence los llama _types_)                       | Un objeto puede ser "obra de arte" (`artwork`) o "libro" (`book`)          |
+| **Configuración** | Una opción con el mismo significado para varios tipos de dato. Su clave en Providence es `<tipo de dato>_<id de la configuración>` | `disable_delete` aplicada a lugares es la clave `ca_places_disable_delete` |
+| **Sección**       | Grupo de configuraciones relacionadas que el panel muestra juntas (#1 a #4 de la tabla de abajo)                                   | "Menú Nuevo"                                                               |
+
+En las claves de las tablas de abajo, `*` reemplaza el tipo de dato.
 
 **Prioridad 1: configuraciones candidatas del módulo**
 
 | #   | Configuración                              | Mecanismo / claves                                                                                                                                                                | Objetivo                                                                   |
 | --- | ------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------- |
-| 1   | Activar o desactivar entidades             | `*_disable`                                                                                                                                                                       | Ocultar los módulos que la institución no usa (lugares, préstamos, tours…) |
-| 2   | Activar o desactivar funciones por entidad | `*_disable_quickadd`, `*_disable_delete`, `*_disable_duplication_of_items`, `*_disable_browse`, `*_disable_basic_search`, `*_disable_advanced_search`, `*_disable_search_builder` | Simplificar la interfaz según el uso institucional                         |
+| 1   | Activar o desactivar tipos de dato         | `*_disable`                                                                                                                                                                       | Ocultar los módulos que la institución no usa (lugares, préstamos, tours…) |
+| 2   | Activar o desactivar funciones por tipo de dato | `*_disable_quickadd`, `*_disable_delete`, `*_disable_duplication_of_items`, `*_disable_browse`, `*_disable_basic_search`, `*_disable_advanced_search`, `*_disable_search_builder` | Simplificar la interfaz según el uso institucional                         |
 | 3   | Menú "Nuevo"                               | `*_dont_show_in_new_menu`, `*_navigation_new_menu_limit_types_to`, `*_navigation_new_menu_exclude_types`, `*_navigation_new_menu_shows_top_level_types_only`                      | Controlar qué registros y tipos se pueden crear desde el menú              |
 | 4   | Menú "Buscar"                              | `*_dont_show_in_find_menu`, `*_breakout_find_by_type_in_menu`, `*_breakout_find_by_type_in_submenu`, `*_navigation_find_menu_limit_types_to`                                      | Organizar la navegación de búsqueda                                        |
-| 5   | Orden de entidades, listas y sublistas     | Orden de los menús por configuración; el orden de los elementos de una lista se edita con el editor nativo (enlace)                                                               | Ordenar lo que se muestra                                                  |
+| 5   | Orden de tipos de dato, listas y sublistas | Orden de los menús por configuración; el orden de los elementos de una lista se edita con el editor nativo (enlace)                                                               | Ordenar lo que se muestra                                                  |
 | 6   | Automatización de identificadores          | `multipart_id_numbering.conf` (formatos por tabla y tipo: `CONSTANT`, `YEAR`, `SERIAL`, `LIST`, etc.)                                                                             | Armar formatos de identificador visualmente, con vista previa              |
 | 7   | Reglas de identificadores                  | `require_valid_id_number_for_*`, `allow_duplicate_id_number_for_*`                                                                                                                | Calidad de datos                                                           |
 | 8   | Textos y traducciones                      | `translations.conf` (`strings`, `replacements`, por idioma)                                                                                                                       | Adaptar la terminología institucional sin editar los `.po`                 |
@@ -143,101 +140,171 @@ En las claves, `*` reemplaza el nombre de la tabla (por ejemplo, `ca_places_disa
 | 25  | Procesamiento de medios | `media_processing.conf`                                        | Requiere reprocesar medios                  |
 | 26  | Facetas de navegación   | `browse.conf`                                                  | Puede romper la navegación                  |
 
-Cada entrada del catálogo define tipo, valores permitidos, valor por defecto, descripción, nivel de
-riesgo y efectos secundarios (por ejemplo, si requiere limpiar la caché o reindexar).
+Para cada configuración, el catálogo define su nombre, una descripción, el tipo de valor (sí o no, o
+una lista de subtipos), el riesgo de cambiarla y los tipos de dato a los que se aplica.
 
-## Versionado, registro y permisos (diseño propuesto)
+## Versionado, registro y permisos
+
+**Valor por defecto y valor efectivo.** Cada configuración tiene dos valores:
+
+- **Valor por defecto:** el que trae Providence, en `app/conf/`.
+- **Valor efectivo:** el que Providence usa realmente. Es el valor por defecto, salvo que
+  `app/conf/local/` lo reemplace.
+
+Por ejemplo, `ca_places_disable` vale 0 por defecto (los lugares están activos). Si
+`app/conf/local/app.conf` dice `ca_places_disable = 1`, el valor efectivo es 1 y los lugares no
+aparecen. El módulo cambia siempre el valor efectivo, escribiendo en `app/conf/local/`, y la vista
+resalta las configuraciones cuyo valor efectivo es distinto del valor por defecto.
 
 **Aplicar un cambio:**
 
-1. Leer el valor efectivo con `Configuration::load()`, que es la fuente de verdad.
-2. Validar en el servidor contra el catálogo y los permisos del usuario.
+1. Leer el valor efectivo actual.
+2. Validar en el servidor que la configuración esté en el catálogo, que el valor sea válido y que el
+   usuario tenga permiso.
 3. Guardar una versión automática del estado anterior.
-4. Escribir `app/conf/local/<archivo>.conf` de forma atómica (archivo temporal y luego renombrado).
-5. Limpiar la caché.
-6. Volver a leer el valor efectivo para confirmar que Providence aplicó el cambio.
-7. Registrar quién hizo el cambio, cuándo, qué se modificó, sobre qué versión y con qué resultado.
+4. Escribir `app/conf/local/<archivo>.conf` sin dejarlo a medio escribir (archivo temporal y luego
+   renombrado).
+5. Volver a leer el valor efectivo para confirmar que Providence tomó el cambio.
+6. Registrar quién hizo el cambio, cuándo, qué se modificó y con qué resultado.
 
 **Versiones:** cubren toda la configuración, sin importar desde dónde se editó.
 
 - Cada versión contiene:
-  - **Archivos:** todo `app/conf/local/`.
-  - **Base:** un perfil XML generado con el exportador nativo (`ConfigurationExporter`): idiomas,
-    listas, elementos de metadatos, interfaces de edición, tipos de relación, roles, grupos,
-    displays, formularios de búsqueda y diccionario de datos. Se excluyen los usuarios.
-  - **Metadatos:** nombre, autor, fecha, descripción, hash del contenido y versión anterior. El
-    nombre se completa automáticamente con fecha, hora y usuario (por ejemplo,
-    `2026-10-17 14:32 – usuario`) y se puede editar.
-- Las versiones se guardan en la [base de la extensión](../../README.md#base-de-datos-de-la-extensión).
+    - **Archivos:** todo `app/conf/local/`.
+    - **Base de Providence:** una exportación de su configuración (idiomas, listas, elementos de
+      metadatos, interfaces de edición, tipos de relación, roles, grupos, displays, formularios de
+      búsqueda y diccionario de datos), hecha con el exportador de Providence. Sin los usuarios.
+    - **Datos de la versión:** nombre, autor, fecha y descripción. El nombre se completa solo con
+      fecha, hora y usuario (por ejemplo, `2026-10-17 14:32 – usuario`) y se puede editar.
 - **Restaurar** una versión:
-  1. Se guarda una versión automática del estado actual, para poder deshacer la restauración.
-  2. Se verifica que la configuración no haya cambiado desde que se cargó la pantalla. Si cambió,
-     se informa el conflicto y no se aplica nada.
-  3. **Archivos:** se reemplaza `app/conf/local/` por el de la versión elegida.
-  4. **Base:** se compara la versión elegida con el estado actual y se arma un perfil con lo que hay
-     que crear, actualizar y borrar (los elementos que hoy existen y en la versión no se marcan con
-     `deleted`). Ese perfil se aplica con el instalador nativo de Providence en modo actualización,
-     el mismo que usa `caUtils update-installation-profile` ([install/inc/Installer.php](../../install/inc/Installer.php)).
-  5. Se vuelve a exportar la configuración y se compara con la versión elegida para confirmar que
-     se aplicó.
-- **Riesgo de pérdida de datos:** borrar un elemento de metadatos, un ítem de lista o un tipo que
-  ya se usa en registros afecta datos catalogados. Antes de restaurar se muestra qué se va a borrar
-  y cuántos registros lo usan. Si alguno está en uso, la restauración se bloquea o requiere el
-  permiso de configuraciones críticas.
-- **Pendiente de verificar con una prueba de concepto:** que el instalador en modo actualización
-  revierta todas las propiedades (opciones, ubicaciones en pantallas, restricciones por tipo) y no
-  solo las etiquetas y los valores principales.
+    1. Se guarda una versión automática del estado actual, para poder deshacer la restauración.
+    2. Se verifica que nadie haya cambiado la configuración desde que se abrió la pantalla. Si
+       cambió, se avisa del conflicto y no se aplica nada.
+    3. **Archivos:** se reemplaza `app/conf/local/` por el de la versión elegida.
+    4. **Base de Providence:** se aplica lo que difiere con el instalador de Providence en modo
+       actualización, que crea, actualiza y borra elementos de configuración.
+    5. Se vuelve a leer la configuración para confirmar que quedó como la versión elegida.
+- **Riesgo de pérdida de datos:** borrar un elemento de metadatos o un ítem de lista que ya se usa
+  en registros afecta datos catalogados. Antes de restaurar se muestra qué se va a borrar y cuántos
+  registros lo usan, y si algo está en uso, la restauración se bloquea o pide un permiso especial.
+- **Pendiente de verificar:** que el instalador en modo actualización revierta todas las propiedades
+  de la configuración en base y no solo las principales.
 
-**Permisos:** acciones de rol propias del módulo, asignables desde Administrate → Access → Roles.
-Todas las validaciones y controles de autorización se hacen en el servidor.
+**Dónde se guarda la historia.** Para las versiones y el registro de cambios, el módulo tiene tres
+tablas en la [base de la extensión](../../README.md#base-de-datos-de-la-extensión). Las
+configuraciones en sí no se guardan ahí (están en los `.conf` de Providence), ni el catálogo (que es
+código):
 
-## Persistencia en Docker
+| Tabla              | Qué guarda |
+| ------------------ | ---------- |
+| `m2_versions`      | Cada versión: nombre, descripción, si se creó sola antes de un cambio, versión anterior, usuario y fecha |
+| `m2_version_files` | El contenido de cada archivo de `app/conf/local/` en esa versión |
+| `m2_change_log`    | Cada cambio: usuario, fecha, acción (editar o restaurar), configuración, valor anterior y nuevo, y resultado (aplicado, rechazado, falló o conflicto) |
 
-`app/conf/local/` se guarda en el volumen `conf_local`, así los cambios hechos desde el módulo
-sobreviven a las reconstrucciones de la imagen. Ver [docker/README.md](../../docker/README.md).
+Los usuarios son los de Providence, que están en otra base: se guarda su id y su nombre.
+
+**Permisos:** acciones de rol propias del módulo, que se asignan desde Administrate → Access → Roles.
+Todas las validaciones y controles de permisos se hacen en el servidor, no solo en la pantalla.
 
 ## Plan de trabajo
 
-Convenciones: `[x]` hecho, `[ ]` pendiente. Los números `#N` refieren al catálogo de configuraciones.
+El desarrollo se organizó en fases, de lo más simple y seguro a lo más complejo:
 
-### Decisiones
+| Fase | Qué se hace |
+| ---- | ----------- |
+| 0. Infraestructura | Plugin, servicio Rust, base de la extensión y pruebas |
+| 1. Creación del catálogo y lectura | Definir el catálogo y mostrar los valores actuales, sin modificar nada |
+| 2. Edición del catálogo | Modificar configuraciones del catálogo, con validación y registro de cambios |
+| 3. Versionado | Crear versiones, compararlas y restaurarlas |
+| 4 a 6. Ampliar el catálogo | Sumar configuraciones de prioridad 1, 2 y 3 |
 
-| ID  | Decisión                                                | Opciones                                                                                                                                                                                                             | Propuesta                                      | Quién decide          | Estado                                                                  |
-| --- | ------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------- | --------------------- | ----------------------------------------------------------------------- |
-| D1  | Reparto de responsabilidades entre PHP y Rust           | a) PHP lee, escribe y verifica; Rust valida contra el catálogo, genera el `.conf`, calcula diferencias y guarda versiones. b) Todo en PHP y Rust solo para versionado. c) Otra                                       | a)                                             | Cátedra               | Opciona a aprobada                                                      |
-| D2  | Dónde se guardan las versiones y el registro de cambios | a) Tablas propias en la base de Providence. b) Base MySQL propia de la extensión (`ca_extension`), en el mismo servidor, de la que el servicio Rust es el único dueño | b) | Equipo | Opción b aprobada (ver [Base de datos de la extensión](../../README.md#base-de-datos-de-la-extensión)) |
-| D3  | Alcance del versionado y la restauración | a) Versionar solo los archivos; la base, solo como foto para comparar. b) Versionar y restaurar toda la configuración (archivos y base), restaurando la base con el instalador nativo en modo actualización | b), con control de borrados en uso | Equipo | Opción b aprobada, sujeta a la prueba de concepto de la Fase 3 |
-| D4  | Propiedad de los archivos de `app/conf/local/`          | a) El módulo genera completos los archivos que administra; una edición manual se detecta por hash y se informa como conflicto. b) Combinar con ediciones manuales (requiere interpretar el formato `.conf` completo) | a)                                             | Equipo                | Opcion a aprobada                                                       |
-| D5  | Granularidad de permisos                                | a) Cuatro acciones: ver, editar, editar críticas, restaurar versiones. b) Una sola acción (la actual `can_use_modulo2`)                                                                                              | a)                                             | Equipo                | Opcion de tener varios tipos de permisos(falta definir cuales) aprobada |
-| D6  | Configuraciones que se implementan                      | Confirmar con la institución qué ítems de prioridad 1 y 2 responden a necesidades reales                                                                                                                             | Empezar por #1 a #4                            | Institución / cátedra | Aprobado                                                                |
+Al final de este documento hay una lista de tareas por fase, que se va marcando a medida que se
+avanza.
+
+## Implementación
+
+### Fase 0: infraestructura
+
+- **Plugin `modulo2`:** agrega el menú **Módulo 2** y el permiso `can_use_modulo2`, que se asigna
+  desde los roles de Providence.
+- **Servicio Rust:** el plugin se comunica con él por HTTP. La opción **Módulo 2 → Estado del
+  servicio** verifica la conexión.
+- **Base de la extensión:** las tablas del módulo 2 (ver
+  [Versionado](#versionado-registro-y-permisos)) se crean solas cuando arranca el servicio.
+- **Pruebas** en Rust y PHP, incluida la verificación de que cada base es inaccesible para el
+  usuario de la otra.
+
+### Fase 1: creación del catálogo y lectura
+
+**Qué ve el usuario:** el menú **Módulo 2 → Configuraciones** muestra todas las configuraciones del
+catálogo por tipo de dato, agrupadas por sección. Cada sección es una tabla con una fila por tipo de
+dato (objetos, lugares...) y una columna por configuración. Cada celda muestra el valor efectivo, y
+se resalta si es distinto del valor por defecto. La vista es de solo lectura.
+
+**Cómo funciona:**
+
+```
+Providence (plugin modulo2)                          Servicio Rust
+Pantalla de Configuraciones ── pide el catálogo ──►  catálogo (models/modulo2/catalog.rs)
+            │               ◄── lista de configuraciones
+            └── lee el valor efectivo y el por defecto de cada una en Providence
+```
+
+- **El catálogo lo define el servicio Rust** (`models/modulo2/catalog.rs`). Incluye solo
+  configuraciones verificadas en el código de Providence 2.0.12, y para cada una, los tipos de dato
+  que la tienen en `app/conf/app.conf`.
+- **Los valores los lee el plugin en Providence**, porque Providence es quien sabe qué valor está
+  usando. Los nombres de los tipos de dato también los da Providence, en el idioma de la interfaz.
+- El servicio entrega el catálogo en `GET /api/modulo2/catalog`, en este formato:
+
+```json
+{
+  "file": "app.conf",
+  "sections": [{
+    "id": "features", "name": "Funciones por tipo de dato", "description": "...",
+    "settings": [{
+      "id": "disable_delete", "label": "Sin borrado", "description": "...",
+      "kind": "boolean", "risk": "low",
+      "entries": [{ "data_type": "ca_objects", "key": "ca_objects_disable_delete" }]
+    }]
+  }]
+}
+```
+
+`kind` es `boolean` (sí o no) o `subtype_list` (lista de subtipos; vacía = sin restricción), y `risk`
+es `low` o `medium` (desactivar un tipo de dato entero).
+
+## Tareas por fase
+
+Convenciones: `[x]` hecho, `[ ]` pendiente. Los números `#N` refieren al
+[catálogo de configuraciones](#catálogo-de-configuraciones).
 
 ### Fase 0: infraestructura
 
 - [x] Plugin base, menú y permiso `can_use_modulo2`
-- [x] Conexión con el servicio Rust (`/api/modulo2/health`)
+- [x] Conexión de prueba con el servicio Rust (`/api/modulo2/health`)
 - [x] Volumen `conf_local` para `app/conf/local`
 - [x] Base propia de la extensión (`ca_extension`) creada en Docker
 - [x] Conexión del servicio Rust a la base de la extensión
 - [x] Estructura de pruebas (Rust y PHP) y pruebas de aislamiento entre las bases
-- [ ] Migraciones de las tablas del módulo 2 en la base de la extensión
-- [x] Resolver D1, D2, D3, D4 y D6
-- [ ] Definir qué permisos tiene el módulo (D5)
+- [x] Migraciones de la base de la extensión y tablas del módulo 2 (`creando_tablas_modulo2`)
 
-### Fase 1: catálogo y consulta (solo lectura)
+### Fase 1: creación del catálogo y lectura
 
-- [ ] Definir el formato del catálogo: clave, archivo, tipo, valores permitidos, valor por defecto, descripción, riesgo y efectos
-- [ ] Cargar en el catálogo las configuraciones #1 a #4
-- [ ] Leer en PHP el valor efectivo y el valor de la distribución de cada clave
-- [ ] Panel por áreas que muestre el valor actual y si difiere del valor de la distribución
-- [ ] Pruebas: lectura con y sin sobrescrituras en `app/conf/local`
+- [x] Definir el formato del catálogo (ver [Implementación](#fase-1-creación-del-catálogo-y-lectura)).
+- [ ] Cargar todas las configuraciones del catalogo
+- [x] Leer en PHP el valor efectivo y el valor por defecto de cada clave
+- [x] Vista de todas las configuraciones por tipo de dato y sección, con el valor actual
+- [ ] Pruebas unitarias de rust, tanto db como rutas
+- [ ] Pruebas unitarias de PHP
 
-### Fase 2: escritura segura
+### Fase 2: edición del catálogo
 
 - [ ] Validar en el servidor contra el catálogo
 - [ ] Generar el contenido `.conf` para `app/conf/local`
 - [ ] Escritura atómica, limpieza de caché y verificación posterior del valor efectivo
 - [ ] Registro de cambios: usuario, fecha, clave, valor anterior y nuevo, resultado
-- [ ] Permisos de edición en el servidor (D5)
+- [ ] Permisos de edición en el servidor (definir qué permisos tiene el módulo)
 - [ ] Pruebas: valores inválidos, usuario sin permiso, falla de escritura, verificación fallida
 
 ### Fase 3: versionado
@@ -246,7 +313,7 @@ Convenciones: `[x]` hecho, `[ ]` pendiente. Los números `#N` refieren al catál
 - [ ] Versión automática antes de cada cambio y de cada restauración
 - [ ] Lista de versiones y comparación entre dos versiones
 - [ ] Restauración con detección de conflictos (por hash)
-- [ ] Prueba de concepto: restaurar la configuración en base con el instalador en modo actualización (D3)
+- [ ] Prueba de concepto: restaurar la configuración en base con el instalador en modo actualización
 - [ ] Exportación XML de la configuración en base en cada versión (sin usuarios)
 - [ ] Restauración de la configuración en base con aviso y bloqueo de borrados en uso
 - [ ] Pruebas: crear, comparar, restaurar y resolver conflictos
@@ -256,11 +323,11 @@ Convenciones: `[x]` hecho, `[ ]` pendiente. Los números `#N` refieren al catál
 Cada configuración se cierra cuando tiene: entrada en el catálogo, validación, interfaz, prueba de
 aplicar y verificar, prueba de restaurar y documentación.
 
-- [ ] #1 Activar o desactivar entidades
-- [ ] #2 Activar o desactivar funciones por entidad
+- [ ] #1 Activar o desactivar tipos de dato
+- [ ] #2 Activar o desactivar funciones por tipo de dato
 - [ ] #3 Menú "Nuevo"
 - [ ] #4 Menú "Buscar"
-- [ ] #5 Orden de entidades, listas y sublistas
+- [ ] #5 Orden de tipos de dato, listas y sublistas
 - [ ] #6 Automatización de identificadores
 - [ ] #7 Reglas de identificadores
 - [ ] #8 Textos y traducciones
@@ -282,7 +349,7 @@ aplicar y verificar, prueba de restaurar y documentación.
 - [ ] #21 Panel de configuración en base
 - [ ] #22 Instantánea y comparación de la configuración en base
 
-### Fase 6: configuraciones críticas (sujeto a decisión)
+### Fase 6: configuraciones críticas
 
 - [ ] #23 Control de acceso
 - [ ] #24 Indexación de búsqueda

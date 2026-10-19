@@ -5,27 +5,11 @@ use std::env;
 use std::process;
 
 use mysql::prelude::Queryable;
-use mysql::PooledConn;
 
-use super::{connect, DbConfig};
-
-/// Variable con el nombre de la base de Providence (solo la usan estas pruebas).
-const PROVIDENCE_DB_ENV_VAR: &str = "CA_DB_DATABASE";
-/// Códigos de error de MySQL: acceso denegado a una base y a una tabla.
-const ER_DBACCESS_DENIED: u16 = 1044;
-const ER_TABLEACCESS_DENIED: u16 = 1142;
-/// Tabla de Providence usada para probar la lectura.
-const PROVIDENCE_TABLE: &str = "ca_users";
-
-fn config() -> DbConfig {
-    DbConfig::from_env().expect("faltan las variables EXT_DB_* (correr con docker compose)")
-}
-
-fn open_connection() -> PooledConn {
-    let pool = connect(&config()).expect("no se pudo conectar a la base de la extensión");
-    pool.get_conn()
-        .expect("no se pudo obtener una conexión del pool")
-}
+use super::{config, open_connection};
+use crate::constants::{
+    ER_DBACCESS_DENIED, ER_TABLEACCESS_DENIED, PROVIDENCE_DB_ENV_VAR, PROVIDENCE_TABLE,
+};
 
 fn providence_db() -> String {
     env::var(PROVIDENCE_DB_ENV_VAR).expect("falta la variable CA_DB_DATABASE")

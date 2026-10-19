@@ -15,11 +15,6 @@ class Modulo2ServiceException extends Exception {}
 
 class Modulo2ServiceClient {
 	# -------------------------------------------------------
-	/** Ruta de estado del módulo 2, relativa a la URL base del servicio */
-	const HEALTH_PATH = Modulo2Constants::API_PATH.'/health';
-	/** Profundidad máxima al decodificar JSON (valor por defecto de json_decode) */
-	const JSON_MAX_DEPTH = 512;
-	# -------------------------------------------------------
 	private $client;
 	# -------------------------------------------------------
 	/**
@@ -36,12 +31,31 @@ class Modulo2ServiceClient {
 	}
 	# -------------------------------------------------------
 	/**
+	 * Crea el cliente con la URL y el tiempo de espera de la configuración del plugin.
+	 * La variable de entorno EXTENSION_SERVICE_URL (usada en Docker) tiene prioridad sobre modulo2.conf
+	 */
+	public static function fromConfig(Configuration $config) : self {
+		$url = getenv(Modulo2Constants::SERVICE_URL_ENV_VAR) ?: (string)$config->get('service_url');
+		$timeout = (float)($config->get('service_timeout') ?: Modulo2Constants::DEFAULT_TIMEOUT);
+		return new self($url, $timeout);
+	}
+	# -------------------------------------------------------
+	/**
 	 * Consulta el estado del módulo 2 en el servicio (GET /api/modulo2/health)
 	 *
 	 * @throws Modulo2ServiceException
 	 */
 	public function getHealth() : array {
-		return $this->getJson(self::HEALTH_PATH);
+		return $this->getJson(Modulo2Constants::HEALTH_PATH);
+	}
+	# -------------------------------------------------------
+	/**
+	 * Obtiene el catálogo de configuraciones que administra el módulo (GET /api/modulo2/catalog)
+	 *
+	 * @throws Modulo2ServiceException
+	 */
+	public function getCatalog() : array {
+		return $this->getJson(Modulo2Constants::CATALOG_PATH);
 	}
 	# -------------------------------------------------------
 	/**
@@ -52,7 +66,7 @@ class Modulo2ServiceClient {
 	private function getJson(string $path) : array {
 		try {
 			$response = $this->client->get($path, ['headers' => ['Accept' => 'application/json']]);
-			$data = json_decode((string)$response->getBody(), true, self::JSON_MAX_DEPTH, JSON_THROW_ON_ERROR);
+			$data = json_decode((string)$response->getBody(), true, Modulo2Constants::JSON_MAX_DEPTH, JSON_THROW_ON_ERROR);
 		} catch (GuzzleException | JsonException $e) {
 			throw new Modulo2ServiceException(_t('No se pudo consultar el servicio del módulo 2: %1', $e->getMessage()), 0, $e);
 		}
