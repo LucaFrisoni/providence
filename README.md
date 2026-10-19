@@ -64,8 +64,17 @@ Servicio Rust ───────► │ base de la extensión (ca_extension) 
 3. Reconstruir el servicio (`docker compose up -d --build extension-service`): al arrancar aplica las
    migraciones pendientes y las anota en la tabla `ext_migrations`.
 
-Una migración ya aplicada no se modifica: si su SQL cambia, el servicio no arranca y avisa. Los
-cambios van en una migración nueva.
+Las migraciones ya registradas en `ext_migrations` no se vuelven a ejecutar: reiniciar o
+reconstruir el servicio solo aplica las nuevas. El servicio no arranca, y avisa cuál es la
+migración, si:
+
+- una migración ya aplicada cambió su SQL (los cambios van en una migración nueva);
+- un módulo no numera sus migraciones desde 1, sin saltos ni repetidos y en orden;
+- se borró del código una migración que ya está aplicada.
+
+Si una migración falla, no se registra y las siguientes no se aplican; al corregirla, se vuelve a
+intentar en el próximo arranque. MySQL no deshace los cambios de estructura, así que lo que la
+migración alcanzó a crear antes del error hay que borrarlo a mano.
 
 **Por qué no se usan modelos de Providence:** para que Providence trate una tabla como un modelo
 propio, la tabla tiene que registrarse en `app/conf/datamodel.conf` y la clase tiene que estar en
@@ -159,6 +168,10 @@ rust/extension-service/src/
     ├── migrations.rs        Aplicación de las migraciones
     ├── migrations/moduloN/  SQL de las migraciones del módulo N
     └── tests/               Pruebas de la base: unitarias y de integración (#[ignore])
+        ├── access.rs        Aislamiento: solo accede a su base, no a la de Providence
+        ├── config.rs        Lectura de las variables EXT_DB_*
+        ├── migrations.rs    Aplicación, numeración y registro de las migraciones
+        └── moduloN_schema.rs  Tablas del módulo N: columnas, índices, claves y restricciones
 
 app/plugins/
 ├── tests/
@@ -214,7 +227,13 @@ Para simular el servicio Rust en una prueba unitaria se usa el `MockHandler` de 
 - **El nombre describe el comportamiento esperado:** `health_only_accepts_get` en Rust,
   `testUnreachableServiceThrowsModuleException` en PHP.
 - **Dejar la base como estaba:** las pruebas usan la base de desarrollo, así que si crean datos (tablas,
-  registros) los borran al terminar.
+  registros) los borran al terminar. Para escribir filas en tablas reales, la prueba trabaja dentro
+  de una transacción que no confirma: al terminar se deshace sola (ver `db/tests/modulo2_schema.rs`).
+- **Pruebas que no rompen nada si fallan:** una prueba que verifica que algo está prohibido (por
+  ejemplo, borrar una tabla de Providence) apunta a objetos que no existen o corre en una transacción,
+  así, si el permiso existiera por error, no se pierden datos.
+- **Conexiones en Rust:** usar `open_connection()` de `db/tests/`, que comparte un único pool entre
+  todas las pruebas; un pool por prueba supera el máximo de conexiones de MySQL al correr en paralelo.
 
 #### Cómo ejecutarlas
 

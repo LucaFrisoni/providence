@@ -65,6 +65,21 @@ pub const PROVIDENCE_TABLE: &str = "ca_users";
 pub const ER_DBACCESS_DENIED: u16 = 1044;
 #[cfg(test)]
 pub const ER_TABLEACCESS_DENIED: u16 = 1142;
+/// Pruebas (db): códigos de error de MySQL de usuario o contraseña incorrectos, clave única repetida,
+/// referencia a una fila inexistente, borrado de una fila referenciada y valor fuera de un ENUM.
+#[cfg(test)]
+pub const ER_ACCESS_DENIED: u16 = 1045;
+#[cfg(test)]
+pub const ER_DUP_ENTRY: u16 = 1062;
+#[cfg(test)]
+pub const ER_NO_REFERENCED_ROW: u16 = 1452;
+#[cfg(test)]
+pub const ER_ROW_IS_REFERENCED: u16 = 1451;
+#[cfg(test)]
+pub const ER_DATA_TRUNCATED: u16 = 1265;
+/// Pruebas (db): base de sistema de MySQL, a la que el servicio tampoco debe acceder.
+#[cfg(test)]
+pub const MYSQL_SYSTEM_DB: &str = "mysql";
 /// Pruebas (db): tablas que crea la migración creando_tablas_modulo2.
 #[cfg(test)]
 pub const MODULO2_TABLES: [&str; 3] = ["m2_versions", "m2_version_files", "m2_change_log"];

@@ -316,7 +316,7 @@ Convenciones: `[x]` hecho, `[ ]` pendiente. Los números `#N` refieren al
 - [ ] Cargar todas las configuraciones del catalogo
 - [x] Leer en PHP el valor efectivo y el valor por defecto de cada clave
 - [x] Vista de todas las configuraciones por tipo de dato y sección, con el valor actual
-- [ ] Pruebas unitarias de rust, tanto db como rutas
+- [x] Pruebas unitarias de rust, tanto db como rutas
 - [ ] Pruebas unitarias de PHP
 
 ### Fase 2: edición del catálogo

@@ -45,7 +45,7 @@ impl DbConfig {
         })
     }
 
-    fn opts(&self) -> Opts {
+    pub(crate) fn opts(&self) -> Opts {
         OptsBuilder::new()
             .ip_or_hostname(Some(self.host.as_str()))
             .tcp_port(self.port)
@@ -57,12 +57,15 @@ impl DbConfig {
 }
 
 /// Puerto de `EXT_DB_PORT`, o el puerto por defecto de MySQL si no está definido.
+/// El puerto 0 no es válido: el sistema operativo lo usa para elegir uno libre al escuchar.
 fn parse_port(raw: Option<String>) -> Result<u16, String> {
-    match raw.filter(|value| !value.is_empty()) {
-        None => Ok(DEFAULT_DB_PORT),
-        Some(value) => value
-            .parse()
-            .map_err(|e| format!("{DB_PORT_ENV_VAR} inválida ({value}): {e}")),
+    let Some(value) = raw.filter(|value| !value.is_empty()) else {
+        return Ok(DEFAULT_DB_PORT);
+    };
+    match value.parse::<u16>() {
+        Ok(0) => Err(format!("{DB_PORT_ENV_VAR} inválida ({value}): el puerto no puede ser 0")),
+        Ok(port) => Ok(port),
+        Err(e) => Err(format!("{DB_PORT_ENV_VAR} inválida ({value}): {e}")),
     }
 }
 

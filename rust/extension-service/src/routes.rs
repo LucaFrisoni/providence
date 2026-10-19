@@ -49,20 +49,14 @@ fn sin_parametros(ruta: &str) -> &str {
 mod tests {
     use super::*;
 
-    use crate::constants::{CODIGO_NO_ENCONTRADO, CODIGO_OK, HEALTH_ROUTE};
+    use crate::constants::{CODIGO_NO_ENCONTRADO, CODIGO_OK};
     use crate::modules::health_response;
-
-    /// La ruta base de un módulo es /api/<modulo>.
-    #[test]
-    fn module_path_uses_api_prefix() {
-        assert_eq!(module_path(MODULO2), "/api/modulo2");
-    }
 
     /// GET /api/<modulo>/health llega al módulo correcto, para los siete módulos.
     #[test]
     fn dispatches_health_to_every_module() {
         for (nombre, _) in MODULOS {
-            let ruta = format!("{}{HEALTH_ROUTE}", module_path(nombre));
+            let ruta = format!("/api/{nombre}/health");
             assert_eq!(responder(&Method::Get, &ruta), health_response(nombre), "{ruta}");
         }
     }
@@ -70,14 +64,24 @@ mod tests {
     /// Los parámetros de la URL (?x=1) no impiden encontrar la ruta.
     #[test]
     fn ignores_query_parameters() {
-        let respuesta = responder(&Method::Get, "/api/modulo2/health?x=1");
+        let respuesta = responder(&Method::Get, "/api/modulo2/health?x=1&y=2");
         assert_eq!(respuesta.estado, CODIGO_OK);
     }
 
-    /// Las rutas fuera de /api/<modulo> devuelven 404.
+    /// Las rutas fuera de /api/<modulo> o con un módulo mal escrito devuelven 404.
     #[test]
     fn unknown_module_or_path_returns_not_found() {
-        for ruta in ["/", "/api", "/api/inexistente/health", "/otra/modulo2/health"] {
+        for ruta in [
+            "/",
+            "/api",
+            "/api/inexistente/health",
+            "/otra/modulo2/health",
+            "/api/modulo2",
+            "/api/modulo2health",
+            "/api/modulo21/health",
+            "/API/modulo2/health",
+            "/api/Modulo2/health",
+        ] {
             assert_eq!(responder(&Method::Get, ruta).estado, CODIGO_NO_ENCONTRADO, "{ruta}");
         }
     }

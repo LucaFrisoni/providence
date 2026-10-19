@@ -32,12 +32,6 @@ mod tests {
         assert_eq!(respuesta, health_response(MODULO2));
     }
 
-    /// /health con otro método (POST) devuelve 404.
-    #[test]
-    fn health_only_accepts_get() {
-        assert_eq!(responder(&Method::Post, HEALTH_ROUTE).estado, CODIGO_NO_ENCONTRADO);
-    }
-
     /// GET /catalog responde 200 con el catálogo de configuraciones.
     #[test]
     fn get_catalog_returns_configuration_catalog() {
@@ -46,12 +40,25 @@ mod tests {
         assert_eq!(respuesta.cuerpo, catalog::catalog_json().dump());
     }
 
-    /// Una ruta inexistente del módulo devuelve 404 con un JSON de error.
+    /// /health y /catalog con otro método (POST, PUT, DELETE, PATCH, HEAD, OPTIONS) devuelven 404.
     #[test]
-    fn unknown_route_returns_not_found() {
-        let respuesta = responder(&Method::Get, "/inexistente");
-        assert_eq!(respuesta.estado, CODIGO_NO_ENCONTRADO);
-        assert!(respuesta.cuerpo.contains("error"), "{}", respuesta.cuerpo);
+    fn routes_only_accept_get() {
+        let otros = [Method::Post, Method::Put, Method::Delete, Method::Patch, Method::Head, Method::Options];
+        for ruta in [HEALTH_ROUTE, CATALOG_ROUTE] {
+            for metodo in &otros {
+                assert_eq!(responder(metodo, ruta).estado, CODIGO_NO_ENCONTRADO, "{metodo} {ruta}");
+            }
+        }
+    }
+
+    /// Las rutas inexistentes, con barra final, mayúsculas o segmentos de más dan 404.
+    #[test]
+    fn routes_must_match_exactly() {
+        for ruta in [
+            "", "/", "/inexistente", "/health/", "/HEALTH", "//health", "/health/extra",
+            "/catalog/", "/Catalog", "/catalog/ca_objects", "catalog",
+        ] {
+            assert_eq!(responder(&Method::Get, ruta).estado, CODIGO_NO_ENCONTRADO, "{ruta:?}");
+        }
     }
 }
-

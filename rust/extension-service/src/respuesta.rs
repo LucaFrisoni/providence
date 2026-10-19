@@ -28,3 +28,16 @@ impl Respuesta{
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// Respuesta::no_encontrado responde 404 con {"error": mensaje}.
+    #[test]
+    fn not_found_responds_404_with_error_message() {
+        let respuesta = Respuesta::no_encontrado("ruta inexistente");
+        assert_eq!(respuesta.estado, CODIGO_NO_ENCONTRADO);
+        assert_eq!(respuesta.cuerpo, r#"{"error":"ruta inexistente"}"#);
+    }
+}

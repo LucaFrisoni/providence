@@ -8,9 +8,14 @@
 //! Reglas:
 //! - Una migración aplicada no se modifica: los cambios van en una migración nueva. Si el SQL de una
 //!   migración aplicada cambió, el servicio no arranca (`MigrationError::Modified`).
+//! - Cada módulo numera sus migraciones desde 1, sin saltos ni repetidos, y en orden. Si no, el
+//!   servicio no arranca (`MigrationError::Numbering`).
+//! - Una migración aplicada no se borra del código: si `ext_migrations` registra una migración de un
+//!   módulo que ya no está en `MIGRATIONS`, el servicio no arranca (`MigrationError::Missing`).
 //! - MySQL no revierte las sentencias que crean o modifican tablas: si una migración falla a la
 //!   mitad, hay que corregir la base a mano antes de volver a arrancar.
 
+use std::collections::HashMap;
 use std::fmt;
 
 use mysql::prelude::Queryable;
@@ -48,6 +53,10 @@ pub enum MigrationError {
     Database(mysql::Error),
     /// El SQL de una migración ya aplicada cambió (contiene su identificador).
     Modified(String),
+    /// La migración no tiene el número que sigue en su módulo (contiene su identificador).
+    Numbering(String),
+    /// Una migración registrada en `ext_migrations` ya no está en el código (contiene su identificador).
+    Missing(String),
 }
 
 impl Migration {
@@ -77,6 +86,14 @@ impl fmt::Display for MigrationError {
                 f,
                 "la migración {id} ya estaba aplicada y su SQL cambió: los cambios van en una migración nueva"
             ),
+            MigrationError::Numbering(id) => write!(
+                f,
+                "la migración {id} no sigue la numeración de su módulo (desde 1, sin saltos ni repetidos)"
+            ),
+            MigrationError::Missing(id) => write!(
+                f,
+                "la migración {id} está aplicada en la base pero ya no está en el código"
+            ),
         }
     }
 }
@@ -92,19 +109,62 @@ pub fn run(
     conn: &mut impl Queryable,
     migrations: &[Migration],
 ) -> Result<Vec<String>, MigrationError> {
+    check_numbering(migrations)?;
     ensure_registry(conn)?;
+    check_none_missing(conn, migrations)?;
     let mut applied = Vec::new();
     for migration in migrations {
-        match applied_checksum(conn, migration)? {
-            Some(checksum) if checksum == migration.checksum() => continue,
-            Some(_) => return Err(MigrationError::Modified(migration.id())),
-            None => {
-                apply(conn, migration)?;
-                applied.push(migration.id());
-            }
+        if apply_if_pending(conn, migration)? {
+            applied.push(migration.id());
         }
     }
     Ok(applied)
+}
+
+/// Verifica que cada módulo numere sus migraciones desde 1, sin saltos ni repetidos, y en orden.
+pub(crate) fn check_numbering(migrations: &[Migration]) -> Result<(), MigrationError> {
+    let mut last_version: HashMap<&str, u32> = HashMap::new();
+    for migration in migrations {
+        let expected = last_version.get(migration.module).copied().unwrap_or(0) + 1;
+        if migration.version != expected {
+            return Err(MigrationError::Numbering(migration.id()));
+        }
+        last_version.insert(migration.module, migration.version);
+    }
+    Ok(())
+}
+
+/// Verifica que las migraciones registradas de los módulos de la lista sigan en la lista.
+/// Solo revisa esos módulos: las de un módulo que no está en la lista no se comparan.
+fn check_none_missing(
+    conn: &mut impl Queryable,
+    migrations: &[Migration],
+) -> Result<(), MigrationError> {
+    let registered: Vec<(String, u32, String)> =
+        conn.query(format!("SELECT module, version, name FROM {MIGRATIONS_TABLE}"))?;
+    for (module, version, name) in registered {
+        let module_listed = migrations.iter().any(|m| m.module == module);
+        let listed = migrations.iter().any(|m| m.module == module && m.version == version);
+        if module_listed && !listed {
+            return Err(MigrationError::Missing(format!("{module}/{version:04}_{name}")));
+        }
+    }
+    Ok(())
+}
+
+/// Aplica la migración si todavía no se aplicó. Devuelve si la aplicó.
+fn apply_if_pending(
+    conn: &mut impl Queryable,
+    migration: &Migration,
+) -> Result<bool, MigrationError> {
+    match applied_checksum(conn, migration)? {
+        Some(checksum) if checksum == migration.checksum() => Ok(false),
+        Some(_) => Err(MigrationError::Modified(migration.id())),
+        None => {
+            apply(conn, migration)?;
+            Ok(true)
+        }
+    }
 }
 
 /// Crea la tabla que registra las migraciones aplicadas, si no existe.
