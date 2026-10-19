@@ -4,11 +4,11 @@
 use std::collections::{HashMap, HashSet};
 use std::fmt;
 
-use super::dominio::{Asignacion, Elemento, Entidad, TipoDato, Campo};
+use super::dominio::{Asignacion, Elemento, Entidad, TipoDato, Campo, Relacion};
 use crate::constants::{
     CAMPO_ASIGNACIONES, CAMPO_CODIGO, CAMPO_ELEMENTO, CAMPO_ELEMENTOS, CAMPO_ENTIDAD,
     CAMPO_ENTIDADES, CAMPO_ETIQUETA, CAMPO_NOMBRE, CAMPO_NUMERO_TABLA, CAMPO_PADRE, CAMPO_TIPO,
-    PROFUNDIDAD_MAX_ARBOL, CAMPO_CAMPOS
+    PROFUNDIDAD_MAX_ARBOL, CAMPO_CAMPOS, CAMPO_RELACIONES, CAMPO_ORIGEN, CAMPO_DESTINO, CAMPO_INVERSO,
 };
 use json::JsonValue;
 
@@ -33,6 +33,7 @@ pub struct Modelo {
     pub elementos: Vec<Elemento>,
     pub asignaciones: Vec<Asignacion>,
     pub campos: Vec<Campo>,
+    pub relaciones: Vec<Relacion>,
 }
 
 impl Modelo {
@@ -44,6 +45,7 @@ impl Modelo {
             elementos: leer_lista(&raiz, CAMPO_ELEMENTOS, leer_elemento)?,
             asignaciones: leer_lista(&raiz, CAMPO_ASIGNACIONES, leer_asignacion)?,
             campos: leer_lista(&raiz, CAMPO_CAMPOS, leer_campo)?,
+            relaciones: leer_lista(&raiz, CAMPO_RELACIONES, leer_relacion)?,
         };
         modelo.validar()?;
         Ok(modelo)
@@ -55,6 +57,7 @@ impl Modelo {
         self.validar_padres()?;
         self.validar_asignaciones()?;
         self.validar_campos()?;
+        self.validar_relaciones()?;
         self.validar_profundidad()
     }
 
@@ -93,6 +96,15 @@ impl Modelo {
         self.campos
             .iter()
             .try_for_each(|c| self.validar_entidad(&c.entidad))
+    }
+
+     //toda relacion debe unir dos entidades que existan
+    fn validar_relaciones(&self) -> Result<(), ErrorModelo> {
+        for r in &self.relaciones {
+            self.validar_entidad(&r.origen)?;
+            self.validar_entidad(&r.destino)?;
+        }
+        Ok(())
     }
 
     fn validar_entidad(&self, codigo: &str) -> Result<(), ErrorModelo> {
@@ -193,6 +205,15 @@ fn leer_campo(valor: &JsonValue) -> Result<Campo, ErrorModelo> {
     })
 }
 
+fn leer_relacion(valor: &JsonValue) -> Result<Relacion, ErrorModelo> {
+    Ok(Relacion {
+        origen: texto(valor, CAMPO_ORIGEN)?,
+        destino: texto(valor, CAMPO_DESTINO)?,
+        tipo: texto(valor, CAMPO_TIPO)?,
+        inverso: texto(valor, CAMPO_INVERSO)?,
+    })
+}
+
 fn texto(valor: &JsonValue, campo: &str) -> Result<String, ErrorModelo> {
     valor[campo]
         .as_str()
@@ -226,7 +247,10 @@ mod tests {
     use super::*;
     // un modelo como el ejemplo de 6.1 del documento de los clientes
     const MODELO_VALIDO: &str = r#"{
-        "entidades": [ { "codigo": "ca_objects", "nombre": "Objetos", "numero_tabla": 57 } ],
+        "entidades": [
+            { "codigo": "ca_objects", "nombre": "Objetos", "numero_tabla": 57 },
+            { "codigo": "ca_entities", "nombre": "Entidades", "numero_tabla": 20 }
+        ],
         "elementos": [
             { "codigo": "date", "nombre": "Fecha", "tipo": 0, "padre": null },
             { "codigo": "ISOdate", "nombre": "Formato ISO", "tipo": 2, "padre": "date" },
@@ -238,6 +262,9 @@ mod tests {
         ],
         "campos": [
             { "entidad": "ca_objects", "codigo": "idno", "nombre": "Identificador" }
+        ],
+        "relaciones": [
+            { "origen": "ca_objects", "destino": "ca_entities", "tipo": "creador", "inverso": "creado por" }
         ]
     }"#;
 
@@ -253,7 +280,7 @@ mod tests {
     #[test]
     fn lee_un_modelo_valido() {
         let modelo = Modelo::desde_json(MODELO_VALIDO).unwrap();
-        assert_eq!(modelo.entidades.len(), 1);
+        assert_eq!(modelo.entidades.len(), 2);
         assert_eq!(modelo.elementos.len(), 3);
         assert_eq!(modelo.asignaciones.len(), 2);
     }
@@ -287,6 +314,21 @@ mod tests {
         );
         let resultado = Modelo::desde_json(&mal);
         assert!(matches!(resultado, Err(ErrorModelo::Inconsistente(m)) if m.contains("ca_x")));
+    }
+
+    #[test]
+    fn lee_las_relaciones_entre_entidades() {
+        let modelo = Modelo::desde_json(MODELO_VALIDO).unwrap();
+        assert_eq!(modelo.relaciones.len(), 1);
+        assert_eq!(modelo.relaciones[0].destino, "ca_entities");
+        assert_eq!(modelo.relaciones[0].inverso, "creado por");
+    }
+
+    #[test]
+    fn rechaza_una_relacion_con_una_entidad_que_no_existe() {
+        let mal = modelo_con(r#""destino": "ca_entities""#, r#""destino": "ca_nada""#);
+        let resultado = Modelo::desde_json(&mal);
+        assert!(matches!(resultado, Err(ErrorModelo::Inconsistente(m)) if m.contains("ca_nada")));
     }
 
     #[test]
@@ -385,7 +427,7 @@ mod tests {
             })
             .collect();
         format!(
-            r#"{{ "entidades": [], "elementos": [{}], "asignaciones": [], "campos": [] }}"#,
+            r#"{{ "entidades": [], "elementos": [{}], "asignaciones": [], "campos": [], "relaciones": [] }}"#,
             elementos.join(",")
         )
     }

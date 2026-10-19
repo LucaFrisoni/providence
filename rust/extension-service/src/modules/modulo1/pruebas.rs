@@ -1,6 +1,6 @@
 //funciones para armar modelos de ejemplo para los tests
 
-use super::dominio::{Asignacion, Elemento, Entidad, TipoDato, Campo};
+use super::dominio::{Asignacion, Elemento, Entidad, TipoDato, Campo, Relacion};
 use super::modelo::Modelo;
 
 pub fn elemento(codigo: &str, nombre: &str, tipo: TipoDato, padre: Option<&str>) -> Elemento {
@@ -36,6 +36,15 @@ pub fn campo(entidad: &str, codigo: &str, nombre: &str) -> Campo {
     }
 }
 
+pub fn relacion(origen: &str, destino: &str, tipo: &str, inverso: &str) -> Relacion {
+    Relacion {
+        origen: origen.to_string(),
+        destino: destino.to_string(),
+        tipo: tipo.to_string(),
+        inverso: inverso.to_string(),
+    }
+}
+
 pub fn modelo(
     entidades: Vec<Entidad>,
     elementos: Vec<Elemento>,
@@ -46,5 +55,6 @@ pub fn modelo(
         elementos,
         asignaciones,
         campos: vec![],
+        relaciones: vec![],
     }
 }

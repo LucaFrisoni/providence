@@ -120,6 +120,15 @@ pub struct Campo {
     pub nombre: String,
 }
 
+//tipo de relacion entre dos entidades (ca_relationship_types en Providence)
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Relacion {
+    pub origen: String, //codigo de la entidad desde la que se lee el tipo
+    pub destino: String, //codigo de la entidad con la que se relaciona
+    pub tipo: String, //por ej. "creador"
+    pub inverso: String, //el mismo tipo pero de destino a origen, por ej. "creado por"
+}
+
 
 #[cfg(test)]
 mod tests {

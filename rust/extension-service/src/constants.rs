@@ -86,6 +86,11 @@ pub const CAMPO_ELEMENTO: &str = "elemento";
 pub const CAMPO_ETIQUETA: &str = "etiqueta";
 pub const CAMPO_HIJOS: &str = "hijos";
 pub const CAMPO_CAMPOS: &str = "campos";
+pub const CAMPO_RELACIONES: &str = "relaciones";
+pub const CAMPO_ORIGEN: &str = "origen";
+pub const CAMPO_DESTINO: &str = "destino";
+pub const CAMPO_INVERSO: &str = "inverso";
+
 
 //cant maxima de contenedores dentro de contenedores, para no tener jerarquias muy grandes
 pub const PROFUNDIDAD_MAX_ARBOL: usize = 16;
