@@ -28,6 +28,12 @@ final class Modulo2CatalogMatrixTest extends TestCase {
 		$this->assertSame(['ca_objects', 'ca_places'], Modulo2CatalogMatrix::dataTypes($catalog));
 	}
 	# -------------------------------------------------------
+	#[TestDox('Una sección sin configuraciones o un catálogo sin secciones no tienen filas ni tipos de dato')]
+	public function testEmptySectionOrCatalogHasNoRows() : void {
+		$this->assertSame([], Modulo2CatalogMatrix::rows(['settings' => []]));
+		$this->assertSame([], Modulo2CatalogMatrix::dataTypes(['sections' => []]));
+	}
+	# -------------------------------------------------------
 	private function section() : array {
 		return ['settings' => [
 			['id' => 'disable_quickadd', 'entries' => [['data_type' => 'ca_objects', 'key' => 'ca_objects_disable_quickadd']]],

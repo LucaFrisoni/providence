@@ -35,9 +35,21 @@ class Modulo2ServiceClient {
 	 * La variable de entorno EXTENSION_SERVICE_URL (usada en Docker) tiene prioridad sobre modulo2.conf
 	 */
 	public static function fromConfig(Configuration $config) : self {
-		$url = getenv(Modulo2Constants::SERVICE_URL_ENV_VAR) ?: (string)$config->get('service_url');
-		$timeout = (float)($config->get('service_timeout') ?: Modulo2Constants::DEFAULT_TIMEOUT);
-		return new self($url, $timeout);
+		return new self(self::configuredUrl($config), self::configuredTimeout($config));
+	}
+	# -------------------------------------------------------
+	/**
+	 * URL del servicio: EXTENSION_SERVICE_URL si está definida, si no service_url de modulo2.conf
+	 */
+	public static function configuredUrl(Configuration $config) : string {
+		return getenv(Modulo2Constants::SERVICE_URL_ENV_VAR) ?: (string)$config->get('service_url');
+	}
+	# -------------------------------------------------------
+	/**
+	 * Tiempo de espera en segundos: service_timeout de modulo2.conf, o DEFAULT_TIMEOUT si no está definido
+	 */
+	public static function configuredTimeout(Configuration $config) : float {
+		return (float)($config->get('service_timeout') ?: Modulo2Constants::DEFAULT_TIMEOUT);
 	}
 	# -------------------------------------------------------
 	/**
@@ -59,7 +71,7 @@ class Modulo2ServiceClient {
 	}
 	# -------------------------------------------------------
 	/**
-	 * Hace un GET y decodifica la respuesta JSON como array
+	 * Hace un GET y decodifica la respuesta JSON, que tiene que ser un objeto
 	 *
 	 * @throws Modulo2ServiceException
 	 */
@@ -70,7 +82,8 @@ class Modulo2ServiceClient {
 		} catch (GuzzleException | JsonException $e) {
 			throw new Modulo2ServiceException(_t('No se pudo consultar el servicio del módulo 2: %1', $e->getMessage()), 0, $e);
 		}
-		if (!is_array($data)) {
+		// Un objeto JSON se decodifica como array asociativo; una lista ([1, 2]) no es una respuesta válida
+		if (!is_array($data) || ($data && array_is_list($data))) {
 			throw new Modulo2ServiceException(_t('El servicio del módulo 2 devolvió una respuesta inesperada'));
 		}
 		return $data;

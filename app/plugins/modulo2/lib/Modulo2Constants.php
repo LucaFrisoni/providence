@@ -29,8 +29,8 @@ final class Modulo2Constants {
 	/** Profundidad máxima al decodificar JSON (valor por defecto de json_decode) */
 	const JSON_MAX_DEPTH = 512;
 	# -------------------------------------------------------
-	/** Catálogo: nombres de archivo aceptados (solo archivos de app/conf) */
-	const CATALOG_FILE_PATTERN = '/^[a-z_]+\.conf$/';
+	/** Catálogo: nombres de archivo aceptados (solo archivos de app/conf). \z y no $: $ acepta un salto de línea final */
+	const CATALOG_FILE_PATTERN = '/^[a-z_]+\.conf\z/';
 	/** Catálogo: tipos de valor de una configuración ("kind" en el JSON del catálogo) */
 	const KIND_BOOLEAN = 'boolean';
 	const KIND_SUBTYPE_LIST = 'subtype_list';
