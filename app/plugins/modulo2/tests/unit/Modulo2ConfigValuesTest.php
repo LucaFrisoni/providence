@@ -19,52 +19,70 @@ final class Modulo2ConfigValuesTest extends TestCase {
 		$this->assertSame(['current' => true, 'distribution' => false, 'modified' => true], $entry);
 	}
 	# -------------------------------------------------------
-	#[TestDox('No marca como modificado un valor igual al de la distribución, aunque esté escrito distinto')]
+	#[TestDox('No marca como modificado un valor igual al de la distribución, aunque esté escrito o ordenado distinto')]
 	public function testSameValueIsNotModified() : void {
 		$this->assertFalse($this->valuesOf('boolean', ['ca_places_disable' => '0'], ['ca_places_disable' => 0])['modified']);
 		$this->assertFalse($this->valuesOf('subtype_list', ['ca_places_disable' => ''], [])['modified']);
+		$this->assertFalse($this->valuesOf('subtype_list', ['ca_places_disable' => ['b', 'a']], ['ca_places_disable' => ['a', 'b']])['modified']);
 	}
 	# -------------------------------------------------------
-	#[TestDox('Normaliza booleanos y listas de subtipos: un valor vacío o ausente es No o []')]
+	#[TestDox('Normaliza cada tipo de valor; las listas de subtipos se ordenan y las de tipos de dato no')]
 	public function testValuesAreNormalizedByKind() : void {
 		$cases = [
 			[null, 'boolean', false], ['', 'boolean', false], ['0', 'boolean', false],
 			['1', 'boolean', true], [1, 'boolean', true],
 			[null, 'subtype_list', []], ['', 'subtype_list', []], ['city', 'subtype_list', ['city']],
-			[['city', 'country'], 'subtype_list', ['city', 'country']], [[10, 20], 'subtype_list', ['10', '20']]
+			[['country', 'city'], 'subtype_list', ['city', 'country']], [[10, 20], 'subtype_list', ['10', '20']],
+			[null, 'table_list', []], [['ca_places', 'ca_objects'], 'table_list', ['ca_places', 'ca_objects']],
+			['2', 'number', 2], ['2.5', 'number', 2.5], [null, 'number', null], ['', 'number', null],
+			['FFFFFF', 'color', 'ffffff'], [null, 'color', ''],
+			['^ca_objects.idno', 'text', '^ca_objects.idno'], [null, 'text', ''], ['alwaysShow', 'choice', 'alwaysShow'],
+			[['a' => ['b' => '1']], 'structured', ['a' => ['b' => '1']]], [null, 'structured', []], ['', 'structured', []],
+			[['objects' => [], 'places' => []], 'key_order', ['objects', 'places']], [null, 'key_order', []]
 		];
 		foreach ($cases as [$value, $kind, $expected]) {
 			$this->assertSame($expected, Modulo2ConfigValues::normalize($value, $kind), var_export($value, true)." ({$kind})");
 		}
 	}
 	# -------------------------------------------------------
-	#[TestDox('Agrega a cada entrada de cada sección sus propios valores, leídos del archivo del catálogo')]
-	public function testEveryEntryGetsItsOwnValues() : void {
-		$files = [];
+	#[TestDox('Una clave anidada recorre los bloques; si un tramo no existe, el valor es null')]
+	public function testNestedKeysWalkTheBlocks() : void {
+		$config = $this->fakeConfig(['formats' => ['ca_objects' => ['__default__' => ['separator' => '.']]], 'menu_color' => 'fff']);
+
+		$this->assertSame(['separator' => '.'], Modulo2ConfigValues::lookup($config, 'formats/ca_objects/__default__'));
+		$this->assertSame('fff', Modulo2ConfigValues::lookup($config, 'menu_color'));
+		$this->assertNull(Modulo2ConfigValues::lookup($config, 'formats/ca_places'));
+		$this->assertNull(Modulo2ConfigValues::lookup($config, 'menu_color/otro'), 'Un valor simple no tiene tramos');
+		$this->assertNull(Modulo2ConfigValues::lookup($config, 'inexistente/x'));
+	}
+	# -------------------------------------------------------
+	#[TestDox('Cada sección se lee de su archivo, y cada archivo se carga una sola vez')]
+	public function testEverySectionIsReadFromItsFile() : void {
+		$loaded = [];
 		$reader = new Modulo2ConfigValues(
-			function(string $file) use (&$files) { $files[] = $file; return $this->fakeConfig(['ca_objects_disable' => '1']); },
+			function(string $file) use (&$loaded) { $loaded[] = $file; return $this->fakeConfig(['ca_objects_disable' => '1', 'formats' => ['ca_objects' => ['x' => '1']]]); },
 			fn(string $file) => $this->fakeConfig([])
 		);
 
-		$catalog = $reader->addValues($this->twoSectionCatalog());
+		$catalog = $reader->addValues($this->threeSectionCatalog());
 
-		$this->assertSame(['app.conf'], $files);
+		$this->assertSame(['app.conf', 'multipart_id_numbering.conf'], $loaded);
 		$current = [];
 		foreach ($catalog['sections'] as $section) {
 			foreach ($section['settings'] as $setting) {
 				foreach ($setting['entries'] as $entry) { $current[$entry['key']] = $entry['current']; }
 			}
 		}
-		$this->assertSame(['ca_objects_disable' => true, 'ca_places_disable' => false, 'ca_objects_disable_delete' => false], $current);
+		$this->assertSame(['ca_objects_disable' => true, 'ca_places_disable' => false, 'ca_objects_disable_delete' => false, 'formats/ca_objects' => ['x' => '1']], $current);
 		$this->assertSame('Tipos de dato', $catalog['sections'][0]['name'], 'Conserva los datos del catálogo');
 	}
 	# -------------------------------------------------------
-	#[TestDox('Rechaza un catálogo sin archivo o con uno fuera de app/conf, sin leer configuraciones')]
+	#[TestDox('Rechaza una sección sin archivo o con uno fuera de app/conf, sin leer configuraciones')]
 	public function testRejectsInvalidFile() : void {
 		$reader = new Modulo2ConfigValues(fn($file) => $this->fail("No debía leer {$file}"), fn($file) => $this->fail("No debía leer {$file}"));
 		foreach ([null, '', '../../setup.php', '/etc/passwd', 'local/app.conf', 'APP.conf', 'app.conf.php', "app.conf\n"] as $file) {
 			$catalog = $this->catalog('boolean');
-			$catalog['file'] = $file;
+			$catalog['sections'][0]['file'] = $file;
 			try {
 				$reader->addValues($catalog);
 				$this->fail('Se esperaba Modulo2ConfigException: '.var_export($file, true));
@@ -99,21 +117,24 @@ final class Modulo2ConfigValuesTest extends TestCase {
 	}
 	# -------------------------------------------------------
 	private function catalog(string $kind) : array {
-		return ['file' => 'app.conf', 'sections' => [[
-			'id' => 'data_types',
+		return ['sections' => [[
+			'id' => 'data_types', 'file' => 'app.conf',
 			'settings' => [['id' => 'disable', 'kind' => $kind, 'entries' => [['data_type' => 'ca_places', 'key' => 'ca_places_disable']]]]
 		]]];
 	}
 	# -------------------------------------------------------
-	/** Dos secciones; la primera con una configuración de dos entradas */
-	private function twoSectionCatalog() : array {
-		return ['file' => 'app.conf', 'sections' => [
-			['id' => 'data_types', 'name' => 'Tipos de dato', 'settings' => [['id' => 'disable', 'kind' => 'boolean', 'entries' => [
+	/** Tres secciones: dos de app.conf (la primera con dos entradas) y una de multipart_id_numbering.conf */
+	private function threeSectionCatalog() : array {
+		return ['sections' => [
+			['id' => 'data_types', 'name' => 'Tipos de dato', 'file' => 'app.conf', 'settings' => [['id' => 'disable', 'kind' => 'boolean', 'entries' => [
 				['data_type' => 'ca_objects', 'key' => 'ca_objects_disable'],
 				['data_type' => 'ca_places', 'key' => 'ca_places_disable']
 			]]]],
-			['id' => 'features', 'name' => 'Funciones', 'settings' => [['id' => 'disable_delete', 'kind' => 'boolean', 'entries' => [
+			['id' => 'features', 'name' => 'Funciones', 'file' => 'app.conf', 'settings' => [['id' => 'disable_delete', 'kind' => 'boolean', 'entries' => [
 				['data_type' => 'ca_objects', 'key' => 'ca_objects_disable_delete']
+			]]]],
+			['id' => 'id_formats', 'name' => 'Formatos', 'file' => 'multipart_id_numbering.conf', 'settings' => [['id' => 'formats', 'kind' => 'structured', 'entries' => [
+				['data_type' => 'ca_objects', 'key' => 'formats/ca_objects']
 			]]]]
 		]];
 	}

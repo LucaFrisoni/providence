@@ -28,32 +28,58 @@ class modulo2Plugin extends BaseApplicationPlugin {
 	}
 	# -------------------------------------------------------
 	/**
-	 * Agrega el menú "Módulo 2" a la barra principal
+	 * Reemplaza el menú "Manage" de la barra principal por "Gestión", en el mismo lugar: el panel de
+	 * gestión (todo Manage, mejorado) y las nuevas configuraciones (las del catálogo). Solo cambia la
+	 * barra principal: las pantallas de Manage siguen igual, con su menú lateral, y se llega a ellas
+	 * desde el panel. Un usuario sin el permiso del módulo sigue viendo "Manage"
 	 */
 	public function hookRenderMenuBar($menu_bar) {
 		$request = $this->getRequest();
 		if (!$request || !$request->user->canDoAction(Modulo2Constants::PERMISSION)) { return $menu_bar; }
 
-		$menu_bar['modulo2'] = [
-			'displayName' => _t('Módulo 2'),
+		return self::replaceManage($menu_bar, [
+			'displayName' => _t('Gestión'),
 			'navigation' => [
-				'configurations' => [
-					'displayName' => _t('Configuraciones'),
-					'default' => ['module' => 'modulo2', 'controller' => 'Configurations', 'action' => 'Index'],
-					'is_enabled' => 1,
-					'requires' => [],
-					'parameters' => []
-				],
-				'status' => [
-					'displayName' => _t('Estado del servicio'),
-					'default' => ['module' => 'modulo2', 'controller' => 'Status', 'action' => 'Index'],
-					'is_enabled' => 1,
-					'requires' => [],
-					'parameters' => []
-				]
+				'manage' => self::menuItem(_t('Panel de gestión'), 'Manage'),
+				'configurations' => self::menuItem(_t('Nuevas configuraciones'), 'Configurations')
 			]
+		]);
+	}
+	# -------------------------------------------------------
+	/** Menú con "Gestión" en el lugar de "Manage" (al final, si la barra no tiene "Manage") */
+	public static function replaceManage(array $menu_bar, array $menu) : array {
+		$result = [];
+		foreach ($menu_bar as $key => $item) {
+			if ($key === Modulo2Constants::NATIVE_MANAGE_MENU) { $result[Modulo2Constants::MENU] = $menu; continue; }
+			$result[$key] = $item;
+		}
+		$result[Modulo2Constants::MENU] = $result[Modulo2Constants::MENU] ?? $menu;
+		return $result;
+	}
+	# -------------------------------------------------------
+	/** Ítem del menú que abre la acción Index de un controlador del plugin */
+	private static function menuItem(string $label, string $controller) : array {
+		return [
+			'displayName' => $label,
+			'default' => ['module' => 'modulo2', 'controller' => $controller, 'action' => 'Index'],
+			'is_enabled' => 1,
+			'requires' => [],
+			'parameters' => []
 		];
-		return $menu_bar;
+	}
+	# -------------------------------------------------------
+	/**
+	 * Agrega a la barra lateral de la página de configuraciones su índice de secciones
+	 * (ConfigurationsController::Info)
+	 */
+	public function hookRenderWidgets($widgets) {
+		$widgets[Modulo2Constants::CONFIGURATIONS_WIDGET] = [
+			'domain' => ['module' => 'modulo2', 'controller' => 'Configurations'],
+			'handler' => ['module' => 'modulo2', 'controller' => 'Configurations', 'action' => 'Info', 'isplugin' => true],
+			'requires' => [],
+			'parameters' => []
+		];
+		return $widgets;
 	}
 	# -------------------------------------------------------
 	/**

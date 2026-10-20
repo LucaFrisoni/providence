@@ -53,15 +53,6 @@ class Modulo2ServiceClient {
 	}
 	# -------------------------------------------------------
 	/**
-	 * Consulta el estado del módulo 2 en el servicio (GET /api/modulo2/health)
-	 *
-	 * @throws Modulo2ServiceException
-	 */
-	public function getHealth() : array {
-		return $this->getJson(Modulo2Constants::HEALTH_PATH);
-	}
-	# -------------------------------------------------------
-	/**
 	 * Obtiene el catálogo de configuraciones que administra el módulo (GET /api/modulo2/catalog)
 	 *
 	 * @throws Modulo2ServiceException

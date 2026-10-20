@@ -12,6 +12,9 @@ class Modulo2ConfigException extends Exception {}
 
 class Modulo2ConfigValues {
 	# -------------------------------------------------------
+	/** Separador de los tramos de una clave anidada, por ejemplo "formats/ca_objects" */
+	const KEY_PATH_SEPARATOR = '/';
+	# -------------------------------------------------------
 	/** @var callable(string): object Carga la configuración efectiva de un archivo */
 	private $effective_loader;
 	/** @var callable(string): object Carga la configuración de la distribución de un archivo */
@@ -28,19 +31,19 @@ class Modulo2ConfigValues {
 	# -------------------------------------------------------
 	/**
 	 * Agrega a cada entrada del catálogo "current" (valor actual), "distribution" (valor de la
-	 * distribución) y "modified" (si difieren)
+	 * distribución) y "modified" (si difieren). Cada sección se lee de su archivo; cada archivo se
+	 * carga una sola vez
 	 *
-	 * @throws Modulo2ConfigException Si el catálogo se refiere a un archivo no válido
+	 * @throws Modulo2ConfigException Si una sección se refiere a un archivo no válido
 	 */
 	public function addValues(array $catalog) : array {
-		$file = self::checkedFile((string)($catalog['file'] ?? ''));
-		$effective = ($this->effective_loader)($file);
-		$distribution = ($this->distribution_loader)($file);
-
+		$loaded = [];
 		foreach ($catalog['sections'] as &$section) {
+			$file = self::checkedFile((string)($section['file'] ?? ''));
+			$loaded[$file] = $loaded[$file] ?? [($this->effective_loader)($file), ($this->distribution_loader)($file)];
 			foreach ($section['settings'] as &$setting) {
 				foreach ($setting['entries'] as &$entry) {
-					$entry += self::valuesFor($entry['key'], $setting['kind'], $effective, $distribution);
+					$entry += self::valuesFor($entry['key'], $setting['kind'], ...$loaded[$file]);
 				}
 			}
 		}
@@ -48,21 +51,54 @@ class Modulo2ConfigValues {
 	}
 	# -------------------------------------------------------
 	/**
-	 * Valor normalizado según el tipo de valor: booleano o lista de códigos de subtipos (un valor vacío es
-	 * una lista vacía)
+	 * Valor de una clave en una configuración. Una clave anidada ("formats/ca_objects") recorre los
+	 * bloques: null si algún tramo no existe
 	 */
-	public static function normalize($value, string $kind) {
-		if ($kind === Modulo2Constants::KIND_BOOLEAN) { return (bool)(int)$value; }
-		if ($kind === Modulo2Constants::KIND_SUBTYPE_LIST) {
-			if (is_array($value)) { return array_values(array_map('strval', $value)); }
-			return strlen((string)$value) ? [(string)$value] : [];
+	public static function lookup($config, string $key) {
+		$parts = explode(self::KEY_PATH_SEPARATOR, $key);
+		$value = $config->get(array_shift($parts));
+		foreach ($parts as $part) {
+			if (!is_array($value) || !array_key_exists($part, $value)) { return null; }
+			$value = $value[$part];
 		}
 		return $value;
 	}
 	# -------------------------------------------------------
+	/**
+	 * Valor normalizado según el tipo de valor, para poder comparar el actual con el de la distribución:
+	 * - booleano: true o false. Un valor escrito a mano como "yes" se lee como No: el módulo escribe 1 o 0
+	 * - lista de subtipos: ordenada, porque para Providence es un conjunto ([a, b] y [b, a] son lo mismo)
+	 * - lista de tipos de dato: en su orden, que sí importa (por ejemplo, el de la búsqueda rápida)
+	 * - número: entero o decimal, o null si no hay valor
+	 * - color: en minúsculas (ffffff y FFFFFF son el mismo color)
+	 * - estructura: el bloque tal cual, o vacío si no hay valor
+	 * - orden de un bloque: sus claves, en orden
+	 * - texto y opción: el texto tal cual
+	 */
+	public static function normalize($value, string $kind) {
+		switch ($kind) {
+			case Modulo2Constants::KIND_BOOLEAN: return (bool)(int)$value;
+			case Modulo2Constants::KIND_SUBTYPE_LIST: $list = self::toList($value); sort($list, SORT_STRING); return $list;
+			case Modulo2Constants::KIND_TABLE_LIST: return self::toList($value);
+			case Modulo2Constants::KIND_NUMBER: return is_numeric($value) ? $value + 0 : null;
+			case Modulo2Constants::KIND_COLOR: return strtolower(trim((string)$value));
+			case Modulo2Constants::KIND_STRUCTURED: return is_array($value) ? $value : [];
+			case Modulo2Constants::KIND_KEY_ORDER: return is_array($value) ? array_map('strval', array_keys($value)) : [];
+			case Modulo2Constants::KIND_TEXT:
+			case Modulo2Constants::KIND_CHOICE: return (string)$value;
+		}
+		return $value;
+	}
+	# -------------------------------------------------------
+	/** Lista de textos: un array, un valor suelto como lista de uno, o vacía si no hay valor */
+	private static function toList($value) : array {
+		if (is_array($value)) { return array_values(array_map('strval', $value)); }
+		return strlen((string)$value) ? [(string)$value] : [];
+	}
+	# -------------------------------------------------------
 	private static function valuesFor(string $key, string $kind, $effective, $distribution) : array {
-		$current = self::normalize($effective->get($key), $kind);
-		$original = self::normalize($distribution->get($key), $kind);
+		$current = self::normalize(self::lookup($effective, $key), $kind);
+		$original = self::normalize(self::lookup($distribution, $key), $kind);
 		return ['current' => $current, 'distribution' => $original, 'modified' => $current !== $original];
 	}
 	# -------------------------------------------------------

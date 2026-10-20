@@ -34,40 +34,30 @@ final class Modulo2ServiceClientTest extends TestCase {
 		array_map('unlink', $this->temp_files);
 	}
 	# -------------------------------------------------------
-	#[TestDox('getHealth() hace GET a la ruta de estado, pide JSON y devuelve la respuesta decodificada')]
-	public function testGetHealthRequestsModuleHealthRoute() : void {
-		$client = $this->clientReturning(new Response(200, [], '{"module":"modulo2","status":"ok"}'));
-
-		$health = $client->getHealth();
-
-		$this->assertSame(['module' => 'modulo2', 'status' => 'ok'], $health);
-		$request = $this->history[0]['request'];
-		$this->assertSame('GET', $request->getMethod());
-		$this->assertSame('/'.Modulo2Constants::HEALTH_PATH, $request->getUri()->getPath());
-		$this->assertSame('application/json', $request->getHeaderLine('Accept'));
-	}
-	# -------------------------------------------------------
-	#[TestDox('getCatalog() hace GET a la ruta del catálogo y devuelve la respuesta decodificada')]
+	#[TestDox('getCatalog() hace GET a la ruta del catálogo, pide JSON y devuelve la respuesta decodificada')]
 	public function testGetCatalogRequestsCatalogRoute() : void {
-		$client = $this->clientReturning(new Response(200, [], '{"file":"app.conf","sections":[]}'));
+		$client = $this->clientReturning(new Response(200, [], '{"sections":[]}'));
 
 		$catalog = $client->getCatalog();
 
-		$this->assertSame(['file' => 'app.conf', 'sections' => []], $catalog);
-		$this->assertSame('/'.Modulo2Constants::CATALOG_PATH, $this->history[0]['request']->getUri()->getPath());
+		$this->assertSame(['sections' => []], $catalog);
+		$request = $this->history[0]['request'];
+		$this->assertSame('GET', $request->getMethod());
+		$this->assertSame('/'.Modulo2Constants::CATALOG_PATH, $request->getUri()->getPath());
+		$this->assertSame('application/json', $request->getHeaderLine('Accept'));
 	}
 	# -------------------------------------------------------
 	#[TestDox('La ruta es la misma con o sin barra final en la URL base, y respeta una subruta')]
 	public function testBaseUrlIsNormalized() : void {
 		$cases = [
-			'http://servicio' => '/api/modulo2/health',
-			'http://servicio/' => '/api/modulo2/health',
-			'http://servicio/extension' => '/extension/api/modulo2/health',
-			'http://servicio/extension/' => '/extension/api/modulo2/health'
+			'http://servicio' => '/api/modulo2/catalog',
+			'http://servicio/' => '/api/modulo2/catalog',
+			'http://servicio/extension' => '/extension/api/modulo2/catalog',
+			'http://servicio/extension/' => '/extension/api/modulo2/catalog'
 		];
 		foreach ($cases as $base_url => $expected_path) {
 			$this->history = [];
-			$this->clientReturning(new Response(200, [], '{}'), $base_url)->getHealth();
+			$this->clientReturning(new Response(200, [], '{}'), $base_url)->getCatalog();
 			$this->assertSame($expected_path, $this->history[0]['request']->getUri()->getPath(), $base_url);
 		}
 	}
@@ -85,7 +75,7 @@ final class Modulo2ServiceClientTest extends TestCase {
 		];
 		foreach ($responses as $case => $response) {
 			try {
-				$this->clientReturning($response)->getHealth();
+				$this->clientReturning($response)->getCatalog();
 				$this->fail("Se esperaba Modulo2ServiceException: {$case}");
 			} catch (Modulo2ServiceException $e) {
 				$this->assertNotEmpty($e->getMessage(), $case);

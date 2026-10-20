@@ -51,8 +51,11 @@ pub const TIPO_JSON: &str = "application/json";
 
 /// ----------------------------------------------------Módulo 2: ruta del catálogo de configuraciones, relativa a `/api/modulo2`.
 pub const CATALOG_ROUTE: &str = "/catalog";
-/// Módulo 2: archivo de `app/conf` donde están las configuraciones del catálogo.
-pub const CATALOG_FILE: &str = "app.conf";
+/// Módulo 2: archivos de `app/conf` que leen las secciones del catálogo.
+pub const APP_CONF: &str = "app.conf";
+pub const NAVIGATION_CONF: &str = "navigation.conf";
+pub const ID_NUMBERING_CONF: &str = "multipart_id_numbering.conf";
+pub const TRANSLATIONS_CONF: &str = "translations.conf";
 
 /// ----------------------------------------------------Pruebas (db): variable con el nombre de la base de Providence, para verificar que el servicio no accede a ella.
 #[cfg(test)]

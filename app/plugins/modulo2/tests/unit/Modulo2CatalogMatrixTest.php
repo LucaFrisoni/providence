@@ -28,10 +28,29 @@ final class Modulo2CatalogMatrixTest extends TestCase {
 		$this->assertSame(['ca_objects', 'ca_places'], Modulo2CatalogMatrix::dataTypes($catalog));
 	}
 	# -------------------------------------------------------
-	#[TestDox('Una sección sin configuraciones o un catálogo sin secciones no tienen filas ni tipos de dato')]
-	public function testEmptySectionOrCatalogHasNoRows() : void {
+	#[TestDox('Una sección global, una sin configuraciones o un catálogo sin secciones no tienen filas')]
+	public function testGlobalOrEmptySectionHasNoRows() : void {
+		$global = ['scope' => 'global', 'settings' => [['id' => 'menu_color', 'kind' => 'color', 'entries' => [['key' => 'menu_color']]]]];
+
+		$this->assertSame([], Modulo2CatalogMatrix::rows($global));
 		$this->assertSame([], Modulo2CatalogMatrix::rows(['settings' => []]));
-		$this->assertSame([], Modulo2CatalogMatrix::dataTypes(['sections' => []]));
+		$this->assertSame([], Modulo2CatalogMatrix::dataTypes(['sections' => [$global]]));
+	}
+	# -------------------------------------------------------
+	#[TestDox('Los tipos de dato incluyen los que son valor de una lista de tipos de dato')]
+	public function testDataTypesIncludeTableListValues() : void {
+		$search = ['scope' => 'global', 'settings' => [['id' => 'quicksearch_default_results', 'kind' => 'table_list', 'entries' => [
+			['key' => 'quicksearch_default_results', 'current' => ['ca_objects', 'ca_tours'], 'distribution' => ['ca_loans']]
+		]]]];
+
+		$this->assertSame(['ca_objects', 'ca_places', 'ca_tours', 'ca_loans'], Modulo2CatalogMatrix::dataTypes(['sections' => [$this->section(), $search]]));
+	}
+	# -------------------------------------------------------
+	#[TestDox('Cuenta las entradas modificadas de una sección')]
+	public function testCountsModifiedEntries() : void {
+		$section = ['settings' => [['id' => 'x', 'entries' => [['modified' => true], ['modified' => false], ['modified' => true]]]]];
+
+		$this->assertSame(2, Modulo2CatalogMatrix::modifiedCount($section));
 	}
 	# -------------------------------------------------------
 	private function section() : array {

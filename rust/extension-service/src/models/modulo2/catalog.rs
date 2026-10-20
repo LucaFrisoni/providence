@@ -10,25 +10,49 @@
 //!   Providence es una tabla: `ca_objects`, `ca_places`, `ca_loans`...
 //! - **Subtipo**: la clasificación dentro de un tipo de dato, definida en las listas de Providence
 //!   (por ejemplo, un objeto puede ser "obra de arte" o "libro"). Providence los llama "types".
-//! - **Configuración**: una opción con el mismo significado para varios tipos de dato. Su clave en
-//!   Providence es `<tipo de dato>_<id de la configuración>`: la configuración `disable_delete`
-//!   aplicada a `ca_places` es la clave `ca_places_disable_delete`.
-//! - **Sección**: grupo de configuraciones relacionadas, que el panel muestra juntas.
+//! - **Configuración**: una opción de Providence. Puede aplicarse a varios tipos de dato (su clave
+//!   combina el tipo de dato y el id de la configuración) o ser global (su clave es el id).
+//! - **Sección**: grupo de configuraciones relacionadas de un mismo archivo de `app/conf`, que el
+//!   panel muestra juntas. Una sección es por tipo de dato (una tabla) o global (una lista), nunca
+//!   las dos cosas.
+//! - **Clave anidada**: una clave con `/` recorre un valor estructurado; por ejemplo,
+//!   `formats/ca_objects` es el valor `ca_objects` dentro de `formats`.
 //!
 //! Solo se incluyen claves verificadas en el código de Providence 2.0.12 y, para cada una, los
-//! tipos de dato que la definen en `app/conf/app.conf`.
+//! tipos de dato que la definen en su archivo. Las secciones están en `sections.rs`.
 
 use json::JsonValue;
 
-use crate::constants::CATALOG_FILE;
+pub use super::sections::SECTIONS;
 
 /// Tipo de valor de una configuración.
 #[derive(Clone, Copy)]
 pub enum Kind {
     /// Sí o no (en el archivo, 1 o 0).
     Boolean,
-    /// Lista de códigos de subtipos, por ejemplo `[artwork, book]`. Vacía: sin restricción.
+    /// Lista de códigos de subtipos, por ejemplo `[artwork, book]`. El orden no importa. Vacía: sin restricción.
     SubtypeList,
+    /// Lista de tipos de dato, por ejemplo `[ca_objects, ca_entities]`. El orden importa.
+    TableList,
+    /// Número entero.
+    Number,
+    /// Texto libre, por ejemplo una plantilla de visualización.
+    Text,
+    /// Color HTML de seis dígitos, sin `#`.
+    Color,
+    /// Uno de los valores de la lista.
+    Choice(&'static [ChoiceOption]),
+    /// Valor con estructura (bloques anidados de Providence). En la Fase 1 solo se muestra.
+    Structured,
+    /// Orden de los elementos de un bloque: se muestran sus claves, en orden.
+    KeyOrder,
+}
+
+/// Valor posible de una configuración de tipo `Choice`.
+#[derive(Clone, Copy)]
+pub struct ChoiceOption {
+    pub value: &'static str,
+    pub label: &'static str,
 }
 
 /// Riesgo de modificar la configuración (lo usan la interfaz y, más adelante, los permisos).
@@ -36,346 +60,220 @@ pub enum Kind {
 pub enum Risk {
     Low,
     Medium,
+    High,
 }
 
-/// Configuración del catálogo y los tipos de dato a los que se aplica.
+/// Cómo se arma la clave de una configuración para un tipo de dato.
+#[derive(Clone, Copy)]
+pub enum KeyFormat {
+    /// `<tipo de dato>_<id>`, por ejemplo `ca_places_disable`.
+    TypeFirst,
+    /// `<id>_<tipo de dato>`, por ejemplo `require_valid_id_number_for_ca_places`.
+    TypeLast,
+    /// `<id>/<tipo de dato>`: el tipo de dato dentro del bloque `id`, por ejemplo `formats/ca_objects`.
+    Nested,
+}
+
+/// Si las configuraciones de una sección se aplican a cada tipo de dato o a toda la instalación.
+#[derive(Clone, Copy, PartialEq, Eq)]
+pub enum Scope {
+    DataType,
+    Global,
+}
+
+/// Configuración del catálogo y los tipos de dato a los que se aplica (ninguno si es global).
+#[derive(Clone, Copy)]
 pub struct Setting {
     pub id: &'static str,
     pub label: &'static str,
     pub description: &'static str,
     pub kind: Kind,
     pub risk: Risk,
+    pub key_format: KeyFormat,
     pub data_types: &'static [&'static str],
+    /// La clave de Providence es negativa (`disable`, `dont_show`...) y la etiqueta, positiva: la
+    /// interfaz muestra el valor invertido. El valor que se lee y se guarda es siempre el de la clave.
+    pub inverted: bool,
 }
 
-/// Sección del panel: un grupo de configuraciones relacionadas (#1 a #4 del catálogo del módulo).
+/// Sección del panel: un grupo de configuraciones relacionadas de un mismo archivo.
 pub struct Section {
     pub id: &'static str,
     pub name: &'static str,
     pub description: &'static str,
+    /// Archivo de `app/conf` donde están sus configuraciones, por ejemplo `app.conf`.
+    pub file: &'static str,
+    pub scope: Scope,
     pub settings: &'static [Setting],
 }
 
-// Tipos de dato que definen cada configuración en app/conf/app.conf
-const EDITOR_TYPES: &[&str] = &[
-    "ca_objects",
-    "ca_entities",
-    "ca_places",
-    "ca_occurrences",
-    "ca_collections",
-    "ca_object_lots",
-    "ca_storage_locations",
-    "ca_loans",
-    "ca_movements",
-    "ca_tours",
-    "ca_object_representations",
-];
-const QUICKADD_TYPES: &[&str] = &[
-    "ca_objects",
-    "ca_entities",
-    "ca_places",
-    "ca_occurrences",
-    "ca_collections",
-    "ca_object_lots",
-    "ca_storage_locations",
-    "ca_loans",
-    "ca_movements",
-];
-const DELETE_TYPES: &[&str] = &[
-    "ca_objects",
-    "ca_entities",
-    "ca_places",
-    "ca_occurrences",
-    "ca_collections",
-    "ca_object_lots",
-    "ca_object_representations",
-    "ca_lists",
-    "ca_list_items",
-    "ca_storage_locations",
-    "ca_loans",
-    "ca_movements",
-    "ca_tours",
-    "ca_tour_stops",
-];
-const FIND_TYPES: &[&str] = &[
-    "ca_objects",
-    "ca_object_lots",
-    "ca_object_representations",
-    "ca_entities",
-    "ca_places",
-    "ca_occurrences",
-    "ca_collections",
-    "ca_storage_locations",
-    "ca_loans",
-    "ca_movements",
-];
-const NEW_MENU_TYPES: &[&str] = &[
-    "ca_objects",
-    "ca_entities",
-    "ca_places",
-    "ca_occurrences",
-    "ca_collections",
-    "ca_object_lots",
-    "ca_storage_locations",
-    "ca_loans",
-    "ca_movements",
-    "ca_object_representations",
-];
-const SUBTYPE_FILTER_TYPES: &[&str] = &[
-    "ca_objects",
-    "ca_entities",
-    "ca_places",
-    "ca_occurrences",
-    "ca_collections",
-    "ca_object_lots",
-    "ca_loans",
-    "ca_movements",
-    "ca_object_representations",
-];
-const BREAKOUT_TYPES: &[&str] = &[
-    "ca_objects",
-    "ca_object_lots",
-    "ca_object_representations",
-    "ca_entities",
-    "ca_places",
-    "ca_occurrences",
-    "ca_collections",
-    "ca_loans",
-    "ca_movements",
-    "ca_sets",
-];
-
-const DATA_TYPE_SETTINGS: &[Setting] = &[Setting {
-    id: "disable",
-    label: "Desactivado",
-    description: "Oculta el tipo de dato en los menús y en los editores. Los registros existentes no se borran.",
-    kind: Kind::Boolean,
-    risk: Risk::Medium,
-    data_types: EDITOR_TYPES,
-}];
-
-const FEATURE_SETTINGS: &[Setting] = &[
-    boolean(
-        "disable_quickadd",
-        "Sin alta rápida",
-        "Quita la opción de crear un registro relacionado sin salir del editor (quickadd).",
-        QUICKADD_TYPES,
-    ),
-    boolean(
-        "disable_delete",
-        "Sin borrado",
-        "Impide borrar registros.",
-        DELETE_TYPES,
-    ),
-    boolean(
-        "disable_basic_search",
-        "Sin búsqueda básica",
-        "Desactiva la búsqueda básica.",
-        FIND_TYPES,
-    ),
-    boolean(
-        "disable_advanced_search",
-        "Sin búsqueda avanzada",
-        "Desactiva la búsqueda avanzada.",
-        FIND_TYPES,
-    ),
-    boolean(
-        "disable_search_builder",
-        "Sin constructor de búsquedas",
-        "Desactiva el constructor de búsquedas.",
-        FIND_TYPES,
-    ),
-    boolean(
-        "disable_browse",
-        "Sin navegación por facetas",
-        "Desactiva la navegación (browse).",
-        FIND_TYPES,
-    ),
-    boolean(
-        "disable_duplication_of_items",
-        "Sin duplicar elementos",
-        "Impide duplicar los elementos de un set.",
-        &["ca_sets"],
-    ),
-];
-
-const NEW_MENU_SETTINGS: &[Setting] = &[
-    boolean(
-        "dont_show_in_new_menu",
-        "Oculto en el menú",
-        "No muestra el tipo de dato en el menú \"Nuevo\".",
-        NEW_MENU_TYPES,
-    ),
-    boolean(
-        "navigation_new_menu_shows_top_level_types_only",
-        "Solo subtipos de primer nivel",
-        "Muestra solo los subtipos de primer nivel, sin los que dependen de otros.",
-        NEW_MENU_TYPES,
-    ),
-    subtype_list(
-        "navigation_new_menu_limit_types_to",
-        "Solo estos subtipos",
-        "Muestra únicamente los subtipos indicados. Vacío: todos.",
-        NEW_MENU_TYPES,
-    ),
-    subtype_list(
-        "navigation_new_menu_exclude_types",
-        "Excepto estos subtipos",
-        "Oculta los subtipos indicados.",
-        SUBTYPE_FILTER_TYPES,
-    ),
-];
-
-const FIND_MENU_SETTINGS: &[Setting] = &[
-    boolean(
-        "breakout_find_by_type_in_menu",
-        "Subtipos en el menú",
-        "Reemplaza el tipo de dato por sus subtipos directamente en el menú \"Buscar\".",
-        BREAKOUT_TYPES,
-    ),
-    boolean(
-        "breakout_find_by_type_in_submenu",
-        "Subtipos en un submenú",
-        "Agrega un submenú con los subtipos.",
-        BREAKOUT_TYPES,
-    ),
-    subtype_list(
-        "navigation_find_menu_limit_types_to",
-        "Solo estos subtipos",
-        "Muestra únicamente los subtipos indicados. Vacío: todos.",
-        SUBTYPE_FILTER_TYPES,
-    ),
-    subtype_list(
-        "navigation_find_menu_exclude_types",
-        "Excepto estos subtipos",
-        "Oculta los subtipos indicados.",
-        SUBTYPE_FILTER_TYPES,
-    ),
-    boolean(
-        "dont_show_in_find_menu",
-        "Oculto en el menú",
-        "No muestra el tipo de dato en el menú \"Buscar\".",
-        &["ca_object_representations"],
-    ),
-];
-
-/// Secciones del catálogo, en el orden en que se muestran.
-pub const SECTIONS: &[Section] = &[
-    Section {
-        id: "data_types",
-        name: "Tipos de dato",
-        description: "Qué tipos de dato usa la institución.",
-        settings: DATA_TYPE_SETTINGS,
-    },
-    Section {
-        id: "features",
-        name: "Funciones por tipo de dato",
-        description: "Funciones disponibles en cada tipo de dato.",
-        settings: FEATURE_SETTINGS,
-    },
-    Section {
-        id: "new_menu",
-        name: "Menú \"Nuevo\"",
-        description: "Qué se puede crear desde el menú \"Nuevo\".",
-        settings: NEW_MENU_SETTINGS,
-    },
-    Section {
-        id: "find_menu",
-        name: "Menú \"Buscar\"",
-        description: "Cómo se organiza el menú \"Buscar\".",
-        settings: FIND_MENU_SETTINGS,
-    },
-];
-
-/// Configuración de sí o no, de riesgo bajo.
-const fn boolean(
-    id: &'static str,
-    label: &'static str,
-    description: &'static str,
-    data_types: &'static [&'static str],
-) -> Setting {
-    Setting {
-        id,
-        label,
-        description,
-        kind: Kind::Boolean,
-        risk: Risk::Low,
-        data_types,
-    }
-}
-
-/// Lista de subtipos, de riesgo bajo.
-const fn subtype_list(
-    id: &'static str,
-    label: &'static str,
-    description: &'static str,
-    data_types: &'static [&'static str],
-) -> Setting {
-    Setting {
-        id,
-        label,
-        description,
-        kind: Kind::SubtypeList,
-        risk: Risk::Low,
-        data_types,
-    }
-}
-
 impl Setting {
+    /// Configuración por tipo de dato, de riesgo bajo, con clave `<tipo de dato>_<id>`.
+    pub const fn per_type(
+        id: &'static str,
+        label: &'static str,
+        description: &'static str,
+        kind: Kind,
+        data_types: &'static [&'static str],
+    ) -> Self {
+        Self {
+            id,
+            label,
+            description,
+            kind,
+            risk: Risk::Low,
+            key_format: KeyFormat::TypeFirst,
+            data_types,
+            inverted: false,
+        }
+    }
+
+    /// Configuración global, de riesgo bajo: su clave es el id.
+    pub const fn global(id: &'static str, label: &'static str, description: &'static str, kind: Kind) -> Self {
+        Self::per_type(id, label, description, kind, &[])
+    }
+
+    /// La misma configuración con otro riesgo.
+    pub const fn risk(self, risk: Risk) -> Self {
+        Self { risk, ..self }
+    }
+
+    /// La misma configuración con clave `<id>_<tipo de dato>`.
+    pub const fn type_last(self) -> Self {
+        Self { key_format: KeyFormat::TypeLast, ..self }
+    }
+
+    /// La misma configuración con clave `<id>/<tipo de dato>`.
+    pub const fn nested(self) -> Self {
+        Self { key_format: KeyFormat::Nested, ..self }
+    }
+
+    /// La misma configuración, mostrada con el valor invertido.
+    pub const fn inverted(self) -> Self {
+        Self { inverted: true, ..self }
+    }
+
     /// Clave de la configuración para un tipo de dato, por ejemplo `ca_places_disable_delete`.
     pub fn key_for(&self, data_type: &str) -> String {
-        format!("{data_type}_{}", self.id)
+        match self.key_format {
+            KeyFormat::TypeFirst => format!("{data_type}_{}", self.id),
+            KeyFormat::TypeLast => format!("{}_{data_type}", self.id),
+            KeyFormat::Nested => format!("{}/{data_type}", self.id),
+        }
+    }
+
+    /// Claves de la configuración: una por tipo de dato o, si es global, el id.
+    pub fn keys(&self) -> Vec<String> {
+        if self.data_types.is_empty() {
+            return vec![self.id.to_string()];
+        }
+        self.data_types.iter().map(|data_type| self.key_for(data_type)).collect()
     }
 }
 
-impl Kind {
+/// Código con el que un valor del catálogo aparece en el JSON (por ejemplo, `Risk::Medium` es "medium").
+/// Lo comparten los enums del catálogo para que el JSON los escriba igual.
+pub trait Code: Copy {
+    fn code(self) -> &'static str;
+}
+
+impl Code for Kind {
     fn code(self) -> &'static str {
         match self {
             Kind::Boolean => "boolean",
             Kind::SubtypeList => "subtype_list",
+            Kind::TableList => "table_list",
+            Kind::Number => "number",
+            Kind::Text => "text",
+            Kind::Color => "color",
+            Kind::Choice(_) => "choice",
+            Kind::Structured => "structured",
+            Kind::KeyOrder => "key_order",
         }
     }
 }
 
-impl Risk {
+impl Code for Risk {
     fn code(self) -> &'static str {
         match self {
             Risk::Low => "low",
             Risk::Medium => "medium",
+            Risk::High => "high",
+        }
+    }
+}
+
+impl Code for Scope {
+    fn code(self) -> &'static str {
+        match self {
+            Scope::DataType => "data_type",
+            Scope::Global => "global",
+        }
+    }
+}
+
+impl Kind {
+    /// Valores posibles de una configuración de opciones; ninguno para los demás tipos.
+    fn options(self) -> &'static [ChoiceOption] {
+        match self {
+            Kind::Choice(options) => options,
+            _ => &[],
         }
     }
 }
 
 /// Catálogo completo en JSON: secciones, configuraciones y la clave de cada tipo de dato.
 pub fn catalog_json() -> JsonValue {
-    let sections: Vec<JsonValue> = SECTIONS.iter().map(section_json).collect();
-    json::object! { file: CATALOG_FILE, sections: sections }
+    let sections: Vec<JsonValue> = SECTIONS.iter().map(JsonValue::from).collect();
+    json::object! { sections: sections }
 }
 
-fn section_json(section: &Section) -> JsonValue {
-    let settings: Vec<JsonValue> = section.settings.iter().map(setting_json).collect();
-    json::object! {
-        id: section.id,
-        name: section.name,
-        description: section.description,
-        settings: settings,
+impl From<&Section> for JsonValue {
+    fn from(section: &Section) -> Self {
+        let settings: Vec<JsonValue> = section.settings.iter().map(JsonValue::from).collect();
+        json::object! {
+            id: section.id,
+            name: section.name,
+            description: section.description,
+            file: section.file,
+            scope: section.scope.code(),
+            settings: settings,
+        }
     }
 }
 
-fn setting_json(setting: &Setting) -> JsonValue {
-    let entries: Vec<JsonValue> = setting
+impl From<&Setting> for JsonValue {
+    fn from(setting: &Setting) -> Self {
+        let options: Vec<JsonValue> = setting.kind.options().iter().map(JsonValue::from).collect();
+        json::object! {
+            id: setting.id,
+            label: setting.label,
+            description: setting.description,
+            kind: setting.kind.code(),
+            options: options,
+            risk: setting.risk.code(),
+            inverted: setting.inverted,
+            entries: entries_json(setting),
+        }
+    }
+}
+
+impl From<&ChoiceOption> for JsonValue {
+    fn from(option: &ChoiceOption) -> Self {
+        json::object! { value: option.value, label: option.label }
+    }
+}
+
+/// Una entrada por tipo de dato con su clave o, si la configuración es global, una sola sin tipo de dato.
+fn entries_json(setting: &Setting) -> Vec<JsonValue> {
+    if setting.data_types.is_empty() {
+        return vec![json::object! { key: setting.id }];
+    }
+    setting
         .data_types
         .iter()
         .map(|data_type| json::object! { data_type: *data_type, key: setting.key_for(data_type) })
-        .collect();
-    json::object! {
-        id: setting.id,
-        label: setting.label,
-        description: setting.description,
-        kind: setting.kind.code(),
-        risk: setting.risk.code(),
-        entries: entries,
-    }
+        .collect()
 }
 
 #[cfg(test)]
@@ -383,71 +281,88 @@ mod tests {
     use super::*;
     use std::collections::HashSet;
 
-    fn all_keys() -> Vec<String> {
+    fn all_settings() -> impl Iterator<Item = (&'static Section, &'static Setting)> {
         SECTIONS
             .iter()
-            .flat_map(|section| section.settings.iter())
-            .flat_map(|setting| {
-                setting
-                    .data_types
-                    .iter()
-                    .map(move |data_type| setting.key_for(data_type))
-            })
-            .collect()
+            .flat_map(|section| section.settings.iter().map(move |setting| (section, setting)))
     }
 
-    /// La clave es <tipo de dato>_<id de la configuración>.
+    /// La clave combina el tipo de dato y el id, en el orden de su formato.
     #[test]
-    fn key_combines_data_type_and_setting_id() {
-        assert_eq!(
-            DATA_TYPE_SETTINGS[0].key_for("ca_places"),
-            "ca_places_disable"
-        );
+    fn key_follows_its_format() {
+        let setting = Setting::per_type("disable", "x", "x", Kind::Boolean, &["ca_places"]);
+        assert_eq!(setting.key_for("ca_places"), "ca_places_disable");
+        assert_eq!(setting.type_last().key_for("ca_places"), "disable_ca_places");
+        assert_eq!(setting.nested().key_for("ca_places"), "disable/ca_places");
+        assert_eq!(Setting::global("menu_color", "x", "x", Kind::Color).keys(), ["menu_color"]);
     }
 
-    /// No hay claves repetidas en todo el catálogo.
+    /// No hay claves repetidas en un mismo archivo.
     #[test]
     fn keys_are_unique() {
-        let keys = all_keys();
+        let keys: Vec<String> = all_settings()
+            .flat_map(|(section, setting)| setting.keys().into_iter().map(move |key| format!("{}:{key}", section.file)))
+            .collect();
         let unique: HashSet<&String> = keys.iter().collect();
         assert_eq!(unique.len(), keys.len());
     }
 
-    /// Todas las claves son de una tabla de Providence (ca_...) y solo usan minúsculas y "_".
+    /// Cada tramo de una clave usa letras y "_", y las claves de un tipo de dato lo incluyen.
     #[test]
     fn keys_have_providence_format() {
-        for key in all_keys() {
-            let valid =
-                key.starts_with("ca_") && key.chars().all(|c| c.is_ascii_lowercase() || c == '_');
-            assert!(valid, "{key}");
-        }
-    }
-
-    /// Cada sección tiene configuraciones y cada configuración, textos y al menos un tipo de dato.
-    #[test]
-    fn sections_and_settings_are_complete() {
-        for section in SECTIONS {
-            assert!(!section.settings.is_empty(), "{}", section.id);
-            for setting in section.settings {
-                assert!(
-                    !setting.label.is_empty() && !setting.description.is_empty(),
-                    "{}",
-                    setting.id
-                );
-                assert!(!setting.data_types.is_empty(), "{}", setting.id);
+        for (_, setting) in all_settings() {
+            for key in setting.keys() {
+                let valid_part = |part: &str| !part.is_empty() && part.chars().all(|c| c.is_ascii_alphabetic() || c == '_');
+                assert!(key.split('/').all(valid_part), "{key}");
+            }
+            for data_type in setting.data_types {
+                assert!(data_type.starts_with("ca_") && setting.key_for(data_type).contains(data_type));
             }
         }
     }
 
-    /// El JSON tiene el archivo, las secciones y, por cada tipo de dato, su clave.
+    /// Las secciones no repiten id y leen un .conf; sus configuraciones tienen textos y coinciden con su alcance.
+    #[test]
+    fn sections_and_settings_are_complete() {
+        let ids: HashSet<&str> = SECTIONS.iter().map(|section| section.id).collect();
+        assert_eq!(ids.len(), SECTIONS.len());
+        for section in SECTIONS {
+            assert!(!section.settings.is_empty(), "{}", section.id);
+            let name = section.file.strip_suffix(".conf").unwrap_or("");
+            let valid_file = !name.is_empty() && name.chars().all(|c| c.is_ascii_lowercase() || c == '_');
+            assert!(valid_file, "{}: {}", section.id, section.file);
+        }
+        for (section, setting) in all_settings() {
+            assert!(!setting.label.is_empty() && !setting.description.is_empty(), "{}", setting.id);
+            let global = section.scope == Scope::Global;
+            assert_eq!(setting.data_types.is_empty(), global, "{}: {}", section.id, setting.id);
+        }
+    }
+
+    /// Una configuración de opciones tiene al menos dos, sin valores repetidos; las demás, ninguna.
+    #[test]
+    fn choices_have_distinct_options() {
+        for (_, setting) in all_settings() {
+            let values: HashSet<&str> = setting.kind.options().iter().map(|o| o.value).collect();
+            assert_eq!(values.len(), setting.kind.options().len(), "{}", setting.id);
+            let is_choice = matches!(setting.kind, Kind::Choice(_));
+            assert_eq!(is_choice, values.len() >= 2, "{}", setting.id);
+        }
+    }
+
+    /// El JSON tiene, por sección, su archivo y alcance y, por configuración, una entrada por clave.
     #[test]
     fn json_lists_sections_settings_and_keys() {
         let catalog = catalog_json();
-        assert_eq!(catalog["file"], CATALOG_FILE);
         assert_eq!(catalog["sections"].len(), SECTIONS.len());
-        let first = &catalog["sections"][0]["settings"][0];
-        assert_eq!(first["kind"], "boolean");
-        assert_eq!(first["entries"][0]["data_type"], "ca_objects");
-        assert_eq!(first["entries"][0]["key"], "ca_objects_disable");
+        for (section, section_json) in SECTIONS.iter().zip(catalog["sections"].members()) {
+            assert_eq!(section_json["file"], section.file);
+            assert_eq!(section_json["scope"], section.scope.code());
+            for (setting, json) in section.settings.iter().zip(section_json["settings"].members()) {
+                assert_eq!(json["inverted"], setting.inverted, "{}", setting.id);
+                let keys: Vec<&str> = json["entries"].members().map(|e| e["key"].as_str().unwrap()).collect();
+                assert_eq!(keys, setting.keys(), "{}", setting.id);
+            }
+        }
     }
 }
