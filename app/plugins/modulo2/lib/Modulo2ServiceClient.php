@@ -15,11 +15,6 @@ class Modulo2ServiceException extends Exception {}
 
 class Modulo2ServiceClient {
 	# -------------------------------------------------------
-	/** Ruta de estado del módulo 2, relativa a la URL base del servicio */
-	const HEALTH_PATH = Modulo2Constants::API_PATH.'/health';
-	/** Profundidad máxima al decodificar JSON (valor por defecto de json_decode) */
-	const JSON_MAX_DEPTH = 512;
-	# -------------------------------------------------------
 	private $client;
 	# -------------------------------------------------------
 	/**
@@ -36,27 +31,50 @@ class Modulo2ServiceClient {
 	}
 	# -------------------------------------------------------
 	/**
-	 * Consulta el estado del módulo 2 en el servicio (GET /api/modulo2/health)
-	 *
-	 * @throws Modulo2ServiceException
+	 * Crea el cliente con la URL y el tiempo de espera de la configuración del plugin.
+	 * La variable de entorno EXTENSION_SERVICE_URL (usada en Docker) tiene prioridad sobre modulo2.conf
 	 */
-	public function getHealth() : array {
-		return $this->getJson(self::HEALTH_PATH);
+	public static function fromConfig(Configuration $config) : self {
+		return new self(self::configuredUrl($config), self::configuredTimeout($config));
 	}
 	# -------------------------------------------------------
 	/**
-	 * Hace un GET y decodifica la respuesta JSON como array
+	 * URL del servicio: EXTENSION_SERVICE_URL si está definida, si no service_url de modulo2.conf
+	 */
+	public static function configuredUrl(Configuration $config) : string {
+		return getenv(Modulo2Constants::SERVICE_URL_ENV_VAR) ?: (string)$config->get('service_url');
+	}
+	# -------------------------------------------------------
+	/**
+	 * Tiempo de espera en segundos: service_timeout de modulo2.conf, o DEFAULT_TIMEOUT si no está definido
+	 */
+	public static function configuredTimeout(Configuration $config) : float {
+		return (float)($config->get('service_timeout') ?: Modulo2Constants::DEFAULT_TIMEOUT);
+	}
+	# -------------------------------------------------------
+	/**
+	 * Obtiene el catálogo de configuraciones que administra el módulo (GET /api/modulo2/catalog)
+	 *
+	 * @throws Modulo2ServiceException
+	 */
+	public function getCatalog() : array {
+		return $this->getJson(Modulo2Constants::CATALOG_PATH);
+	}
+	# -------------------------------------------------------
+	/**
+	 * Hace un GET y decodifica la respuesta JSON, que tiene que ser un objeto
 	 *
 	 * @throws Modulo2ServiceException
 	 */
 	private function getJson(string $path) : array {
 		try {
 			$response = $this->client->get($path, ['headers' => ['Accept' => 'application/json']]);
-			$data = json_decode((string)$response->getBody(), true, self::JSON_MAX_DEPTH, JSON_THROW_ON_ERROR);
+			$data = json_decode((string)$response->getBody(), true, Modulo2Constants::JSON_MAX_DEPTH, JSON_THROW_ON_ERROR);
 		} catch (GuzzleException | JsonException $e) {
 			throw new Modulo2ServiceException(_t('No se pudo consultar el servicio del módulo 2: %1', $e->getMessage()), 0, $e);
 		}
-		if (!is_array($data)) {
+		// Un objeto JSON se decodifica como array asociativo; una lista ([1, 2]) no es una respuesta válida
+		if (!is_array($data) || ($data && array_is_list($data))) {
 			throw new Modulo2ServiceException(_t('El servicio del módulo 2 devolvió una respuesta inesperada'));
 		}
 		return $data;

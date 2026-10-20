@@ -4,7 +4,7 @@
  * Verifica que Providence trabaja en su base y no puede acceder a la base propia
  * de la extensión (ver README, "Base de datos de la extensión").
  * La prueba inversa (el servicio Rust no accede a la base de Providence) está en
- * rust/extension-service/src/db/access_tests.rs.
+ * rust/extension-service/src/db/tests/access.rs.
  * ----------------------------------------------------------------------
  */
 use PHPUnit\Framework\Attributes\TestDox;
@@ -18,6 +18,8 @@ final class ExtensionDbIsolationTest extends TestCase {
 	/** Códigos de error de MySQL: acceso denegado a una base y a una tabla */
 	const ER_DBACCESS_DENIED = 1044;
 	const ER_TABLEACCESS_DENIED = 1142;
+	/** Tabla compartida de la base de la extensión (MIGRATIONS_TABLE en constants.rs) */
+	const EXT_SHARED_TABLE = 'ext_migrations';
 	# -------------------------------------------------------
 	private Db $db;
 	# -------------------------------------------------------
@@ -38,10 +40,46 @@ final class ExtensionDbIsolationTest extends TestCase {
 		$this->assertMysqlError(self::ER_DBACCESS_DENIED, 'SHOW TABLES FROM `'.$this->extensionDb().'`');
 	}
 	# -------------------------------------------------------
-	#[TestDox('Providence no puede crear tablas en la base de la extensión (error 1142)')]
-	public function testProvidenceCannotCreateTablesInExtensionDatabase() : void {
-		$sql = 'CREATE TABLE `'.$this->extensionDb().'`.test_aislamiento (id INT)';
-		$this->assertMysqlError(self::ER_TABLEACCESS_DENIED, $sql);
+	#[TestDox('Providence no puede leer ni escribir las tablas de la extensión (error 1142)')]
+	public function testProvidenceCannotReadOrWriteExtensionTables() : void {
+		// Las escrituras no afectan ninguna fila aunque el permiso existiera por error
+		$table = '`'.$this->extensionDb().'`.'.self::EXT_SHARED_TABLE;
+		foreach ([
+			"SELECT 1 FROM {$table} LIMIT 1",
+			"INSERT INTO {$table} (module) SELECT 'prueba' FROM DUAL WHERE 1 = 0",
+			"UPDATE {$table} SET name = 'prueba' WHERE 1 = 0",
+			"DELETE FROM {$table} WHERE 1 = 0"
+		] as $sql) {
+			$this->assertMysqlError(self::ER_TABLEACCESS_DENIED, $sql);
+		}
+	}
+	# -------------------------------------------------------
+	#[TestDox('Providence no puede crear, modificar ni borrar tablas en la base de la extensión (error 1142)')]
+	public function testProvidenceCannotChangeExtensionSchema() : void {
+		// Apuntan a tablas que no existen: MySQL revisa el permiso antes que la existencia de la tabla
+		$db = '`'.$this->extensionDb().'`';
+		foreach ([
+			"CREATE TABLE {$db}.test_aislamiento (id INT)",
+			"ALTER TABLE {$db}.test_aislamiento_inexistente ADD COLUMN id INT",
+			"DROP TABLE {$db}.test_aislamiento_inexistente"
+		] as $sql) {
+			$this->assertMysqlError(self::ER_TABLEACCESS_DENIED, $sql);
+		}
+	}
+	# -------------------------------------------------------
+	#[TestDox('Providence solo tiene permisos sobre su propia base')]
+	public function testProvidenceOnlyHasPrivilegesOnItsOwnDatabase() : void {
+		$own_database = 'ON `'.__CA_DB_DATABASE__.'`.*';
+		$grants = [];
+		$result = $this->db->query('SHOW GRANTS');
+		while ($result->nextRow()) { $grants[] = (string)array_values($result->getRow())[0]; }
+
+		foreach ($grants as $grant) {
+			$allowed = str_starts_with($grant, 'GRANT USAGE ON *.*') || str_contains($grant, $own_database);
+			$this->assertTrue($allowed, "Permiso inesperado: {$grant}");
+		}
+		$this->assertNotEmpty(array_filter($grants, fn($grant) => str_contains($grant, $own_database)), implode("
+", $grants));
 	}
 	# -------------------------------------------------------
 	private function extensionDb() : string {

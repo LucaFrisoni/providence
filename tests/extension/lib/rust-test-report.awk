@@ -17,11 +17,13 @@ function humanize(name) {
     return name
 }
 
-# Grupo de la prueba: db::access_tests::connects_to_its_own_database -> db · access_tests
+# Grupo de la prueba, sin los módulos "tests": db::tests::access::connects_to_its_own_database -> db · access
 function group_of(name) {
     if (name !~ /::/) return "(raíz)"
     sub(/::[^:]+$/, "", name)
-    sub(/(^|::)tests$/, "", name)
+    name = "::" name "::"
+    gsub(/::tests::/, "::", name)
+    gsub(/^::|::$/, "", name)
     gsub(/::/, " · ", name)
     return (name == "" ? "main" : name)
 }
