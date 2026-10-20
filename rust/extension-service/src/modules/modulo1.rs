@@ -55,7 +55,8 @@ mod tests {
         ],
         "asignaciones": [],
         "campos": [],
-        "relaciones": []
+        "relaciones": [], 
+        "configuraciones": []
     }"#;
 
     #[test]

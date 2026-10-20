@@ -4,11 +4,11 @@
 use std::collections::{HashMap, HashSet};
 use std::fmt;
 
-use super::dominio::{Asignacion, Elemento, Entidad, TipoDato, Campo, Relacion};
+use super::dominio::{Asignacion, Elemento, Entidad, TipoDato, Campo, Relacion, Configuracion};
 use crate::constants::{
     CAMPO_ASIGNACIONES, CAMPO_CODIGO, CAMPO_ELEMENTO, CAMPO_ELEMENTOS, CAMPO_ENTIDAD,
     CAMPO_ENTIDADES, CAMPO_ETIQUETA, CAMPO_NOMBRE, CAMPO_NUMERO_TABLA, CAMPO_PADRE, CAMPO_TIPO,
-    PROFUNDIDAD_MAX_ARBOL, CAMPO_CAMPOS, CAMPO_RELACIONES, CAMPO_ORIGEN, CAMPO_DESTINO, CAMPO_INVERSO,
+    PROFUNDIDAD_MAX_ARBOL, CAMPO_CAMPOS, CAMPO_RELACIONES, CAMPO_ORIGEN, CAMPO_DESTINO, CAMPO_INVERSO, CAMPO_CONFIGURACIONES, CAMPO_VALOR
 };
 use json::JsonValue;
 
@@ -34,6 +34,7 @@ pub struct Modelo {
     pub asignaciones: Vec<Asignacion>,
     pub campos: Vec<Campo>,
     pub relaciones: Vec<Relacion>,
+    pub configuraciones: Vec<Configuracion>,
 }
 
 impl Modelo {
@@ -46,6 +47,7 @@ impl Modelo {
             asignaciones: leer_lista(&raiz, CAMPO_ASIGNACIONES, leer_asignacion)?,
             campos: leer_lista(&raiz, CAMPO_CAMPOS, leer_campo)?,
             relaciones: leer_lista(&raiz, CAMPO_RELACIONES, leer_relacion)?,
+            configuraciones: leer_lista(&raiz, CAMPO_CONFIGURACIONES, leer_configuracion)?,
         };
         modelo.validar()?;
         Ok(modelo)
@@ -58,6 +60,7 @@ impl Modelo {
         self.validar_asignaciones()?;
         self.validar_campos()?;
         self.validar_relaciones()?;
+        self.validar_configuraciones()?;
         self.validar_profundidad()
     }
 
@@ -105,6 +108,13 @@ impl Modelo {
             self.validar_entidad(&r.destino)?;
         }
         Ok(())
+    }
+
+    //toda configuracion debe pertenecer a una entidad que exista
+    fn validar_configuraciones(&self) -> Result<(), ErrorModelo> {
+        self.configuraciones
+            .iter()
+            .try_for_each(|c| self.validar_entidad(&c.entidad))
     }
 
     fn validar_entidad(&self, codigo: &str) -> Result<(), ErrorModelo> {
@@ -214,6 +224,14 @@ fn leer_relacion(valor: &JsonValue) -> Result<Relacion, ErrorModelo> {
     })
 }
 
+fn leer_configuracion(valor: &JsonValue) -> Result<Configuracion, ErrorModelo> {
+    Ok(Configuracion {
+        entidad: texto(valor, CAMPO_ENTIDAD)?,
+        nombre: texto(valor, CAMPO_NOMBRE)?,
+        valor: texto(valor, CAMPO_VALOR)?,
+    })
+}
+
 fn texto(valor: &JsonValue, campo: &str) -> Result<String, ErrorModelo> {
     valor[campo]
         .as_str()
@@ -265,6 +283,9 @@ mod tests {
         ],
         "relaciones": [
             { "origen": "ca_objects", "destino": "ca_entities", "tipo": "creador", "inverso": "creado por" }
+        ],
+        "configuraciones": [
+            { "entidad": "ca_objects", "nombre": "Jerarquía", "valor": "Sí" }
         ]
     }"#;
 
@@ -329,6 +350,24 @@ mod tests {
         let mal = modelo_con(r#""destino": "ca_entities""#, r#""destino": "ca_nada""#);
         let resultado = Modelo::desde_json(&mal);
         assert!(matches!(resultado, Err(ErrorModelo::Inconsistente(m)) if m.contains("ca_nada")));
+    }
+
+    #[test]
+    fn lee_las_configuraciones() {
+        let modelo = Modelo::desde_json(MODELO_VALIDO).unwrap();
+        assert_eq!(modelo.configuraciones.len(), 1);
+        assert_eq!(modelo.configuraciones[0].nombre, "Jerarquía");
+        assert_eq!(modelo.configuraciones[0].valor, "Sí");
+    }
+
+    #[test]
+    fn rechaza_una_configuracion_de_una_entidad_que_no_existe() {
+        let mal = modelo_con(
+            r#""entidad": "ca_objects", "nombre": "Jerarquía""#,
+            r#""entidad": "ca_x", "nombre": "Jerarquía""#,
+        );
+        let resultado = Modelo::desde_json(&mal);
+        assert!(matches!(resultado, Err(ErrorModelo::Inconsistente(m)) if m.contains("ca_x")));
     }
 
     #[test]
@@ -427,7 +466,7 @@ mod tests {
             })
             .collect();
         format!(
-            r#"{{ "entidades": [], "elementos": [{}], "asignaciones": [], "campos": [], "relaciones": [] }}"#,
+            r#"{{ "entidades": [], "elementos": [{}], "asignaciones": [], "campos": [], "relaciones": [], "configuraciones": [] }}"#,
             elementos.join(",")
         )
     }

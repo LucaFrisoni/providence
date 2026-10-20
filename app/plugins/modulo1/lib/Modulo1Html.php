@@ -29,4 +29,18 @@ class Modulo1Html {
 		return $html.'</ul>';
 	}
 
+	//lista simple, cada item se escribe con la funcion recibida; sin items devuelve cadena vacia
+	public static function lista(array $items, callable $texto) : string {
+		if (!$items) { return ''; }
+		$html = '<ul>';
+		foreach ($items as $item) { $html .= '<li>'.htmlspecialchars($texto($item)).'</li>'; }
+		return $html.'</ul>';
+	}
+	
+	//seccion desplegable con título; si no hay contenido avisa que no hay datos
+	public static function seccion(string $titulo, string $contenido) : string {
+		$cuerpo = $contenido ?: '<p>'._t('Sin datos.').'</p>';
+		return '<details open><summary><em>'.htmlspecialchars($titulo).'</em></summary>'.$cuerpo.'</details>';
+	}
+
 }

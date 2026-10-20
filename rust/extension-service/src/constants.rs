@@ -90,6 +90,8 @@ pub const CAMPO_RELACIONES: &str = "relaciones";
 pub const CAMPO_ORIGEN: &str = "origen";
 pub const CAMPO_DESTINO: &str = "destino";
 pub const CAMPO_INVERSO: &str = "inverso";
+pub const CAMPO_CONFIGURACIONES: &str = "configuraciones";
+pub const CAMPO_VALOR: &str = "valor";
 
 
 //cant maxima de contenedores dentro de contenedores, para no tener jerarquias muy grandes

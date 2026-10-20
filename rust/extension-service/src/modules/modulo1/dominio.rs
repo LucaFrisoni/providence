@@ -129,6 +129,14 @@ pub struct Relacion {
     pub inverso: String, //el mismo tipo pero de destino a origen, por ej. "creado por"
 }
 
+//configuracion relevante de una entidad
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Configuracion {
+    pub entidad: String,
+    pub nombre: String,
+    pub valor: String,
+}
+
 
 #[cfg(test)]
 mod tests {

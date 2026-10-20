@@ -4,9 +4,9 @@
 use json::JsonValue;
 
 use super::arbol::nodo;
-use super::dominio::{Campo, Entidad, Relacion};
+use super::dominio::{Campo, Entidad, Relacion, Configuracion};
 use super::modelo::Modelo;
-use crate::constants::{CAMPO_CODIGO, CAMPO_ELEMENTOS, CAMPO_ENTIDADES, CAMPO_NOMBRE, CAMPO_CAMPOS, CAMPO_RELACIONES, CAMPO_TIPO, CAMPO_DESTINO};
+use crate::constants::{CAMPO_CODIGO, CAMPO_ELEMENTOS, CAMPO_ENTIDADES, CAMPO_NOMBRE, CAMPO_CAMPOS, CAMPO_RELACIONES, CAMPO_TIPO, CAMPO_DESTINO, CAMPO_CONFIGURACIONES, CAMPO_VALOR};
 
 ///todas las entidades del modelo
 pub fn vista_de_entidades(modelo: &Modelo) -> JsonValue {
@@ -34,6 +34,7 @@ fn vista_de_entidad(entidad: &Entidad, modelo: &Modelo) -> JsonValue {
     vista[CAMPO_NOMBRE] = entidad.nombre.as_str().into();
     vista[CAMPO_CAMPOS] = campos_de(&entidad.codigo, &modelo.campos);
      vista[CAMPO_RELACIONES] = relaciones_de(&entidad.codigo, &modelo.relaciones);
+    vista[CAMPO_CONFIGURACIONES] = configuraciones_de(&entidad.codigo, &modelo.configuraciones);
     vista[CAMPO_ELEMENTOS] = JsonValue::Array(elementos);
     vista
 }
@@ -74,10 +75,25 @@ fn relacion_json(tipo: &str, destino: &str) -> JsonValue {
     relacion
 }
 
+//Configuraciones de una entidad [{"nombre":..., "valor":...}]
+fn configuraciones_de(entidad: &str, configuraciones: &[Configuracion]) -> JsonValue {
+    let lista: Vec<JsonValue> = configuraciones
+        .iter()
+        .filter(|c| c.entidad == entidad)
+        .map(|c| {
+            let mut configuracion = JsonValue::new_object();
+            configuracion[CAMPO_NOMBRE] = c.nombre.as_str().into();
+            configuracion[CAMPO_VALOR] = c.valor.as_str().into();
+            configuracion
+        })
+        .collect();
+    JsonValue::Array(lista)
+}
+
 #[cfg(test)]
 mod tests {
     use super::super::dominio::TipoDato;
-    use super::super::pruebas::{asignacion, elemento, entidad, modelo, campo, relacion};
+    use super::super::pruebas::{asignacion, elemento, entidad, modelo, campo, relacion, configuracion};
     use super::*;
 
     #[test]
@@ -92,7 +108,7 @@ mod tests {
         let vista = vista_de_entidades(&modelo);
         assert_eq!(
             vista.dump(),
-            r#"{"entidades":[{"codigo":"ca_objects","nombre":"Objetos","campos":[],"relaciones":[],"elementos":[]}]}"#
+            r#"{"entidades":[{"codigo":"ca_objects","nombre":"Objetos","campos":[],"relaciones":[],"configuraciones":[],"elementos":[]}]}"#
         );
     }
 
@@ -208,5 +224,26 @@ mod tests {
         assert_eq!(desde_objetos[CAMPO_DESTINO], "ca_entities");
         assert_eq!(desde_entidades[CAMPO_TIPO], "creado por");
         assert_eq!(desde_entidades[CAMPO_DESTINO], "ca_objects");
+    }
+
+    #[test]
+    fn cada_entidad_muestra_sus_configuraciones() {
+        let mut modelo = modelo(
+            vec![
+                entidad("ca_objects", "Objetos"),
+                entidad("ca_places", "Lugares"),
+            ],
+            vec![],
+            vec![],
+        );
+        modelo.configuraciones = vec![
+            configuracion("ca_objects", "Jerarquía", "No"),
+            configuracion("ca_places", "Jerarquía", "Sí"),
+        ];
+        let vista = vista_de_entidades(&modelo);
+        let lugares = &vista[CAMPO_ENTIDADES][1][CAMPO_CONFIGURACIONES];
+        assert_eq!(lugares.len(), 1);
+        assert_eq!(lugares[0][CAMPO_NOMBRE], "Jerarquía");
+        assert_eq!(lugares[0][CAMPO_VALOR], "Sí");
     }
 }

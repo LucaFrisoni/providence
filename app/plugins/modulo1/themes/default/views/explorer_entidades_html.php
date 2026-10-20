@@ -13,11 +13,10 @@ $error = $this->getVar('error');
 <?php foreach ($vista['entidades'] as $entidad) { ?>
 		<details open>
 			<summary><strong><?= htmlspecialchars($entidad['nombre']); ?></strong> (<?= htmlspecialchars($entidad['codigo']); ?>)</summary>
-<?php if ($entidad['elementos']) { ?>
-			<?= Modulo1Html::arbol($entidad['elementos']); ?>
-<?php } else { ?>
-			<p><?= _t('No tiene elementos de metadatos asignados.'); ?></p>
-<?php } ?>
+			<?= Modulo1Html::seccion(_t('Campos intrínsecos'), Modulo1Html::lista($entidad['campos'], function($c) { return $c['nombre'].' ('.$c['codigo'].')'; })); ?>
+			<?= Modulo1Html::seccion(_t('Elementos de metadatos asignados'), $entidad['elementos'] ? Modulo1Html::arbol($entidad['elementos']) : ''); ?>
+			<?= Modulo1Html::seccion(_t('Relaciones'), Modulo1Html::lista($entidad['relaciones'], function($r) { return $r['tipo'].' → '.$r['destino']; })); ?>
+			<?= Modulo1Html::seccion(_t('Configuración'), Modulo1Html::lista($entidad['configuraciones'], function($c) { return $c['nombre'].': '.$c['valor']; })); ?>
 		</details>
 <?php } ?>
 	</div>
