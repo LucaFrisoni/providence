@@ -55,8 +55,26 @@ después en `.env`, hay que reiniciar desde cero (ver abajo).
 ## 2. Levantar
 
 ```sh
-docker compose up --build
+docker compose up -d --build
 ```
+
+`-d` deja los contenedores corriendo en segundo plano: la terminal queda libre y se puede cerrar.
+Sin `-d`, la terminal queda mostrando los logs y, al cerrarla o presionar Ctrl+C, se detienen todos
+los contenedores.
+
+| Para...                         | Comando                                                                  |
+| ------------------------------- | ------------------------------------------------------------------------ |
+| Ver los logs de todos, en vivo  | `docker compose logs -f` (Ctrl+C deja de mostrarlos, no apaga nada)      |
+| Ver los logs de un contenedor   | `docker compose logs -f extension-service` (o `providence`, `db`)        |
+| Ver qué contenedores corren     | `docker compose ps`                                                      |
+| Apagar el entorno               | `docker compose down` (sin `-v`: conserva los [datos](#datos-que-se-conservan)) |
+
+`--build` reconstruye las imágenes antes de levantar. Hace falta cuando cambió el código Rust (incluidas
+las migraciones) o algo de `docker/` (ver la tabla de la [sección 3](#3-cómo-se-monta-el-código));
+si no hubo cambios, Docker reutiliza la caché y tarda poco.
+
+Los contenedores no tienen `restart:` en `compose.yaml`: después de reiniciar la computadora o Docker
+Desktop no se levantan solos, hay que volver a ejecutar `docker compose up -d`.
 
 La primera construcción tarda varios minutos (instala PHP, sus extensiones y las dependencias de
 composer dentro de la imagen). Después, el primer arranque instala Providence (perfil `default`) en
@@ -64,8 +82,8 @@ menos de un minuto. Para seguir el progreso: `docker compose logs -f providence`
 
 Ingresar con `CA_ADMIN_USERNAME` y `CA_ADMIN_PASSWORD` de `.env`.
 
-Cada módulo que ya tiene plugin agrega su menú **Módulo N** en la barra principal. Su opción
-**Estado del servicio** verifica la conexión con el servicio Rust.
+Cada módulo que ya tiene plugin agrega su menú en la barra principal (el del módulo 2 se llama
+**Gestión**).
 
 ## 3. Cómo se monta el código
 
@@ -76,8 +94,8 @@ Windows/macOS (con todo el repositorio montado, cada página tardaba varios segu
 | Qué se modifica                                                                                                       | Cómo se ve el cambio                          |
 | --------------------------------------------------------------------------------------------------------------------- | --------------------------------------------- |
 | Cualquier archivo dentro de `app/plugins/` (controladores, vistas, librerías, configuración y pruebas de los plugins) | Al recargar la página                         |
-| Código del servicio Rust (`rust/`)                                                                                    | `docker compose up --build extension-service` |
-| Cualquier otro archivo del repositorio (núcleo de Providence, `composer.json`, archivos de `docker/`)                 | `docker compose up --build providence`        |
+| Código del servicio Rust (`rust/`)                                                                                    | `docker compose up -d --build extension-service` |
+| Cualquier otro archivo del repositorio (núcleo de Providence, `composer.json`, archivos de `docker/`)                 | `docker compose up -d --build providence`     |
 
 Por eso, todo el código PHP de la extensión debe vivir dentro de la carpeta del plugin del módulo
 correspondiente. Los datos propios de la extensión no se guardan con modelos de Providence sino en la
@@ -150,5 +168,5 @@ restaurarlo para que se regenere con LF (por ejemplo: `rm tests/extension/*.sh &
 
 ```sh
 docker compose down -v   # borra la base de datos, media, uploads y la configuración local
-docker compose up --build
+docker compose up -d --build
 ```

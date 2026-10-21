@@ -7,22 +7,26 @@
 
 mod constants;
 mod db;
+mod models;
 mod modules;
 mod routes;
+mod respuesta;
 
 use std::env;
 use std::io;
 use std::net::SocketAddr;
 use std::thread;
 
-use constants::{ADDR_ENV_VAR, DEFAULT_ADDR, SERVICE_NAME,};
-use modules::peticion_incorrecta;
-use tiny_http::{Request, Server};
+use constants::{ADDR_ENV_VAR, DEFAULT_ADDR, SERVICE_NAME, CABECERA_CONTENT_TYPE, TIPO_JSON};
+use tiny_http::{Request, Server, Header, Response};
+use respuesta::Respuesta;
 use mysql::Pool;
 
 fn main() {
     // Todavía ninguna ruta usa la base: se conecta al iniciar para fallar temprano si no responde
-    let _pool = connect_database();
+    // y para crear o actualizar sus tablas
+    let pool = connect_database();
+    run_migrations(&pool);
     let addr = listen_addr();
     let servidor =
         Server::http(addr).unwrap_or_else(|e| panic!("No se pudo escuchar en {addr}: {e}"));
@@ -39,6 +43,17 @@ fn connect_database() -> Pool {
         .unwrap_or_else(|e| panic!("No se pudo conectar a la base {}: {e}", config.database));
     println!("{SERVICE_NAME} conectado a la base {} en {}:{}", config.database, config.host, config.port);
     pool
+}
+
+/// Aplica las migraciones pendientes de la base de la extensión (ver `db/migrations.rs`).
+fn run_migrations(pool: &Pool) {
+    let mut conn = pool
+        .get_conn()
+        .unwrap_or_else(|e| panic!("No se pudo obtener una conexión para las migraciones: {e}"));
+    let applied = db::migrations::run(&mut conn, db::migrations::MIGRATIONS).unwrap_or_else(|e| panic!("{e}"));
+    for migration in applied {
+        println!("{SERVICE_NAME} aplicó la migración {migration}");
+    }
 }
 
 /// Lee la dirección de la variable de entorno o usa la dirección por defecto.
@@ -58,9 +73,19 @@ fn leer_cuerpo(peticion: &mut Request) -> io::Result<String>{
 fn atender(mut peticion: Request) {
     let respuesta = match leer_cuerpo(&mut peticion){
         Ok(cuerpo) => routes::responder(peticion.method(), peticion.url(), &cuerpo),
-        Err(_) => peticion_incorrecta("el cuerpo no es un texto valido")
+        Err(_) => Respuesta::peticion_incorrecta("el cuerpo no es un texto valido")
     };
-    if let Err(e) = peticion.respond(respuesta) {
+        enviar(peticion, respuesta);
+}
+
+//convierte la respuesta del modulo en una respuesta http y la envia
+fn enviar(peticion: Request, respuesta: Respuesta) {
+    let cabecera = Header::from_bytes(CABECERA_CONTENT_TYPE, TIPO_JSON)
+        .expect("La cabecera content-type es valida");
+    let respuesta_http = Response::from_string(respuesta.cuerpo)
+        .with_status_code(respuesta.estado)
+        .with_header(cabecera);
+    if let Err(e) = peticion.respond(respuesta_http) {
         eprintln!("Error al responder: {e}");
     }
 }
