@@ -28,6 +28,13 @@ pub fn asignacion(entidad: &str, elemento: &str) -> Asignacion {
     }
 }
 
+pub fn asignacion_con_etiqueta(entidad: &str, elemento: &str, etiqueta: &str) -> Asignacion {
+    Asignacion {
+        etiqueta: Some(etiqueta.to_string()),
+        ..asignacion(entidad, elemento)
+    }
+}
+
 pub fn campo(entidad: &str, codigo: &str, nombre: &str) -> Campo {
     Campo {
         entidad: entidad.to_string(),

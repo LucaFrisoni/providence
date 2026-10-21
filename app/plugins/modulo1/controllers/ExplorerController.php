@@ -31,6 +31,12 @@ class ExplorerController extends ActionController {
 		$this->mostrar('getVistaEntidades', 'vista', 'explorer_entidades_html.php');
 	}
 
+	//6.3: vista por elemento de metadatos, el parámetro `elemento` elige cuál mostrar
+	public function Elementos() {
+		$this->view->setVar('elemento', $this->request->getParameter('elemento', pString));
+		$this->mostrar('getVistaElementos', 'vista', 'explorer_elementos_html.php');
+	}
+
 	// Lee el modelo, se lo manda al servicio y muestra la vista.
 	private function mostrar(string $metodo_cliente, string $variable, string $vista) {
 		if (!$this->request->user->canDoAction('can_use_modulo1')) { return; }

@@ -40,7 +40,14 @@ class modulo1Plugin extends BaseApplicationPlugin {
 					'is_enabled' => 1,
 					'requires' => [],
 					'parameters' => []
-				]
+				], 
+				'elementos' => [
+					'displayName' => _t('Vista por elemento'),
+					'default' => ['module' => 'modulo1', 'controller' => 'Explorer', 'action' => 'Elementos'],
+					'is_enabled' => 1,
+					'requires' => [],
+					'parameters' => []
+ 				]
 			]
 		];
 		return $menu_bar;

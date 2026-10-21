@@ -5,6 +5,7 @@
 
 mod arbol;
 mod entidades;
+mod uso;
 #[allow(dead_code)]
 mod dominio;
 #[allow(dead_code)]
@@ -17,10 +18,11 @@ use tiny_http::Method;
 
 use self::arbol::arbol_de_elementos;
 use self::entidades::vista_de_entidades;
+use self::uso::vista_de_elementos;
 use self::modelo::Modelo;
 use crate::respuesta::Respuesta;
 use super::health_response;
-use crate::constants::{HEALTH_ROUTE, MODULO1, RUTA_ARBOL_ELEMENTOS, RUTA_VISTA_ENTIDADES};
+use crate::constants::{HEALTH_ROUTE, MODULO1, RUTA_ARBOL_ELEMENTOS, RUTA_VISTA_ENTIDADES, RUTA_VISTA_USOS,};
 
 //atiende las peticiones del modulo
 pub fn responder(metodo: &Method, ruta: &str, cuerpo: &str) -> Respuesta {
@@ -28,12 +30,13 @@ pub fn responder(metodo: &Method, ruta: &str, cuerpo: &str) -> Respuesta {
         (Method::Get, HEALTH_ROUTE) => health_response(MODULO1),
         (Method::Post, RUTA_ARBOL_ELEMENTOS) => responder_vista(cuerpo, arbol_de_elementos),
         (Method::Post, RUTA_VISTA_ENTIDADES) => responder_vista(cuerpo, vista_de_entidades),
+        (Method::Post, RUTA_VISTA_USOS) => responder_vista(cuerpo, vista_de_elementos),
         _ => Respuesta::no_encontrado("ruta inexistente"),
     }
 }
 
 //lee el modelo que viene en el cuerpo y responde con la vista.
-//en 6.1 arbol de elementos, 6.2 vista por entidad
+//en 6.1 arbol de elementos, 6.2 vista por entidad, 6.3 vista por elemento
 fn responder_vista(cuerpo: &str, vista: fn(&Modelo) -> JsonValue) -> Respuesta{
     match Modelo::desde_json(cuerpo){
         Ok(modelo) => Respuesta::json(vista(&modelo)),
@@ -95,6 +98,23 @@ mod tests {
     #[test]
     fn la_vista_por_entidad_rechaza_un_modelo_roto() {
         let respuesta = responder(&Method::Post, RUTA_VISTA_ENTIDADES, "{ no es json");
+        assert_eq!(respuesta.estado, CODIGO_PETICION_INCORRECTA);
+    }
+
+    #[test]
+    fn la_vista_por_elemento_trae_las_entidades_donde_se_usa() {
+        let modelo = MODELO
+            .replace(r#""entidades": []"#, r#""entidades": [{ "codigo": "ca_objects", "nombre": "Objetos", "numero_tabla": 57 }]"#)
+            .replace(r#""asignaciones": []"#, r#""asignaciones": [{ "entidad": "ca_objects", "elemento": "date", "etiqueta": "Cuándo" }]"#);
+        let respuesta = responder(&Method::Post, RUTA_VISTA_USOS, &modelo);
+        assert_eq!(respuesta.estado, CODIGO_OK);
+        assert!(respuesta.cuerpo.contains(r#""nombre_entidad":"Objetos""#));
+        assert!(respuesta.cuerpo.contains(r#""etiqueta":"Cuándo""#));
+    }
+
+    #[test]
+    fn la_vista_por_elemento_rechaza_un_modelo_roto() {
+        let respuesta = responder(&Method::Post, RUTA_VISTA_USOS, "{ no es json");
         assert_eq!(respuesta.estado, CODIGO_PETICION_INCORRECTA);
     }
 

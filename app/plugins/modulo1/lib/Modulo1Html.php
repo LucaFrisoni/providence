@@ -43,4 +43,13 @@ class Modulo1Html {
 		return '<details open><summary><em>'.htmlspecialchars($titulo).'</em></summary>'.$cuerpo.'</details>';
 	}
 
+	//entidades donde se usa un elemento, cada uso trae entidad, nombre_entidad, etiqueta y contenedor
+	 //si el elemento está dentro de un contenedor, se aclara con qué nombre aparece ese contenedor
+	public static function usos(array $usos) : string {
+		return self::lista($usos, function($uso) {
+			$texto = $uso['nombre_entidad'].' → '.$uso['etiqueta'];
+			return $uso['contenedor'] === null ? $texto : $texto.' '._t('(dentro de «%1»)', $uso['contenedor']);
+		});
+	}
+
 }

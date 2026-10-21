@@ -24,6 +24,17 @@ class Modulo1ModeloReader {
 		GROUP BY r.table_num, e.element_id, e.element_code
 		ORDER BY r.table_num, MIN(r.`rank`)';
 	
+	
+	//lugares donde las pantallas de edicion muestran un elemento: la tabla de la interfaz y el nombre del bundle
+	const SQL_ETIQUETAS = 'SELECT u.editor_type, p.bundle_name, p.settings
+		FROM ca_editor_ui_bundle_placements p
+		INNER JOIN ca_editor_ui_screens s ON s.screen_id = p.screen_id
+		INNER JOIN ca_editor_uis u ON u.ui_id = s.ui_id
+		ORDER BY u.ui_id, s.`rank`, p.`rank`';
+
+	//separador cuando una entidad le pone etiquetas distintas a un elemento en distintas pantallas 
+	const SEPARADOR_ETIQUETAS = ' / ';
+
 	//tipos de relacion entre tablas con el nombre en cada sentido
 	const SQL_RELACIONES = 'SELECT t.table_num, MIN(l.typename) AS typename, MIN(l.typename_reverse) AS typename_reverse
 		FROM ca_relationship_types t
@@ -43,6 +54,7 @@ class Modulo1ModeloReader {
 	//columnas que se leen de cada consulta
 	const COLUMNAS_ELEMENTOS = ['element_id', 'parent_id', 'element_code', 'datatype', 'name'];
 	const COLUMNAS_ASIGNACIONES = ['table_num', 'element_code'];
+	const COLUMNAS_ETIQUETAS = ['editor_type', 'bundle_name', 'settings'];
 	const COLUMNAS_RELACIONES = ['table_num', 'typename', 'typename_reverse'];
 	const COLUMNAS_TIPOS = ['name'];
 	
@@ -146,23 +158,55 @@ class Modulo1ModeloReader {
 
 	//Convierte las filas (número de tabla y código de elemento) en la lista de asignaciones del json.
 	
-	public static function armarAsignaciones(array $filas, array $entidades) : array {
+	public static function armarAsignaciones(array $filas, array $entidades, array $etiquetas = []) : array {
 		$tablas = array_column($entidades, 'codigo', 'numero_tabla');
 		$asignaciones = [];
 		foreach ($filas as $fila) {
 			if (!isset($tablas[$fila['table_num']])) { continue; }
+			$entidad = $tablas[$fila['table_num']];
 			$asignaciones[] = [
-				'entidad' => $tablas[$fila['table_num']],
+				'entidad' => $entidad,
 				'elemento' => $fila['element_code'],
-				'etiqueta' => null
+				'etiqueta' => $etiquetas[$entidad][$fila['element_code']] ?? null
 			];
 		}
 		return $asignaciones;
 	}
 
+	//etiqueta propia de cada elemento en cada entidad, tal como la definen las pantallas de edicion
+	private function leerEtiquetas(array $entidades) : array {
+		$filas = $this->leerFilas(self::SQL_ETIQUETAS, self::COLUMNAS_ETIQUETAS);
+		$con_etiqueta = array_map(function($fila) {
+			return $fila + ['label' => self::etiquetaDeLugar($fila['settings'])];
+		}, $filas);
+		return self::armarEtiquetas($con_etiqueta, $entidades);
+	}
+	
+	//etiqueta que define un lugar de una pantalla o null si no define ninguna 
+	private static function etiquetaDeLugar(string $settings) : ?string {
+		$etiqueta = caExtractSettingsValueByUserLocale('label', caUnserializeForDatabase($settings));
+		return (is_string($etiqueta) && trim($etiqueta) !== '') ? trim($etiqueta) : null;
+	}
+	
+	//agrupa las etiquetas por entidad y por codigo de elemento[entidad][elemento] => etiqueta.
+
+	public static function armarEtiquetas(array $filas, array $entidades) : array {
+		$tablas = array_column($entidades, 'codigo', 'numero_tabla');
+		$etiquetas = [];
+		foreach ($filas as $fila) {
+			if ($fila['label'] === null || !isset($tablas[$fila['editor_type']])) { continue; }
+			$codigo = preg_replace('/^(ca_attribute_|[a-z_]+\.)/', '', $fila['bundle_name']);
+			$actuales = $etiquetas[$tablas[$fila['editor_type']]][$codigo] ?? [];
+			$etiquetas[$tablas[$fila['editor_type']]][$codigo] = array_values(array_unique(array_merge($actuales, [$fila['label']])));
+		}
+		return array_map(function($por_elemento) {
+			return array_map(function($lista) { return implode(self::SEPARADOR_ETIQUETAS, $lista); }, $por_elemento);
+		}, $etiquetas);
+	}
+	
+	//filas de una consulta, cada una como array con las columnas indicadas
 	private function leerFilas(string $sql, array $columnas, array $parametros = []) : array {
-		$db = new Db();
-		$resultado = $parametros ? $db->query($sql, ...$parametros) : $db->query($sql);
+		$resultado = (new Db())->query($sql, $parametros);
 		$filas = [];
 		while ($resultado->nextRow()) {
 			$fila = [];
@@ -171,5 +215,4 @@ class Modulo1ModeloReader {
 		}
 		return $filas;
 	}
-
 }

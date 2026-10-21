@@ -95,12 +95,16 @@ pub const CAMPO_DESTINO: &str = "destino";
 pub const CAMPO_INVERSO: &str = "inverso";
 pub const CAMPO_CONFIGURACIONES: &str = "configuraciones";
 pub const CAMPO_VALOR: &str = "valor";
+pub const CAMPO_USOS: &str = "usos";
+pub const CAMPO_CONTENEDOR: &str = "contenedor";
+pub const CAMPO_NOMBRE_ENTIDAD: &str = "nombre_entidad";
 
 
 //cant maxima de contenedores dentro de contenedores, para no tener jerarquias muy grandes
 pub const PROFUNDIDAD_MAX_ARBOL: usize = 16;
 pub const RUTA_ARBOL_ELEMENTOS: &str = "/elementos/arbol";
 pub const RUTA_VISTA_ENTIDADES: &str = "/entidades";
+pub const RUTA_VISTA_USOS: &str = "/elementos/uso";
 
 /// ----------------------------------------------------Módulo 2: ruta del catálogo de configuraciones, relativa a `/api/modulo2`.
 pub const CATALOG_ROUTE: &str = "/catalog";

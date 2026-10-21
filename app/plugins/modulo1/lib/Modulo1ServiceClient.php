@@ -11,6 +11,7 @@ class Modulo1ServiceClient {
 	//Ruta del árbol de elementos de metadatos, relativa a la URL base del servicio 
 	const ARBOL_ELEMENTOS_PATH = 'api/modulo1/elementos/arbol';
 	const ENTIDADES_PATH = 'api/modulo1/entidades';
+	const USOS_PATH = 'api/modulo1/elementos/uso';
 	const HTTP_OK = 200;
 	const JSON_MAX_DEPTH = 512;
 	
@@ -34,6 +35,12 @@ class Modulo1ServiceClient {
 	//  (POST /api/modulo1/entidades)
 	public function getVistaEntidades(array $modelo) : array {
 		return $this->postJson(self::ENTIDADES_PATH, $modelo);
+	}
+
+	 //Le manda el modelo al servicio y devuelve cada elemento con las entidades donde se usa
+	 //(POST /api/modulo1/elementos/uso)
+	public function getVistaElementos(array $modelo) : array {
+		return $this->postJson(self::USOS_PATH, $modelo);
 	}
 	
 	//Hace un POST con el cuerpo en json y decodifica la respuesta como array.
