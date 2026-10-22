@@ -47,6 +47,13 @@ class modulo1Plugin extends BaseApplicationPlugin {
 					'is_enabled' => 1,
 					'requires' => [],
 					'parameters' => []
+ 				], 
+				'relaciones' => [
+					'displayName' => _t('Vista de relaciones'),
+					'default' => ['module' => 'modulo1', 'controller' => 'Explorer', 'action' => 'Relaciones'],
+					'is_enabled' => 1,
+					'requires' => [],
+					'parameters' => []
  				]
 			]
 		];

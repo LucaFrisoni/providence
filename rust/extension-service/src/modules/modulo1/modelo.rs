@@ -8,7 +8,7 @@ use super::dominio::{Asignacion, Elemento, Entidad, TipoDato, Campo, Relacion, C
 use crate::constants::{
     CAMPO_ASIGNACIONES, CAMPO_CODIGO, CAMPO_ELEMENTO, CAMPO_ELEMENTOS, CAMPO_ENTIDAD,
     CAMPO_ENTIDADES, CAMPO_ETIQUETA, CAMPO_NOMBRE, CAMPO_NUMERO_TABLA, CAMPO_PADRE, CAMPO_TIPO,
-    PROFUNDIDAD_MAX_ARBOL, CAMPO_CAMPOS, CAMPO_RELACIONES, CAMPO_ORIGEN, CAMPO_DESTINO, CAMPO_INVERSO, CAMPO_CONFIGURACIONES, CAMPO_VALOR
+    PROFUNDIDAD_MAX_ARBOL, CAMPO_CAMPOS, CAMPO_RELACIONES, CAMPO_ORIGEN, CAMPO_DESTINO, CAMPO_INVERSO, CAMPO_CONFIGURACIONES, CAMPO_VALOR, CAMPO_DESCRIPCION, CAMPO_POR_DEFECTO, CAMPO_TIPOS_DESTINO, CAMPO_TIPOS_ORIGEN,
 };
 use json::JsonValue;
 
@@ -221,6 +221,10 @@ fn leer_relacion(valor: &JsonValue) -> Result<Relacion, ErrorModelo> {
         destino: texto(valor, CAMPO_DESTINO)?,
         tipo: texto(valor, CAMPO_TIPO)?,
         inverso: texto(valor, CAMPO_INVERSO)?,
+        descripcion: texto_opcional(valor, CAMPO_DESCRIPCION)?.unwrap_or_default(),
+        por_defecto: booleano_opcional(valor, CAMPO_POR_DEFECTO)?,
+        tipos_origen: lista_de_textos(valor, CAMPO_TIPOS_ORIGEN)?,
+        tipos_destino: lista_de_textos(valor, CAMPO_TIPOS_DESTINO)?,
     })
 }
 
@@ -244,6 +248,34 @@ fn texto_opcional(valor: &JsonValue, campo: &str) -> Result<Option<String>, Erro
         return Ok(None);
     }
     texto(valor, campo).map(Some)
+}
+
+//un campo que puede faltar o ser null, pero si esta tiene que ser verdadero o falso.
+fn booleano_opcional(valor: &JsonValue, campo: &str) -> Result<bool, ErrorModelo> {
+    if valor[campo].is_null() {
+        return Ok(false);
+    }
+    valor[campo]
+        .as_bool()
+        .ok_or_else(|| formato(format!("'{campo}' tiene que ser verdadero o falso")))
+}
+
+//una lista de textos que puede faltar o ser null
+fn lista_de_textos(valor: &JsonValue, campo: &str) -> Result<Vec<String>, ErrorModelo> {
+    if valor[campo].is_null() {
+        return Ok(Vec::new());
+    }
+    if !valor[campo].is_array() {
+        return Err(formato(format!("'{campo}' tiene que ser una lista")));
+    }
+    valor[campo]
+        .members()
+        .map(|t| {
+            t.as_str()
+                .map(str::to_string)
+                .ok_or_else(|| formato(format!("'{campo}' solo admite textos")))
+        })
+        .collect()
 }
 
 fn numero(valor: &JsonValue, campo: &str) -> Result<u32, ErrorModelo> {
@@ -343,6 +375,43 @@ mod tests {
         assert_eq!(modelo.relaciones.len(), 1);
         assert_eq!(modelo.relaciones[0].destino, "ca_entities");
         assert_eq!(modelo.relaciones[0].inverso, "creado por");
+    }
+
+    #[test]
+    fn una_relacion_sin_detalle_se_lee_con_valores_vacios() {
+        let modelo = Modelo::desde_json(MODELO_VALIDO).unwrap();
+        let relacion = &modelo.relaciones[0];
+        assert_eq!(relacion.descripcion, "");
+        assert!(!relacion.por_defecto);
+        assert!(relacion.tipos_origen.is_empty() && relacion.tipos_destino.is_empty());
+    }
+
+    #[test]
+    fn lee_el_detalle_de_una_relacion() {
+        let con_detalle = modelo_con(
+            r#""inverso": "creado por""#,
+            r#""inverso": "creado por", "descripcion": "Quien lo hizo", "por_defecto": true,
+               "tipos_origen": ["Pintura"], "tipos_destino": ["Persona", "Taller"]"#,
+        );
+        let modelo = Modelo::desde_json(&con_detalle).unwrap();
+        let relacion = &modelo.relaciones[0];
+        assert_eq!(relacion.descripcion, "Quien lo hizo");
+        assert!(relacion.por_defecto);
+        assert_eq!(relacion.tipos_origen, vec!["Pintura"]);
+        assert_eq!(relacion.tipos_destino, vec!["Persona", "Taller"]);
+    }
+
+    #[test]
+    fn rechaza_un_detalle_de_relacion_mal_escrito() {
+        for mal in [
+            r#""por_defecto": "si""#,
+            r#""tipos_origen": "Pintura""#,
+            r#""tipos_destino": [1]"#,
+        ] {
+            let texto = modelo_con(r#""inverso": "creado por""#, &format!(r#""inverso": "creado por", {mal}"#));
+            let resultado = Modelo::desde_json(&texto);
+            assert!(matches!(resultado, Err(ErrorModelo::Formato(_))), "{mal}");
+        }
     }
 
     #[test]

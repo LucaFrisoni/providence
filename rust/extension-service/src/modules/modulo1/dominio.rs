@@ -127,6 +127,11 @@ pub struct Relacion {
     pub destino: String, //codigo de la entidad con la que se relaciona
     pub tipo: String, //por ej. "creador"
     pub inverso: String, //el mismo tipo pero de destino a origen, por ej. "creado por"
+    //no obligatorios
+    pub descripcion: String,
+    pub por_defecto: bool, //si es el tipo q providence propone por defecto al relacionar dos registros
+    pub tipos_origen: Vec<String>, //tipos de registro del origen a los que se limita esta relacion
+    pub tipos_destino: Vec<String>, //tipos de registro del destino a los que se limita esta relación
 }
 
 //configuracion relevante de una entidad

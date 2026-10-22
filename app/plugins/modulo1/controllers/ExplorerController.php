@@ -37,6 +37,11 @@ class ExplorerController extends ActionController {
 		$this->mostrar('getVistaElementos', 'vista', 'explorer_elementos_html.php');
 	}
 
+	//6.4: vista de relaciones entre entidades (origen, tipo, destino, inversa, multiplicidad y características)
+	public function Relaciones() {
+		$this->mostrar('getVistaRelaciones', 'vista', 'explorer_relaciones_html.php');
+	}
+
 	// Lee el modelo, se lo manda al servicio y muestra la vista.
 	private function mostrar(string $metodo_cliente, string $variable, string $vista) {
 		if (!$this->request->user->canDoAction('can_use_modulo1')) { return; }

@@ -49,6 +49,10 @@ pub fn relacion(origen: &str, destino: &str, tipo: &str, inverso: &str) -> Relac
         destino: destino.to_string(),
         tipo: tipo.to_string(),
         inverso: inverso.to_string(),
+        descripcion: String::new(),
+        por_defecto: false,
+        tipos_origen: vec![],
+        tipos_destino: vec![],
     }
 }
 

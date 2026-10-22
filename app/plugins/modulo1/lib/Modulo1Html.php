@@ -52,4 +52,40 @@ class Modulo1Html {
 		});
 	}
 
+	private static function e($texto) : string {
+		return htmlspecialchars((string)$texto);
+	}
+
+	//tabla de relaciones que devuelve el servicio, una fila por tipo de relacion, con el origen, el tipo, el destino, la relación inversa, la clase, la multiplicidad y las características
+	public static function relaciones(array $relaciones) : string {
+		if (!$relaciones) { return ''; }
+		$columnas = [_t('Origen'), _t('Tipo de relación'), _t('Destino'), _t('Relación inversa'), _t('Clase'), _t('Multiplicidad'), _t('Características')];
+		$html = '<table class="modulo1-tabla"><thead><tr>';
+		foreach ($columnas as $columna) { $html .= '<th>'.self::e($columna).'</th>'; }
+		$html .= '</tr></thead><tbody>';
+		foreach ($relaciones as $r) {
+			$celdas = [
+				$r['nombre_origen'].' ('.$r['origen'].')', $r['tipo'], $r['nombre_destino'].' ('.$r['destino'].')',
+				$r['inverso'], $r['clase'], $r['multiplicidad'], self::caracteristicas($r)
+			];
+			$html .= '<tr>'.implode('', array_map(function($celda) { return '<td>'.self::e($celda).'</td>'; }, $celdas)).'</tr>';
+		}
+		return $html.'</tbody></table>';
+	}
+	
+	public static function caracteristicas(array $relacion) : string {
+		$partes = [];
+		if ($relacion['descripcion'] !== '') { $partes[] = $relacion['descripcion']; }
+		if ($relacion['por_defecto']) { $partes[] = _t('Se propone por defecto'); }
+		if ($relacion['tipos_origen']) { $partes[] = _t('Solo desde: %1', implode(', ', $relacion['tipos_origen'])); }
+		if ($relacion['tipos_destino']) { $partes[] = _t('Solo hacia: %1', implode(', ', $relacion['tipos_destino'])); }
+		return $partes ? implode(' · ', $partes) : '—';
+	}
+	
+	public static function jerarquias(array $jerarquias) : string {
+		return self::lista($jerarquias, function($j) {
+			return $j['nombre_entidad'].' ('.$j['entidad'].') · '.$j['clase'].' · '.$j['multiplicidad'];
+		});
+	}
+
 }

@@ -36,11 +36,18 @@ class Modulo1ModeloReader {
 	const SEPARADOR_ETIQUETAS = ' / ';
 
 	//tipos de relacion entre tablas con el nombre en cada sentido
-	const SQL_RELACIONES = 'SELECT t.table_num, MIN(l.typename) AS typename, MIN(l.typename_reverse) AS typename_reverse
+	const SQL_RELACIONES = 'SELECT t.table_num, t.is_default, MIN(l.typename) AS typename, MIN(l.typename_reverse) AS typename_reverse,
+		MIN(l.description) AS description, MIN(izq.name_singular) AS tipo_izquierdo, MIN(der.name_singular) AS tipo_derecho
 		FROM ca_relationship_types t
-		INNER JOIN ca_relationship_type_labels l ON l.type_id = t.type_id
+		INNER JOIN ca_relationship_type_labels l ON l.label_id = (
+			SELECT l2.label_id FROM ca_relationship_type_labels l2
+			INNER JOIN ca_locales lo ON lo.locale_id = l2.locale_id
+			WHERE l2.type_id = t.type_id
+			ORDER BY (lo.language = \'es\') DESC, (lo.language = \'en\') DESC, l2.locale_id LIMIT 1)
+		LEFT JOIN ca_list_item_labels izq ON izq.item_id = t.sub_type_left_id AND izq.is_preferred = 1
+		LEFT JOIN ca_list_item_labels der ON der.item_id = t.sub_type_right_id AND der.is_preferred = 1
 		WHERE t.parent_id IS NOT NULL
-		GROUP BY t.type_id, t.table_num
+		GROUP BY t.type_id, t.table_num, t.is_default
 		ORDER BY t.table_num, MIN(t.`rank`)';
 	//tipos de una entidad: los ítems de la lista cuyo código indica Providence, con su etiqueta
 	const SQL_TIPOS = 'SELECT MIN(li.label) AS name FROM (
@@ -55,7 +62,7 @@ class Modulo1ModeloReader {
 	const COLUMNAS_ELEMENTOS = ['element_id', 'parent_id', 'element_code', 'datatype', 'name'];
 	const COLUMNAS_ASIGNACIONES = ['table_num', 'element_code'];
 	const COLUMNAS_ETIQUETAS = ['editor_type', 'bundle_name', 'settings'];
-	const COLUMNAS_RELACIONES = ['table_num', 'typename', 'typename_reverse'];
+	const COLUMNAS_RELACIONES = ['table_num', 'is_default', 'typename', 'typename_reverse', 'description', 'tipo_izquierdo', 'tipo_derecho'];
 	const COLUMNAS_TIPOS = ['name'];
 	
 	// Modelo para mandarle al servicio: entidades, elementos y asignaciones de elementos a entidades
@@ -114,8 +121,12 @@ class Modulo1ModeloReader {
 			$relaciones[] = [
 				'origen' => $origen,
 				'destino' => $destino,
-				'tipo' => $fila['typename'],
-				'inverso' => $fila['typename_reverse']
+				'tipo' => stripslashes($fila['typename']),
+				'inverso' => stripslashes($fila['typename_reverse']),
+				'descripcion' => (string)($fila['description'] ?? ''),
+				'por_defecto' => (bool)(int)($fila['is_default'] ?? 0),
+				'tipos_origen' => !empty($fila['tipo_izquierdo']) ? [$fila['tipo_izquierdo']] : [],
+				'tipos_destino' => !empty($fila['tipo_derecho']) ? [$fila['tipo_derecho']] : []
 			];
 		}
 		return $relaciones;

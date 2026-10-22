@@ -6,6 +6,7 @@
 mod arbol;
 mod entidades;
 mod uso;
+mod relaciones;
 #[allow(dead_code)]
 mod dominio;
 #[allow(dead_code)]
@@ -19,10 +20,11 @@ use tiny_http::Method;
 use self::arbol::arbol_de_elementos;
 use self::entidades::vista_de_entidades;
 use self::uso::vista_de_elementos;
+use self::relaciones::vista_de_relaciones;
 use self::modelo::Modelo;
 use crate::respuesta::Respuesta;
 use super::health_response;
-use crate::constants::{HEALTH_ROUTE, MODULO1, RUTA_ARBOL_ELEMENTOS, RUTA_VISTA_ENTIDADES, RUTA_VISTA_USOS,};
+use crate::constants::{HEALTH_ROUTE, MODULO1, RUTA_ARBOL_ELEMENTOS, RUTA_VISTA_ENTIDADES, RUTA_VISTA_USOS, RUTA_VISTA_RELACIONES,};
 
 //atiende las peticiones del modulo
 pub fn responder(metodo: &Method, ruta: &str, cuerpo: &str) -> Respuesta {
@@ -31,12 +33,13 @@ pub fn responder(metodo: &Method, ruta: &str, cuerpo: &str) -> Respuesta {
         (Method::Post, RUTA_ARBOL_ELEMENTOS) => responder_vista(cuerpo, arbol_de_elementos),
         (Method::Post, RUTA_VISTA_ENTIDADES) => responder_vista(cuerpo, vista_de_entidades),
         (Method::Post, RUTA_VISTA_USOS) => responder_vista(cuerpo, vista_de_elementos),
+        (Method::Post, RUTA_VISTA_RELACIONES) => responder_vista(cuerpo, vista_de_relaciones),
         _ => Respuesta::no_encontrado("ruta inexistente"),
     }
 }
 
 //lee el modelo que viene en el cuerpo y responde con la vista.
-//en 6.1 arbol de elementos, 6.2 vista por entidad, 6.3 vista por elemento
+//en 6.1 arbol de elementos, 6.2 vista por entidad, 6.3 vista por elemento, 6.4 vista de relaciones
 fn responder_vista(cuerpo: &str, vista: fn(&Modelo) -> JsonValue) -> Respuesta{
     match Modelo::desde_json(cuerpo){
         Ok(modelo) => Respuesta::json(vista(&modelo)),
@@ -115,6 +118,23 @@ mod tests {
     #[test]
     fn la_vista_por_elemento_rechaza_un_modelo_roto() {
         let respuesta = responder(&Method::Post, RUTA_VISTA_USOS, "{ no es json");
+        assert_eq!(respuesta.estado, CODIGO_PETICION_INCORRECTA);
+    }
+
+    #[test]
+    fn la_vista_de_relaciones_trae_las_relaciones_del_modelo() {
+        let modelo = MODELO
+            .replace(r#""entidades": []"#, r#""entidades": [{ "codigo": "ca_objects", "nombre": "Objetos", "numero_tabla": 57 }, { "codigo": "ca_entities", "nombre": "Entidades", "numero_tabla": 20 }]"#)
+            .replace(r#""relaciones": []"#, r#""relaciones": [{ "origen": "ca_objects", "destino": "ca_entities", "tipo": "creador", "inverso": "creado por" }]"#);
+        let respuesta = responder(&Method::Post, RUTA_VISTA_RELACIONES, &modelo);
+        assert_eq!(respuesta.estado, CODIGO_OK);
+        assert!(respuesta.cuerpo.contains(r#""inverso":"creado por""#));
+        assert!(respuesta.cuerpo.contains(r#""multiplicidad":"Muchos a muchos""#));
+    }
+
+    #[test]
+    fn la_vista_de_relaciones_rechaza_un_modelo_roto() {
+        let respuesta = responder(&Method::Post, RUTA_VISTA_RELACIONES, "{ no es json");
         assert_eq!(respuesta.estado, CODIGO_PETICION_INCORRECTA);
     }
 

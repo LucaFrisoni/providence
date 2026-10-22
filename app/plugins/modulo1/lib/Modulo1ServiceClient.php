@@ -12,6 +12,7 @@ class Modulo1ServiceClient {
 	const ARBOL_ELEMENTOS_PATH = 'api/modulo1/elementos/arbol';
 	const ENTIDADES_PATH = 'api/modulo1/entidades';
 	const USOS_PATH = 'api/modulo1/elementos/uso';
+	const RELACIONES_PATH = 'api/modulo1/relaciones';
 	const HTTP_OK = 200;
 	const JSON_MAX_DEPTH = 512;
 	
@@ -41,6 +42,13 @@ class Modulo1ServiceClient {
 	 //(POST /api/modulo1/elementos/uso)
 	public function getVistaElementos(array $modelo) : array {
 		return $this->postJson(self::USOS_PATH, $modelo);
+	}
+
+	//Le manda el modelo al servicio y devuelve las relaciones entre entidades y las jerarquias
+	 // (POST /api/modulo1/relaciones)
+	
+	public function getVistaRelaciones(array $modelo) : array {
+		return $this->postJson(self::RELACIONES_PATH, $modelo);
 	}
 	
 	//Hace un POST con el cuerpo en json y decodifica la respuesta como array.

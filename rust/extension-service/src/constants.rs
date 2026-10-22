@@ -98,13 +98,42 @@ pub const CAMPO_VALOR: &str = "valor";
 pub const CAMPO_USOS: &str = "usos";
 pub const CAMPO_CONTENEDOR: &str = "contenedor";
 pub const CAMPO_NOMBRE_ENTIDAD: &str = "nombre_entidad";
+pub const CAMPO_NOMBRE_ORIGEN: &str = "nombre_origen";
+pub const CAMPO_NOMBRE_DESTINO: &str = "nombre_destino";
+pub const CAMPO_CLASE: &str = "clase";
+pub const CAMPO_MULTIPLICIDAD: &str = "multiplicidad";
+pub const CAMPO_JERARQUIAS: &str = "jerarquias";
+pub const CAMPO_NOTA: &str = "nota";
 
+//campos del json de una relacion q no son obligatorios
+pub const CAMPO_DESCRIPCION: &str = "descripcion";
+pub const CAMPO_POR_DEFECTO: &str = "por_defecto";
+pub const CAMPO_TIPOS_ORIGEN: &str = "tipos_origen";
+pub const CAMPO_TIPOS_DESTINO: &str = "tipos_destino";
 
 //cant maxima de contenedores dentro de contenedores, para no tener jerarquias muy grandes
 pub const PROFUNDIDAD_MAX_ARBOL: usize = 16;
 pub const RUTA_ARBOL_ELEMENTOS: &str = "/elementos/arbol";
 pub const RUTA_VISTA_ENTIDADES: &str = "/entidades";
 pub const RUTA_VISTA_USOS: &str = "/elementos/uso";
+pub const RUTA_VISTA_RELACIONES: &str = "/relaciones";
+
+//configuracion que el plugin informa para cada entidad y el valor que indica que es jerarquica
+pub const CONFIGURACION_JERARQUIA: &str = "Jerarquía";
+pub const VALOR_SI: &str = "Sí";
+
+//clases de relacion: la jerarquica (padre e hijos de una misma entidad), la que une entidades distintas y la que une registros de una misma entidad entre si (grafo).
+pub const CLASE_JERARQUICA: &str = "Jerárquica";
+pub const CLASE_NO_JERARQUICA: &str = "No jerárquica";
+pub const CLASE_GRAFO: &str = "No jerárquica, en grafo (entre registros de la misma entidad)";
+
+//multiplicidad que se muestra. Providence no la guarda, se deduce de como se guarda cada tipo de relacion
+pub const MULTIPLICIDAD_MUCHOS_A_MUCHOS: &str = "Muchos a muchos";
+pub const MULTIPLICIDAD_UNO_A_MUCHOS: &str = "Uno a muchos (un padre, varios hijos)";
+pub const NOTA_MULTIPLICIDAD: &str = "Providence no guarda un límite de cantidad para las relaciones: \
+cada relación es una fila de una tabla de enlace, así que un registro puede relacionarse con varios \
+(muchos a muchos). En las jerarquías cada registro tiene un solo padre (uno a muchos).";
+
 
 /// ----------------------------------------------------Módulo 2: ruta del catálogo de configuraciones, relativa a `/api/modulo2`.
 pub const CATALOG_ROUTE: &str = "/catalog";
