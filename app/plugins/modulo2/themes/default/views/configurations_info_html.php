@@ -117,12 +117,13 @@ $search_text = function(array $section) {
 				item.classList.toggle('m2-search-hidden', !match);
 				if (sectionOf(item)) { sectionOf(item).classList.toggle('m2-search-hidden', !match); }
 			});
-			// Con una búsqueda se despliegan los grupos con resultados; sin búsqueda, vuelven a plegarse
+			// Con una búsqueda se despliegan los grupos con resultados; sin búsqueda, siguen a las secciones abiertas
 			sidebar.querySelectorAll('.m2-sidebar-group').forEach(function(group) {
 				var visible = !!group.querySelector('li:not(.m2-search-hidden)');
 				group.classList.toggle('m2-search-hidden', !visible);
 				group.querySelector('ul').style.display = (words.length && visible) ? 'block' : '';
 			});
+			if (!words.length && window.m2SyncSidebar) { window.m2SyncSidebar(); }
 			document.querySelectorAll('.m2-group-block').forEach(function(block) {
 				block.classList.toggle('m2-search-hidden', !block.querySelector('details.m2-section:not(.m2-search-hidden)'));
 			});

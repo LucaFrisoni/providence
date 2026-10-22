@@ -30,21 +30,24 @@ final class Modulo2ConfigurationsViewTest extends TestCase {
 		$this->assertStringNotContainsString('multipart_id_numbering.conf', $html, 'El archivo es un detalle técnico');
 	}
 	# -------------------------------------------------------
-	// La página tiene más de veinte secciones: plegadas al cargar se recorre el índice sin desplazarse de más
-	#[TestDox('Al cargar la página todas las secciones están plegadas')]
-	public function testSectionsStartCollapsed() : void {
+	// Se ve todo al entrar; la barra lateral abre los grupos según las secciones abiertas (data-m2-scope)
+	#[TestDox('Al cargar la página todas las secciones están desplegadas y marcadas con su grupo')]
+	public function testSectionsStartExpanded() : void {
 		$html = $this->render(self::INDEX_VIEW, ['catalog' => $this->catalog(), 'database_summary' => []]);
 
-		$this->assertSame(4, preg_match_all('/<details class="m2-section"/', $html));
-		$this->assertSame(0, preg_match_all('/<details class="m2-section"[^>]*\bopen\b/', $html));
+		$this->assertSame(4, preg_match_all('/<details class="m2-section" open /', $html));
+		$this->assertStringContainsString('id="m2-section-features" data-modified="1" data-m2-scope="data_type"', $html);
+		$this->assertStringContainsString('id="m2-section-visual_identity" data-modified="0" data-m2-scope="global"', $html);
+		$this->assertStringContainsString('data-m2-scope="database"', $html);
 	}
 	# -------------------------------------------------------
-	#[TestDox('Una configuración invertida en 0 se ve activa (✓), y un valor modificado, resaltado con su valor por defecto')]
+	#[TestDox('Una configuración invertida en 0 se ve activa (✓), y un valor modificado, resaltado con su valor original')]
 	public function testInvertedAndModifiedValues() : void {
 		$html = $this->render(self::INDEX_VIEW, ['catalog' => $this->catalog()]);
 
 		$this->assertStringContainsString('<span class="m2-bool m2-on">✓ '._t('Sí').'</span>', $html);
-		$this->assertMatchesRegularExpression('/class="m2-value m2-modified" title="ca_places_disable_delete · [^"]*'._t('Sí').'"/u', $html);
+		$this->assertStringContainsString('class="m2-value m2-modified" title="'._t('Valor original: %1', _t('Sí')).'"', $html);
+		$this->assertStringNotContainsString('title="ca_places_disable_delete', $html, 'Sin claves de Providence a la vista');
 		$this->assertStringContainsString('<tr class="m2-row m2-row-modified">', $html);
 		$this->assertStringContainsString('data-modified="1"', $html);
 	}
@@ -76,6 +79,25 @@ final class Modulo2ConfigurationsViewTest extends TestCase {
 		$html = $this->render(self::INDEX_VIEW, ['catalog' => $this->catalog(), 'database_summary' => $summary]);
 
 		$this->assertMatchesRegularExpression('!<td>Listas</td>\s*<td class="m2-value">7</td>\s*<td><a href="/index.php/administrate/setup/Lists/Index">!', $html);
+	}
+	# -------------------------------------------------------
+	// Solo se enlaza lo que el usuario puede cambiar: editable y con permiso para su nivel de riesgo
+	#[TestDox('Enlaza al formulario los valores editables cuyo riesgo el usuario puede editar')]
+	public function testEditableValuesLinkToTheirForm() : void {
+		$catalog = $this->catalog();
+		$catalog['sections'][0]['settings'][0]['editable'] = true;
+		$catalog['sections'][2]['settings'][0] += ['editable' => true];
+		$catalog['sections'][2]['settings'][0]['risk'] = 'medium';
+		$vars = ['catalog' => $catalog, 'edit_url' => fn($file, $key) => "/edit/{$file}/{$key}"];
+
+		$low_only = $this->render(self::INDEX_VIEW, $vars + ['allowed_risks' => ['low']]);
+		$read_only = $this->render(self::INDEX_VIEW, $vars + ['allowed_risks' => []]);
+
+		$this->assertStringContainsString('<a class="m2-edit" href="/edit/app.conf/ca_places_disable_delete">', $low_only);
+		$this->assertStringNotContainsString('/edit/app.conf/menu_color', $low_only, 'Riesgo medio sin permiso');
+		$this->assertStringNotContainsString('/edit/multipart_id_numbering.conf', $low_only, 'No editable');
+		$this->assertStringNotContainsString('class="m2-edit"', $read_only);
+		$this->assertStringContainsString(_t('No tiene permiso para cambiar configuraciones: solo puede consultarlas.'), $read_only);
 	}
 	# -------------------------------------------------------
 	#[TestDox('Con un error muestra solo el mensaje, sin secciones')]

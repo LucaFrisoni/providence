@@ -7,6 +7,7 @@ publish = false
 
 [dependencies]
 tiny_http = "0.12"
-json = "0.12"
 # Cliente MySQL síncrono (como tiny_http). Sin TLS ni dependencias de C: la base está en la red de Docker
 mysql = { version = "28", default-features = false, features = ["minimal-rust"] }
+# SHA-256 del contenido de cada versión de configuración (módulo 2). Ya lo usa mysql: no agrega código nuevo
+sha2 = "0.10"

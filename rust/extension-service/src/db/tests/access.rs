@@ -1,4 +1,4 @@
-//! Pruebas de aislamiento contra el MySQL de Docker: el servicio trabaja en su base y no puede
+//! Pruebas de acceso contra el MySQL de Docker: el servicio trabaja en su base y no puede
 //! acceder a la de Providence ni a otras; con datos de conexión incorrectos no se conecta.
 
 use std::env;
@@ -7,12 +7,13 @@ use std::process;
 use mysql::prelude::Queryable;
 use mysql::TxOpts;
 
-use super::{config, open_connection};
+use super::environment::{config, open_connection};
 use crate::constants::{
     ER_ACCESS_DENIED, ER_DBACCESS_DENIED, ER_TABLEACCESS_DENIED, MYSQL_SYSTEM_DB,
     PROVIDENCE_DB_ENV_VAR, PROVIDENCE_TABLE,
 };
-use crate::db::{connect, DbConfig};
+use crate::db::connect;
+use crate::types::db::DbConfig;
 
 fn providence_db() -> String {
     env::var(PROVIDENCE_DB_ENV_VAR).expect("falta la variable CA_DB_DATABASE")
@@ -129,7 +130,10 @@ fn only_has_privileges_on_its_own_database() {
         let allowed = grant.starts_with("GRANT USAGE ON *.*") || grant.contains(&own_database);
         assert!(allowed, "permiso inesperado: {grant}");
     }
-    assert!(grants.iter().any(|grant| grant.contains(&own_database)), "{grants:?}");
+    assert!(
+        grants.iter().any(|grant| grant.contains(&own_database)),
+        "{grants:?}"
+    );
 }
 
 /// Conecta con la configuración real cambiando un dato y devuelve el error.
@@ -144,18 +148,39 @@ fn connection_error(change: impl FnOnce(&mut DbConfig)) -> mysql::Error {
 #[ignore = "requiere el MySQL de Docker"]
 fn rejects_wrong_credentials() {
     let wrong_password = connection_error(|c| c.password.push_str("-incorrecta"));
-    assert_eq!(mysql_error_code::<()>(Err(wrong_password)), ER_ACCESS_DENIED);
+    assert_eq!(
+        mysql_error_code::<()>(Err(wrong_password)),
+        ER_ACCESS_DENIED
+    );
     let unknown_user = connection_error(|c| c.user = "test_usuario_inexistente".to_string());
-    assert_eq!(mysql_error_code::<()>(Err(unknown_user)), ER_ACCESS_DENIED);
+    assert!(is_unknown_user_rejection(&unknown_user), "{unknown_user:?}");
+}
+
+/// Rechazo de un usuario inexistente: error 1045, o el método de autenticación falso que MySQL
+/// elige al azar en cada arranque para no revelar qué usuarios existen (el driver no lo conoce).
+fn is_unknown_user_rejection(error: &mysql::Error) -> bool {
+    match error {
+        mysql::Error::MySqlError(error) => error.code == ER_ACCESS_DENIED,
+        mysql::Error::DriverError(mysql::DriverError::UnknownAuthPlugin(_)) => true,
+        _ => false,
+    }
 }
 
 /// No se conecta indicando como base la de Providence, la de sistema o una inexistente (error 1044).
 #[test]
 #[ignore = "requiere el MySQL de Docker"]
 fn rejects_databases_other_than_its_own() {
-    for database in [providence_db(), MYSQL_SYSTEM_DB.to_string(), "test_base_inexistente".to_string()] {
+    for database in [
+        providence_db(),
+        MYSQL_SYSTEM_DB.to_string(),
+        "test_base_inexistente".to_string(),
+    ] {
         let error = connection_error(|c| c.database = database.clone());
-        assert_eq!(mysql_error_code::<()>(Err(error)), ER_DBACCESS_DENIED, "{database}");
+        assert_eq!(
+            mysql_error_code::<()>(Err(error)),
+            ER_DBACCESS_DENIED,
+            "{database}"
+        );
     }
 }
 
@@ -164,7 +189,13 @@ fn rejects_databases_other_than_its_own() {
 #[ignore = "requiere el MySQL de Docker"]
 fn fails_when_the_server_is_unreachable() {
     let unknown_host = connection_error(|c| c.host = "host-inexistente.invalid".to_string());
-    assert!(!matches!(unknown_host, mysql::Error::MySqlError(_)), "{unknown_host:?}");
+    assert!(
+        !matches!(unknown_host, mysql::Error::MySqlError(_)),
+        "{unknown_host:?}"
+    );
     let closed_port = connection_error(|c| c.port = 1);
-    assert!(!matches!(closed_port, mysql::Error::MySqlError(_)), "{closed_port:?}");
+    assert!(
+        !matches!(closed_port, mysql::Error::MySqlError(_)),
+        "{closed_port:?}"
+    );
 }

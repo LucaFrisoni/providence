@@ -41,6 +41,7 @@ por defecto:
 | Providence                  | `PROVIDENCE_PORT`     | Puerto de Providence en esta computadora                                                                                                  | `8080`         |
 |                             | `CA_INSTALL_PROFILE`  | Perfil de instalación                                                                                                                     | `default`      |
 |                             | `CA_DEFAULT_LOCALE`   | Idioma por defecto                                                                                                                        | `en_US`        |
+| Todos los contenedores      | `TZ`                  | Zona horaria (hora de MySQL, PHP y Providence). Requiere `docker compose up -d --build` al cambiarla                                     | `America/Argentina/Buenos_Aires` |
 
 Para conectarse a las bases desde DBeaver, ver [Base de datos local](../README.md#base-de-datos-local).
 

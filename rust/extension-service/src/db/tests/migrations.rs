@@ -1,12 +1,11 @@
 //! Pruebas de las migraciones (`db/migrations.rs`).
-//! Las de integración usan migraciones de prueba con su propio módulo y sus propias tablas, y las
-//! borran al terminar.
 
 use mysql::prelude::Queryable;
 
-use super::{open_connection, pool};
+use super::environment::{open_connection, pool};
 use crate::constants::{MIGRATIONS_TABLE, MODULO2, MODULO2_TABLES};
-use crate::db::migrations::{check_numbering, run, Migration, MigrationError, MIGRATIONS};
+use crate::db::migrations::{check_numbering, run, MIGRATIONS};
+use crate::types::db::{Migration, MigrationError};
 
 const fn test_migration(module: &'static str, sql: &'static str) -> Migration {
     numbered(module, 1, sql)
@@ -38,7 +37,9 @@ impl Cleanup {
     /// No usa `open_connection` ni `unwrap`: un pánico dentro de `drop`, mientras la prueba ya está
     /// fallando, aborta todo el proceso de pruebas.
     fn clean(&self) {
-        let Ok(mut conn) = pool().get_conn() else { return };
+        let Ok(mut conn) = pool().get_conn() else {
+            return;
+        };
         for table in self.tables {
             let _ = conn.query_drop(format!("DROP TABLE IF EXISTS {table}"));
         }
@@ -98,8 +99,16 @@ fn checksum_depends_only_on_sql() {
         a.checksum(),
         test_migration("otro", "CREATE TABLE a (id INT)").checksum()
     );
-    for changed in ["CREATE TABLE b (id INT)", "CREATE TABLE a (id INT) ", "CREATE TABLE a (id int)"] {
-        assert_ne!(a.checksum(), test_migration("m", changed).checksum(), "{changed:?}");
+    for changed in [
+        "CREATE TABLE b (id INT)",
+        "CREATE TABLE a (id INT) ",
+        "CREATE TABLE a (id int)",
+    ] {
+        assert_ne!(
+            a.checksum(),
+            test_migration("m", changed).checksum(),
+            "{changed:?}"
+        );
     }
     assert_eq!(a.checksum().len(), 16);
 }
@@ -109,6 +118,14 @@ fn checksum_depends_only_on_sql() {
 fn id_matches_file_name() {
     assert_eq!(MIGRATIONS[0].id(), "modulo2/0001_creando_tablas_modulo2");
     assert_eq!(MIGRATIONS[1].id(), "modulo2/0002_creando_indices_modulo2");
+    assert_eq!(
+        MIGRATIONS[2].id(),
+        "modulo2/0003_agregando_cambios_pendientes_modulo2"
+    );
+    assert_eq!(
+        MIGRATIONS[3].id(),
+        "modulo2/0004_optimizando_indices_modulo2"
+    );
     assert_eq!(numbered("m", 12, "").id(), "m/0012_prueba");
 }
 
@@ -130,7 +147,11 @@ fn migrations_are_numbered_per_module() {
 fn modulo2_tables_use_module_prefix() {
     for migration in MIGRATIONS.iter().filter(|m| m.module == MODULO2) {
         for statement in migration.sql.split("CREATE TABLE ").skip(1) {
-            assert!(statement.starts_with("m2_"), "{}: {statement}", migration.id());
+            assert!(
+                statement.starts_with("m2_"),
+                "{}: {statement}",
+                migration.id()
+            );
         }
     }
 }
@@ -139,14 +160,31 @@ fn modulo2_tables_use_module_prefix() {
 #[test]
 fn numbering_rejects_gaps_disorder_repeats_and_wrong_start() {
     let cases: [(&str, &[Migration]); 4] = [
-        ("salto", &[numbered("m", 1, "x"), numbered("m", 2, "x"), numbered("m", 4, "x")]),
-        ("desorden", &[numbered("m", 1, "x"), numbered("m", 4, "x"), numbered("m", 2, "x")]),
+        (
+            "salto",
+            &[
+                numbered("m", 1, "x"),
+                numbered("m", 2, "x"),
+                numbered("m", 4, "x"),
+            ],
+        ),
+        (
+            "desorden",
+            &[
+                numbered("m", 1, "x"),
+                numbered("m", 4, "x"),
+                numbered("m", 2, "x"),
+            ],
+        ),
         ("repetida", &[numbered("m", 1, "x"), numbered("m", 1, "x")]),
         ("inicio", &[numbered("m", 2, "x")]),
     ];
     for (case, migrations) in cases {
         let result = check_numbering(migrations);
-        assert!(matches!(result, Err(MigrationError::Numbering(_))), "{case}: {result:?}");
+        assert!(
+            matches!(result, Err(MigrationError::Numbering(_))),
+            "{case}: {result:?}"
+        );
     }
 }
 
@@ -187,7 +225,11 @@ fn applies_pending_migration_once() {
 #[ignore = "requiere el MySQL de Docker"]
 fn applies_migration_added_later() {
     let _cleanup = Cleanup::new("test_agregada", &["test_migracion_agregada"]);
-    let first = numbered("test_agregada", 1, "CREATE TABLE test_migracion_agregada (id INT)");
+    let first = numbered(
+        "test_agregada",
+        1,
+        "CREATE TABLE test_migracion_agregada (id INT)",
+    );
     let added = numbered(
         "test_agregada",
         2,
@@ -195,7 +237,11 @@ fn applies_migration_added_later() {
     );
 
     run(&mut open_connection(), &[first]).unwrap();
-    let first = numbered("test_agregada", 1, "CREATE TABLE test_migracion_agregada (id INT)");
+    let first = numbered(
+        "test_agregada",
+        1,
+        "CREATE TABLE test_migracion_agregada (id INT)",
+    );
     let applied = run(&mut open_connection(), &[first, added]).unwrap();
 
     assert_eq!(applied, vec!["test_agregada/0002_prueba".to_string()]);
@@ -232,8 +278,16 @@ fn rejects_modified_applied_migration() {
 fn rejects_removed_applied_migration() {
     let _cleanup = Cleanup::new("test_borrada", &["test_migracion_borrada"]);
     let both = [
-        numbered("test_borrada", 1, "CREATE TABLE test_migracion_borrada (id INT)"),
-        numbered("test_borrada", 2, "ALTER TABLE test_migracion_borrada ADD COLUMN x INT"),
+        numbered(
+            "test_borrada",
+            1,
+            "CREATE TABLE test_migracion_borrada (id INT)",
+        ),
+        numbered(
+            "test_borrada",
+            2,
+            "ALTER TABLE test_migracion_borrada ADD COLUMN x INT",
+        ),
     ];
 
     run(&mut open_connection(), &both).unwrap();
@@ -251,8 +305,14 @@ fn rejects_removed_applied_migration() {
 fn ignores_migrations_of_other_modules() {
     let _cleanup_a = Cleanup::new("test_modulo_a", &["test_migracion_modulo_a"]);
     let _cleanup_b = Cleanup::new("test_modulo_b", &["test_migracion_modulo_b"]);
-    let module_a = [test_migration("test_modulo_a", "CREATE TABLE test_migracion_modulo_a (id INT)")];
-    let module_b = [test_migration("test_modulo_b", "CREATE TABLE test_migracion_modulo_b (id INT)")];
+    let module_a = [test_migration(
+        "test_modulo_a",
+        "CREATE TABLE test_migracion_modulo_a (id INT)",
+    )];
+    let module_b = [test_migration(
+        "test_modulo_b",
+        "CREATE TABLE test_migracion_modulo_b (id INT)",
+    )];
 
     run(&mut open_connection(), &module_a).unwrap();
     let applied = run(&mut open_connection(), &module_b).unwrap();
@@ -267,18 +327,29 @@ fn failed_migration_is_not_registered_and_stops_the_rest() {
     let _cleanup = Cleanup::new("test_fallida", &["test_migracion_fallida"]);
     let broken = [
         numbered("test_fallida", 1, "CREATE TABLA con error"),
-        numbered("test_fallida", 2, "CREATE TABLE test_migracion_fallida (id INT)"),
+        numbered(
+            "test_fallida",
+            2,
+            "CREATE TABLE test_migracion_fallida (id INT)",
+        ),
     ];
 
     let result = run(&mut open_connection(), &broken);
 
-    assert!(matches!(result, Err(MigrationError::Database(_))), "{result:?}");
+    assert!(
+        matches!(result, Err(MigrationError::Database(_))),
+        "{result:?}"
+    );
     assert!(registered_versions("test_fallida").is_empty());
     assert!(!table_exists("test_migracion_fallida"));
 
     let fixed = [
         numbered("test_fallida", 1, "SELECT 1"),
-        numbered("test_fallida", 2, "CREATE TABLE test_migracion_fallida (id INT)"),
+        numbered(
+            "test_fallida",
+            2,
+            "CREATE TABLE test_migracion_fallida (id INT)",
+        ),
     ];
     run(&mut open_connection(), &fixed).unwrap();
     assert_eq!(registered_versions("test_fallida"), vec![1, 2]);
@@ -289,7 +360,10 @@ fn failed_migration_is_not_registered_and_stops_the_rest() {
 #[ignore = "requiere el MySQL de Docker"]
 fn registry_records_each_applied_migration() {
     let _cleanup = Cleanup::new("test_registro", &["test_migracion_registro"]);
-    let migration = test_migration("test_registro", "CREATE TABLE test_migracion_registro (id INT)");
+    let migration = test_migration(
+        "test_registro",
+        "CREATE TABLE test_migracion_registro (id INT)",
+    );
 
     run(&mut open_connection(), std::slice::from_ref(&migration)).unwrap();
 
@@ -302,7 +376,10 @@ fn registry_records_each_applied_migration() {
             ("test_registro",),
         )
         .unwrap();
-    assert_eq!(row, Some(("prueba".to_string(), migration.checksum(), true)));
+    assert_eq!(
+        row,
+        Some(("prueba".to_string(), migration.checksum(), true))
+    );
 }
 
 /// Las migraciones reales están aplicadas con su checksum actual y crearon las tablas del módulo 2.

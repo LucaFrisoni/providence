@@ -25,3 +25,6 @@ define('__CA_DEFAULT_LOCALE__', getenv('CA_DEFAULT_LOCALE') ?: 'en_US');
 define('__CA_STACKTRACE_ON_EXCEPTION__', true);
 
 require(__DIR__.'/setup.php-dist');
+
+// setup.php-dist fija America/New_York: se usa la zona horaria de los equipos (TZ en .env)
+date_default_timezone_set(getenv('TZ') ?: 'America/Argentina/Buenos_Aires');

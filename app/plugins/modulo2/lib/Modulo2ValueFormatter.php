@@ -44,6 +44,12 @@ class Modulo2ValueFormatter {
 		return strlen((string)$value) ? (string)$value : '—';
 	}
 	# -------------------------------------------------------
+	/** Nombre para mostrar de una entrada: la configuración y, si es por tipo de dato, cuál ("Activo · Lugares") */
+	public static function entryLabel(array $setting, array $entry, array $table_names = []) : string {
+		$data_type = $entry['data_type'] ?? null;
+		return $setting['label'].($data_type ? ' · '.ucfirst($table_names[$data_type] ?? $data_type) : '');
+	}
+	# -------------------------------------------------------
 	/**
 	 * Valor con estructura como texto de varias líneas, con la sintaxis de los .conf de Providence:
 	 * "clave = valor" y los bloques entre llaves, con sangría por nivel
