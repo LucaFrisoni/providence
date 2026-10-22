@@ -46,6 +46,10 @@ final class Modulo2ManageMap {
 		return [
 			'configurations' => self::internal(['Configurations', 'Index'], _t('Nuevas configuraciones'),
 				_t('Configuraciones que Providence solo permite cambiar editando sus archivos y que este módulo trae a la interfaz: tipos de dato, menús, identificadores, búsqueda, textos y más.')),
+			'versions' => self::internal(['Versions', 'Index'], _t('Versiones de la configuración'),
+				_t('Copias de la configuración guardadas en distintos momentos: ver qué cambió en cada una y volver a una anterior.')),
+			'changes' => self::internal(['Changes', 'Index'], _t('Historial de cambios'),
+				_t('Quién cambió cada configuración, cuándo y qué valor tenía antes y después.')),
 			'system_config' => self::native(['system_config'], _t('Interfaces de edición, elementos de metadatos, tipos de relación, idiomas, diccionario de datos, chequeo de configuración y mantenimiento (reindexar, exportar la configuración).'), self::STATUS_PLANNED),
 			'preferences' => self::native(['preferences'], _t('Cómo trabaja cada usuario en Providence: idioma y tema de la interfaz, pantallas de edición por tipo de dato, búsqueda, alta rápida, qué se copia al duplicar un registro y unidades de medida.'), self::STATUS_PLANNED)
 		];

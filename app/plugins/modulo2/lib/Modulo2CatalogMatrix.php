@@ -48,6 +48,22 @@ class Modulo2CatalogMatrix {
 		return $count;
 	}
 	# -------------------------------------------------------
+	/**
+	 * Sección, configuración y entrada de una clave de un archivo: ['section' => ..., 'setting' => ...,
+	 * 'entry' => ...], o null si la clave no está en el catálogo
+	 */
+	public static function findEntry(array $catalog, string $file, string $key) : ?array {
+		foreach ($catalog['sections'] as $section) {
+			if (($section['file'] ?? null) !== $file) { continue; }
+			foreach ($section['settings'] as $setting) {
+				foreach ($setting['entries'] as $entry) {
+					if ($entry['key'] === $key) { return ['section' => $section, 'setting' => $setting, 'entry' => $entry]; }
+				}
+			}
+		}
+		return null;
+	}
+	# -------------------------------------------------------
 	public static function isPerDataType(array $section) : bool {
 		return ($section['scope'] ?? Modulo2Constants::SCOPE_DATA_TYPE) === Modulo2Constants::SCOPE_DATA_TYPE;
 	}

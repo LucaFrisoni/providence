@@ -83,6 +83,31 @@ final class Modulo2ServiceClientTest extends TestCase {
 		}
 	}
 	# -------------------------------------------------------
+	// Al crear una versión repetida, la pantalla avisa cuál es la idéntica: viene en el cuerpo del 409
+	#[TestDox('Un error del servicio trae su motivo, su código HTTP y el cuerpo de la respuesta')]
+	public function testServiceErrorCarriesStatusAndData() : void {
+		$client = $this->clientReturning(new Response(409, [], '{"error":"Ya existe: versión #3","version":{"id":3}}'));
+
+		try {
+			$client->createVersion(['id' => 1, 'name' => 'admin'], ['name' => 'v'], ['files' => [], 'database' => null]);
+			$this->fail('Se esperaba Modulo2ServiceException');
+		} catch (Modulo2ServiceException $e) {
+			$this->assertSame(['Ya existe: versión #3', 409, 3], [$e->getMessage(), $e->getStatus(), $e->getData()['version']['id']]);
+		}
+		$this->assertSame('POST', $this->history[0]['request']->getMethod());
+		$this->assertStringContainsString('"files":{}', (string)$this->history[0]['request']->getBody());
+	}
+	# -------------------------------------------------------
+	#[TestDox('Pide una página del historial con limit y before, y renombra con POST al nombre de la versión')]
+	public function testChangePageAndRenameRoutes() : void {
+		$this->clientReturning(new Response(200, [], '{"changes":[],"next_before":null}'))->getChanges(50, 120);
+		$this->clientReturning(new Response(200, [], '{"version":{"id":3,"name":"x"}}'))->renameVersion(3, ['id' => 1, 'name' => 'a'], 'x');
+
+		$this->assertSame('limit=50&before=120', $this->history[0]['request']->getUri()->getQuery());
+		$this->assertSame(['POST', '/api/modulo2/versions/3/name'], [$this->history[1]['request']->getMethod(), $this->history[1]['request']->getUri()->getPath()]);
+		$this->assertSame('{"user":{"id":1,"name":"a"},"name":"x"}', (string)$this->history[1]['request']->getBody());
+	}
+	# -------------------------------------------------------
 	#[TestDox('La URL de EXTENSION_SERVICE_URL tiene prioridad sobre service_url de modulo2.conf')]
 	public function testEnvironmentUrlOverridesConfiguredUrl() : void {
 		$config = $this->config("service_url = http://desde-conf:8000\n");

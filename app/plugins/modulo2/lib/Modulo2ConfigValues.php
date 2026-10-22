@@ -51,6 +51,27 @@ class Modulo2ConfigValues {
 	}
 	# -------------------------------------------------------
 	/**
+	 * Valor actual y de la distribución de una sola clave: ['current' => ..., 'distribution' => ..., 'modified' => ...]
+	 *
+	 * @throws Modulo2ConfigException Si el archivo no es válido
+	 */
+	public function entryValues(string $file, string $key, string $kind) : array {
+		$file = self::checkedFile($file);
+		return self::valuesFor($key, $kind, ($this->effective_loader)($file), ($this->distribution_loader)($file));
+	}
+	# -------------------------------------------------------
+	/**
+	 * Descarta las configuraciones ya leídas, para que la próxima lectura vea los archivos como están
+	 * ahora: la caché de Providence (entre peticiones), las instancias de esta petición y los valores
+	 * que Configuration::get recuerda por archivo
+	 */
+	public static function clearCaches() : void {
+		Configuration::clearCache();
+		Configuration::$s_get_cache = [];
+		MemoryCache::flush('ConfigurationInstances');
+	}
+	# -------------------------------------------------------
+	/**
 	 * Valor de una clave en una configuración. Una clave anidada ("formats/ca_objects") recorre los
 	 * bloques: null si algún tramo no existe
 	 */
@@ -114,11 +135,8 @@ class Modulo2ConfigValues {
 		return Configuration::load(__CA_CONF_DIR__.'/'.$file);
 	}
 	# -------------------------------------------------------
-	/**
-	 * Configuración de la distribución: solo app/conf. Se construye sin caché ni rutas
-	 * adicionales para no mezclarla con la efectiva, que comparte la misma ruta de archivo
-	 */
-	private static function loadDistribution(string $file) : Configuration {
+	/** Configuración de la distribución: solo app/conf, sin caché ni app/conf/local */
+	public static function loadDistribution(string $file) : Configuration {
 		return new Configuration(__CA_CONF_DIR__.'/'.$file, false, true, true);
 	}
 	# -------------------------------------------------------

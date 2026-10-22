@@ -1,6 +1,2 @@
-//! Módulo 2: administración gráfica de configuraciones.
-//!
-//! - `catalog.rs`: tipos del catálogo y su JSON.
-//! - `sections.rs`: las secciones del catálogo y sus configuraciones.
+//! Módulo 2: el catálogo de configuraciones (datos fijos, en código).
 pub mod catalog;
-pub mod sections;
