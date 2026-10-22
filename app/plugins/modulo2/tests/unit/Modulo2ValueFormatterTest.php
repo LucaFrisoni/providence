@@ -12,13 +12,13 @@ use PHPUnit\Framework\TestCase;
 #[TestDox('Módulo 2 · texto de los valores en el panel')]
 final class Modulo2ValueFormatterTest extends TestCase {
 	# -------------------------------------------------------
-	#[TestDox('Una configuración invertida muestra el booleano al revés ("disable" = 0 es Activo: Sí)')]
+	#[TestDox('Una configuración invertida muestra el booleano al revés ("disable" = 0 es Enabled: Yes)')]
 	public function testInvertedBooleanIsShownReversed() : void {
 		$inverted = ['kind' => 'boolean', 'inverted' => true];
 
 		$this->assertTrue(Modulo2ValueFormatter::displayed(false, $inverted));
-		$this->assertSame(_t('Sí'), Modulo2ValueFormatter::text(false, $inverted));
-		$this->assertSame(_t('Sí'), Modulo2ValueFormatter::text(true, ['kind' => 'boolean', 'inverted' => false]));
+		$this->assertSame(_t('Yes'), Modulo2ValueFormatter::text(false, $inverted));
+		$this->assertSame(_t('Yes'), Modulo2ValueFormatter::text(true, ['kind' => 'boolean', 'inverted' => false]));
 	}
 	# -------------------------------------------------------
 	#[TestDox('Solo se invierten los booleanos: los demás tipos de valor se muestran igual')]
@@ -52,8 +52,8 @@ final class Modulo2ValueFormatterTest extends TestCase {
 	# -------------------------------------------------------
 	#[TestDox('Una estructura se resume con su cantidad de elementos y un orden, con sus claves en orden')]
 	public function testStructuresAndOrdersAreSummarized() : void {
-		$this->assertSame(_t('1 elemento'), Modulo2ValueFormatter::text(['a' => 1], ['kind' => 'structured']));
-		$this->assertSame(_t('%1 elementos', 2), Modulo2ValueFormatter::text(['a' => 1, 'b' => 2], ['kind' => 'structured']));
+		$this->assertSame(_t('1 item'), Modulo2ValueFormatter::text(['a' => 1], ['kind' => 'structured']));
+		$this->assertSame(_t('%1 items', 2), Modulo2ValueFormatter::text(['a' => 1, 'b' => 2], ['kind' => 'structured']));
 		$this->assertSame('—', Modulo2ValueFormatter::text([], ['kind' => 'structured']));
 		$this->assertSame('objects › places', Modulo2ValueFormatter::text(['objects', 'places'], ['kind' => 'key_order']));
 	}

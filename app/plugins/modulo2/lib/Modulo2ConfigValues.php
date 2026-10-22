@@ -125,7 +125,7 @@ class Modulo2ConfigValues {
 	# -------------------------------------------------------
 	private static function checkedFile(string $file) : string {
 		if (!preg_match(Modulo2Constants::CATALOG_FILE_PATTERN, $file)) {
-			throw new Modulo2ConfigException(_t('El catálogo se refiere a un archivo de configuración no válido: %1', $file));
+			throw new Modulo2ConfigException(Modulo2I18n::t('The catalog refers to an invalid configuration file: %1', $file));
 		}
 		return $file;
 	}

@@ -8,6 +8,8 @@ require_once(__CA_APP_DIR__.'/plugins/modulo2/lib/Modulo2ServiceClient.php');
 require_once(__CA_APP_DIR__.'/plugins/modulo2/lib/Modulo2ConfigValues.php');
 require_once(__CA_APP_DIR__.'/plugins/modulo2/lib/Modulo2CatalogMatrix.php');
 require_once(__CA_APP_DIR__.'/plugins/modulo2/lib/Modulo2ValueFormatter.php');
+require_once(__CA_APP_DIR__.'/plugins/modulo2/lib/Modulo2EditorData.php');
+require_once(__CA_APP_DIR__.'/plugins/modulo2/lib/Modulo2Ui.php');
 
 use PHPUnit\Framework\Attributes\TestDox;
 use PHPUnit\Framework\TestCase;
@@ -76,10 +78,12 @@ final class Modulo2CatalogIntegrationTest extends TestCase {
 			array_intersect_key($read, array_flip(['current', 'distribution', 'modified'])));
 	}
 	# -------------------------------------------------------
-	#[TestDox('La página se arma con el catálogo real sin errores ni avisos de PHP y muestra todas las secciones')]
+	#[TestDox('La página se arma con el catálogo real y el editor, sin errores ni avisos de PHP, y muestra todas las secciones')]
 	public function testPageRendersEverySection() : void {
 		$catalog = (new Modulo2ConfigValues())->addValues($this->catalog());
-		$context = new class(['catalog' => $catalog]) {
+		$risks = array_keys(Modulo2Constants::RISK_PERMISSIONS);
+		$editor = (new Modulo2EditorData($catalog, $risks, [], fn($type) => [], fn($file) => []))->build();
+		$context = new class(['catalog' => $catalog, 'allowed_risks' => $risks, 'editor' => $editor]) {
 			public function __construct(private array $vars) {}
 			public function getVar(string $name) { return $this->vars[$name] ?? null; }
 		};
@@ -90,6 +94,23 @@ final class Modulo2CatalogIntegrationTest extends TestCase {
 		foreach ($catalog['sections'] as $section) {
 			$this->assertStringContainsString('id="m2-section-'.$section['id'].'"', $html);
 		}
+		$this->assertStringContainsString('data-m2-entry="app.conf|ca_places_disable"', $html);
+		$this->assertStringContainsString('id="m2-save-form"', $html);
+	}
+	# -------------------------------------------------------
+	// El catálogo lo escribe el servicio en inglés: sin traducción se vería en inglés con Providence en castellano
+	#[TestDox('Cada sección, configuración y opción del catálogo real tiene su traducción al castellano')]
+	public function testRealCatalogIsTranslated() : void {
+		$table = include Modulo2I18n::LOCALE_DIR.'/es.php';
+		$missing = [];
+		foreach ($this->catalog()['sections'] as $section) {
+			$texts = [$section['name'], $section['description']];
+			foreach ($section['settings'] as $setting) {
+				$texts = array_merge($texts, [$setting['label'], $setting['description']], array_column($setting['options'], 'label'));
+			}
+			$missing = array_merge($missing, array_filter($texts, fn($text) => !isset($table[$text])));
+		}
+		$this->assertSame([], array_values(array_unique($missing)));
 	}
 	# -------------------------------------------------------
 	/** Una clave existe si Providence la define (aunque esté vacía) o, si es anidada, si su valor existe */

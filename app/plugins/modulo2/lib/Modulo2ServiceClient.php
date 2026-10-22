@@ -69,7 +69,8 @@ class Modulo2ServiceClient {
 	 * @throws Modulo2ServiceException
 	 */
 	public function getCatalog() : array {
-		return $this->request('GET', Modulo2Constants::CATALOG_PATH);
+		// Los textos del catálogo los escribe el servicio en inglés; se muestran en el idioma del usuario
+		return Modulo2I18n::catalog($this->request('GET', Modulo2Constants::CATALOG_PATH));
 	}
 	# -------------------------------------------------------
 	/** Hash del estado y versión idéntica, si existe: ['hash' => ..., 'version' => ...|null] */
@@ -77,9 +78,13 @@ class Modulo2ServiceClient {
 		return $this->request('POST', Modulo2Constants::STATE_PATH, ['state' => self::stateJson($state)]);
 	}
 	# -------------------------------------------------------
-	/** Todas las versiones, de la más nueva a la más vieja */
-	public function getVersions() : array {
-		return $this->request('GET', Modulo2Constants::VERSIONS_PATH)['versions'] ?? [];
+	/**
+	 * Una página de versiones, de la más nueva a la más vieja: ['versions' => [...], 'next_before' => id o null].
+	 * $before es el último id ya mostrado y $search, un texto del nombre
+	 */
+	public function getVersions(int $limit, ?int $before = null, ?string $search = null) : array {
+		$query = http_build_query(array_filter(['limit' => $limit, 'before' => $before, 'search' => $search]));
+		return $this->request('GET', Modulo2Constants::VERSIONS_PATH.'?'.$query);
 	}
 	# -------------------------------------------------------
 	/** Una versión, sus .conf y el hash de su exportación de la base: ['version', 'files', 'database_hash'] */
@@ -101,14 +106,29 @@ class Modulo2ServiceClient {
 		return $this->request('POST', Modulo2Constants::VERSIONS_PATH."/{$id}/name", ['user' => $user, 'name' => $name])['version'];
 	}
 	# -------------------------------------------------------
+	/** Borra una versión; solo quien la creó (si no, Modulo2ServiceException con estado 403) */
+	public function deleteVersion(int $id, array $user) : array {
+		return $this->request('POST', Modulo2Constants::VERSIONS_PATH."/{$id}/delete", ['user' => $user])['version'];
+	}
+	# -------------------------------------------------------
 	/**
-	 * Prepara una edición (POST /edits): ['change_id', 'version_before', 'file', 'content', 'value'].
-	 * $edit lleva el estado en 'state' y las claves del archivo local en 'local'
+	 * Prepara un guardado (POST /edits): ['change_ids', 'version_before', 'files' => [archivo => contenido o null],
+	 * 'values']. $save lleva el estado en 'state' y las claves de cada archivo local en 'local'
 	 */
-	public function prepareEdit(array $edit) : array {
-		$edit['state'] = self::stateJson($edit['state']);
-		$edit['local'] = (object)$edit['local'];
-		return $this->request('POST', Modulo2Constants::EDITS_PATH, $edit);
+	public function prepareEdits(array $save) : array {
+		$save['state'] = self::stateJson($save['state']);
+		$save['local'] = (object)array_map(fn($entries) => (object)$entries, $save['local']);
+		return $this->request('POST', Modulo2Constants::EDITS_PATH, $save);
+	}
+	# -------------------------------------------------------
+	/**
+	 * Informa el resultado de un guardado. Si se aplicó, el servicio guarda $state como la versión $version.
+	 * Devuelve ['changes' => [...], 'version' => versión nueva o null]
+	 */
+	public function finishEdits(array $change_ids, array $user, string $result, ?string $message, ?array $state, ?array $version) : array {
+		$body = ['change_ids' => $change_ids, 'user' => $user, 'result' => $result, 'message' => $message,
+			'state' => $state === null ? null : self::stateJson($state), 'version' => $version];
+		return $this->request('POST', Modulo2Constants::EDITS_RESULT_PATH, $body);
 	}
 	# -------------------------------------------------------
 	/** Prepara la restauración de una versión: ['change_id', 'version_before', 'version', 'files', 'database_differs'] */
@@ -153,15 +173,16 @@ class Modulo2ServiceClient {
 			$response = $this->client->request($method, $path, $options);
 			$data = json_decode((string)$response->getBody(), true, Modulo2Constants::JSON_MAX_DEPTH, JSON_THROW_ON_ERROR);
 		} catch (GuzzleException | JsonException $e) {
-			throw new Modulo2ServiceException(_t('No se pudo consultar el servicio del módulo 2: %1', $e->getMessage()), 0, [], $e);
+			throw new Modulo2ServiceException(Modulo2I18n::t('The configuration service could not be reached: %1', $e->getMessage()), 0, [], $e);
 		}
 		// Un objeto JSON se decodifica como array asociativo; una lista ([1, 2]) no es una respuesta válida
 		if (!is_array($data) || ($data && array_is_list($data))) {
-			throw new Modulo2ServiceException(_t('El servicio del módulo 2 devolvió una respuesta inesperada'));
+			throw new Modulo2ServiceException(Modulo2I18n::t('The configuration service returned an unexpected response'));
 		}
 		$status = $response->getStatusCode();
 		if ($status >= 400) {
-			throw new Modulo2ServiceException((string)($data['error'] ?? _t('El servicio del módulo 2 respondió con el error %1', $status)), $status, $data);
+			$message = isset($data['error']) ? Modulo2I18n::message((string)$data['error']) : Modulo2I18n::t('The configuration service answered with error %1', $status);
+			throw new Modulo2ServiceException($message, $status, $data);
 		}
 		return $data;
 	}

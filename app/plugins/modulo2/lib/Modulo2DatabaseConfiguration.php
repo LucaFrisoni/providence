@@ -31,10 +31,10 @@ class Modulo2DatabaseConfiguration {
 	 */
 	public static function labels() : array {
 		return [
-			'locales' => _t('Idiomas'), 'lists' => _t('Listas y vocabularios'), 'metadata_elements' => _t('Elementos de metadatos'),
-			'editor_uis' => _t('Interfaces de edición'), 'relationship_types' => _t('Tipos de relación'),
-			'bundle_displays' => _t('Formatos de visualización'), 'search_forms' => _t('Formularios de búsqueda'),
-			'user_roles' => _t('Roles'), 'data_dictionary' => _t('Diccionario de datos')
+			'locales' => Modulo2I18n::t('Locales'), 'lists' => Modulo2I18n::t('Lists & vocabularies'), 'metadata_elements' => Modulo2I18n::t('Metadata elements'),
+			'editor_uis' => Modulo2I18n::t('User interfaces'), 'relationship_types' => Modulo2I18n::t('Relationship types'),
+			'bundle_displays' => Modulo2I18n::t('Displays'), 'search_forms' => Modulo2I18n::t('Search forms'),
+			'user_roles' => Modulo2I18n::t('Roles'), 'data_dictionary' => Modulo2I18n::t('Data dictionary')
 		];
 	}
 	# -------------------------------------------------------

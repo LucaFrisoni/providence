@@ -10,15 +10,15 @@ use tiny_http::Method;
 use super::health;
 use super::helpers::{in_transaction, segments, with_body, with_id};
 use crate::constants::{
-    CATALOG_SEGMENT, CHANGES_SEGMENT, EDITS_SEGMENT, HEALTH_SEGMENT, HTTP_BAD_REQUEST,
-    HTTP_CONFLICT, HTTP_FORBIDDEN, HTTP_UNPROCESSABLE, MODULO2, NAME_SEGMENT, RESTORE_SEGMENT,
-    RESULT_SEGMENT, STATE_SEGMENT, VERSIONS_SEGMENT,
+    CATALOG_SEGMENT, CHANGES_SEGMENT, DELETE_SEGMENT, EDITS_SEGMENT, HEALTH_SEGMENT,
+    HTTP_BAD_REQUEST, HTTP_CONFLICT, HTTP_FORBIDDEN, HTTP_UNPROCESSABLE, MODULO2, NAME_SEGMENT,
+    RESTORE_SEGMENT, RESULT_SEGMENT, STATE_SEGMENT, VERSIONS_SEGMENT,
 };
 use crate::json_object;
 use crate::services::modulo2::{changes, edits, requests, restores, to_json, versions};
 use crate::types::http::{ApiRequest, ApiResponse, RouteError};
-use crate::types::modulo2::operations::{Prepared, Rejection, RejectionReason};
-use crate::types::modulo2::versions::{Closed, Renamed, Saved};
+use crate::types::modulo2::operations::{FinishedEdits, Prepared, Rejection, RejectionReason};
+use crate::types::modulo2::versions::{Closed, Owned, Saved};
 
 ///------------------------------------------------------- Endpoints del módulo 2.
 pub fn routes(request: &ApiRequest) -> ApiResponse {
@@ -35,12 +35,16 @@ pub fn routes(request: &ApiRequest) -> ApiResponse {
         (Method::Post, [VERSIONS_SEGMENT, id, RESTORE_SEGMENT]) => {
             with_id(id, |id| post_restore(request, id))
         }
+        (Method::Post, [VERSIONS_SEGMENT, id, DELETE_SEGMENT]) => {
+            with_id(id, |id| post_version_delete(request, id))
+        }
         (Method::Post, [EDITS_SEGMENT]) => post_edit(request),
+        (Method::Post, [EDITS_SEGMENT, RESULT_SEGMENT]) => post_edits_result(request),
         (Method::Get, [CHANGES_SEGMENT]) => get_changes(request),
         (Method::Post, [CHANGES_SEGMENT, id, RESULT_SEGMENT]) => {
             with_id(id, |id| post_change_result(request, u64::from(id)))
         }
-        _ => ApiResponse::not_found("ruta inexistente"),
+        _ => ApiResponse::not_found("route not found"),
     }
 }
 
@@ -53,9 +57,19 @@ fn post_state(request: &ApiRequest) -> ApiResponse {
     )
 }
 
-/// GET /versions: de la más nueva a la más vieja.
+/// GET /versions?limit=50&before=12&search=texto: una página, de la más nueva a la más vieja.
 fn get_versions(request: &ApiRequest) -> ApiResponse {
-    in_transaction(request, |tx| Ok(ApiResponse::ok(versions::list(tx)?)))
+    let page = requests::version_page(
+        request.query_param("limit"),
+        request.query_param("before"),
+        request.query_param("search"),
+    );
+    match page {
+        Ok(page) => in_transaction(request, |tx| {
+            Ok(ApiResponse::ok(versions::list(tx, &page)?))
+        }),
+        Err(message) => ApiResponse::error(HTTP_BAD_REQUEST, &message),
+    }
 }
 
 /// POST /versions `{user, version, state}`: 201 con la nueva o 409 con la idéntica.
@@ -68,7 +82,7 @@ fn post_version(request: &ApiRequest) -> ApiResponse {
                 }
                 Saved::Existing(version) => ApiResponse::with_status(
                     HTTP_CONFLICT,
-                    json_object! { error: format!("Ya existe: versión {}", version.number), version: to_json::version(&version) },
+                    json_object! { error: format!("Already saved as version {}", version.number), version: to_json::version(&version) },
                 ),
             },
         )
@@ -78,44 +92,62 @@ fn post_version(request: &ApiRequest) -> ApiResponse {
 /// GET /versions/{id}: la versión, sus .conf y el hash de la exportación de la base.
 fn get_version(request: &ApiRequest, id: u32) -> ApiResponse {
     in_transaction(request, |tx| {
-        let detail =
-            versions::detail(tx, id)?.ok_or(RouteError::NotFound("la versión no existe"))?;
+        let detail = versions::detail(tx, id)?.ok_or(RouteError::NotFound(VERSION_NOT_FOUND))?;
         Ok(ApiResponse::ok(detail))
     })
 }
 
 /// POST /versions/{id}/name `{user, name}`: renombra la versión; solo quien la creó (403 si no).
 fn post_version_name(request: &ApiRequest, id: u32) -> ApiResponse {
-    with_body(
-        request,
-        requests::rename,
-        |tx, rename| match versions::rename(tx, id, &rename)? {
-            Renamed::Done(version) => Ok(ApiResponse::ok(
-                json_object! { version: to_json::version(&version) },
-            )),
-            Renamed::NotOwner => Ok(ApiResponse::error(
-                HTTP_FORBIDDEN,
-                "solo quien creó la versión puede cambiarle el nombre",
-            )),
-            Renamed::NotFound => Err(RouteError::NotFound("la versión no existe")),
-        },
-    )
+    with_body(request, requests::rename, |tx, rename| {
+        owned_response(versions::rename(tx, id, &rename)?, ONLY_CREATOR_RENAMES)
+    })
+}
+
+/// POST /versions/{id}/delete `{user}`: borra la versión; solo quien la creó (403 si no).
+fn post_version_delete(request: &ApiRequest, id: u32) -> ApiResponse {
+    with_body(request, requests::delete, |tx, user| {
+        owned_response(versions::delete(tx, id, &user)?, ONLY_CREATOR_DELETES)
+    })
 }
 
 /// POST /versions/{id}/restore `{user, expected_hash, state, version}`.
 fn post_restore(request: &ApiRequest, id: u32) -> ApiResponse {
     with_body(request, requests::restore, |tx, restore| {
-        let prepared = restores::prepare(tx, &restore, id)?
-            .ok_or(RouteError::NotFound("la versión no existe"))?;
+        let prepared =
+            restores::prepare(tx, &restore, id)?.ok_or(RouteError::NotFound(VERSION_NOT_FOUND))?;
         Ok(prepared_response(prepared))
     })
 }
 
-/// POST /edits: valida y prepara la edición de una configuración.
+/// POST /edits: valida y prepara el guardado de varios cambios (todos o ninguno).
 fn post_edit(request: &ApiRequest) -> ApiResponse {
     with_body(request, requests::edit, |tx, edit| {
         Ok(prepared_response(edits::prepare(tx, &edit)?))
     })
+}
+
+/// POST /edits/result `{change_ids, user, result, message, state, version}`: cierra el guardado y,
+/// si se aplicó, guarda la versión nueva.
+fn post_edits_result(request: &ApiRequest) -> ApiResponse {
+    with_body(
+        request,
+        requests::finish_edits,
+        |tx, finish| match edits::finish(tx, &finish)? {
+            FinishedEdits::Done(changes, version) => {
+                let changes: Vec<_> = changes.iter().map(to_json::change).collect();
+                let version = version.as_ref().map(to_json::version);
+                Ok(ApiResponse::ok(
+                    json_object! { changes: changes, version: version },
+                ))
+            }
+            FinishedEdits::NotPending => Ok(ApiResponse::error(
+                HTTP_CONFLICT,
+                "the changes already have a result",
+            )),
+            FinishedEdits::NotFound => Err(RouteError::NotFound("the change does not exist")),
+        },
+    )
 }
 
 /// GET /changes?limit=50&before=120: una página del historial.
@@ -137,20 +169,42 @@ fn post_change_result(request: &ApiRequest, id: u64) -> ApiResponse {
             )),
             Closed::NotPending => Ok(ApiResponse::error(
                 HTTP_CONFLICT,
-                "el cambio ya tiene un resultado",
+                "the change already has a result",
             )),
-            Closed::NotFound => Err(RouteError::NotFound("el cambio no existe")),
+            Closed::NotFound => Err(RouteError::NotFound("the change does not exist")),
         },
     )
 }
 
 //------------------------------------------------------- Funciones Aux
 
+const VERSION_NOT_FOUND: &str = "the version does not exist";
+const ONLY_CREATOR_RENAMES: &str = "only the user who created the version can rename it";
+const ONLY_CREATOR_DELETES: &str = "only the user who created the version can delete it";
+
+/// Renombrar o borrar una versión: 200 con la versión, 403 si no la creó el usuario, 404 si no existe.
+fn owned_response(owned: Owned, not_owner: &str) -> Result<ApiResponse, RouteError> {
+    match owned {
+        Owned::Done(version) => Ok(ApiResponse::ok(
+            json_object! { version: to_json::version(&version) },
+        )),
+        Owned::NotOwner => Ok(ApiResponse::error(HTTP_FORBIDDEN, not_owner)),
+        Owned::NotFound => Err(RouteError::NotFound(VERSION_NOT_FOUND)),
+    }
+}
+
 /// Edición o restauración: 200 si se acepta; 422, 403 o 409 según el rechazo.
 fn prepared_response(prepared: Prepared) -> ApiResponse {
     match prepared {
         Prepared::Accepted(body) => ApiResponse::ok(body),
-        Prepared::Rejected(Rejection { reason, message }, change_id) => {
+        Prepared::Rejected(
+            Rejection {
+                reason,
+                message,
+                item,
+            },
+            change_id,
+        ) => {
             let status = match reason {
                 RejectionReason::Invalid => HTTP_UNPROCESSABLE,
                 RejectionReason::Forbidden => HTTP_FORBIDDEN,
@@ -158,7 +212,7 @@ fn prepared_response(prepared: Prepared) -> ApiResponse {
             };
             ApiResponse::with_status(
                 status,
-                json_object! { error: message, change_id: change_id },
+                json_object! { error: message, change_id: change_id, item: item },
             )
         }
     }
@@ -215,7 +269,9 @@ mod tests {
             "/state",
             "/versions/1/name",
             "/versions/1/restore",
+            "/versions/1/delete",
             "/edits",
+            "/edits/result",
             "/changes/1/result",
         ] {
             for method in [Method::Get, Method::Put, Method::Delete, Method::Patch] {
@@ -266,7 +322,9 @@ mod tests {
             "/versions",
             "/versions/1/name",
             "/versions/1/restore",
+            "/versions/1/delete",
             "/edits",
+            "/edits/result",
             "/changes/1/result",
         ] {
             for body in ["", "no es json", "[]", "{}"] {
@@ -279,14 +337,20 @@ mod tests {
         }
     }
 
-    /// Parámetros inválidos del historial dan 400 antes de usar la base.
+    /// Parámetros inválidos del historial y de las versiones dan 400 antes de usar la base.
     #[test]
-    fn change_page_parameters_are_validated() {
-        let request = ApiRequest {
-            query: "limit=0",
-            ..ApiRequest::new(&Method::Get, "/changes")
-        };
-        assert_eq!(routes(&request).status, HTTP_BAD_REQUEST);
+    fn page_parameters_are_validated() {
+        for (path, query) in [
+            ("/changes", "limit=0"),
+            ("/versions", "limit=0"),
+            ("/versions", "search=%zz"),
+        ] {
+            let request = ApiRequest {
+                query,
+                ..ApiRequest::new(&Method::Get, path)
+            };
+            assert_eq!(routes(&request).status, HTTP_BAD_REQUEST, "{path}?{query}");
+        }
     }
 
     /// Sin base, las rutas que la usan responden 503.
@@ -310,7 +374,7 @@ mod tests {
         );
     }
 
-    /// Cada motivo de rechazo responde con su código y el id del registro.
+    /// Cada motivo de rechazo responde con su código, el id del registro y el cambio rechazado.
     #[test]
     fn rejections_map_to_http_codes() {
         for (reason, status) in [
@@ -322,7 +386,10 @@ mod tests {
                 prepared_response(Prepared::Rejected(Rejection::new(reason, "x"), Some(7)));
             assert_eq!(
                 (response.status, response.body),
-                (status, r#"{"error":"x","change_id":7}"#.to_string())
+                (
+                    status,
+                    r#"{"error":"x","change_id":7,"item":null}"#.to_string()
+                )
             );
         }
     }
@@ -373,8 +440,8 @@ mod tests {
         created["version"]["id"].as_u32().unwrap()
     }
 
-    /// Versiones: crear (201) o repetida (409), consultar el estado, listar, ver (404 si no existe)
-    /// y renombrar (solo quien la creó: 403 para otro usuario).
+    /// Versiones: crear (201) o repetida (409), consultar el estado, listar, ver (404 si no existe),
+    /// renombrar y borrar (solo quien la creó: 403 para otro usuario).
     #[test]
     #[ignore = "requiere el MySQL de Docker"]
     fn version_routes_follow_their_contract() {
@@ -393,7 +460,7 @@ mod tests {
         let (_, info) = post("/state", json_object! { state: state.clone() });
         assert_eq!(info["version"]["id"].as_u32(), Some(id));
 
-        let (status, list) = get("/versions");
+        let (status, list) = call(Method::Get, "/versions", "limit=200", Json::Null);
         assert!(
             status == HTTP_OK
                 && list["versions"]
@@ -416,20 +483,30 @@ mod tests {
             post(&format!("/versions/{MISSING}/name"), rename(1)).0,
             HTTP_NOT_FOUND
         );
+
+        let delete_path = format!("/versions/{id}/delete");
+        let by = |id: u32| json_object! { user: user_json(&user, id) };
+        assert_eq!(post(&delete_path, by(2)).0, HTTP_FORBIDDEN);
+        assert_eq!(post(&delete_path, by(1)).0, HTTP_OK);
+        assert_eq!(get(&format!("/versions/{id}")).0, HTTP_NOT_FOUND);
+        assert_eq!(post(&delete_path, by(1)).0, HTTP_NOT_FOUND);
     }
 
-    /// Cuerpo de una edición de ca_places_disable (riesgo medio) desde el estado dado.
+    /// Cuerpo de un guardado de ca_places_disable (riesgo medio) desde el estado dado.
     fn edit_body(user: &CommittedUser, state: Json, risks: &[&str]) -> Json {
-        json_object! {
-            user: user_json(user, 1), allowed_risks: risks.to_vec(),
+        let item = json_object! {
             file: "app.conf", key: "ca_places_disable", value: true,
             current: false, expected: false, distribution: false,
+        };
+        json_object! {
+            user: user_json(user, 1), allowed_risks: risks.to_vec(), edits: [item],
             local: Json::object(), state: state, version: json_object! { name: "Antes de editar" },
         }
     }
 
-    /// Ediciones e historial: una edición aceptada se cierra una vez (409 la segunda, 404 si no
-    /// existe), un rechazo por permisos da 403 con su registro y el historial lo muestra.
+    /// Guardados e historial: un guardado aceptado se cierra una vez y guarda la versión nueva (409
+    /// la segunda, 404 si no existe), un rechazo por permisos da 403 con su registro y el historial
+    /// lo muestra.
     #[test]
     #[ignore = "requiere el MySQL de Docker"]
     fn edit_and_change_routes_follow_their_contract() {
@@ -443,23 +520,27 @@ mod tests {
             (HTTP_OK, &Json::from(true)),
             "{accepted}"
         );
-        assert!(accepted["content"]
+        assert!(accepted["files"]["app.conf"]
             .as_str()
             .unwrap()
             .contains("ca_places_disable = 1"));
 
-        let result_path = format!("/changes/{}/result", accepted["change_id"]);
-        let applied = json_object! { result: "applied" };
-        let (status, closed) = post(&result_path, applied.clone());
+        let applied = |ids: Json| {
+            json_object! {
+                change_ids: ids, user: user_json(&user, 1), result: "applied",
+                state: state_json(&user, "después"), version: json_object! { name: "Guardado" },
+            }
+        };
+        let ids = accepted["change_ids"].clone();
+        let (status, closed) = post("/edits/result", applied(ids.clone()));
         assert_eq!(
-            (status, &closed["change"]["result"]),
+            (status, &closed["changes"][0]["result"]),
             (HTTP_OK, &Json::from("applied"))
         );
-        assert_eq!(post(&result_path, applied.clone()).0, HTTP_CONFLICT);
-        assert_eq!(
-            post(&format!("/changes/{MISSING}/result"), applied).0,
-            HTTP_NOT_FOUND
-        );
+        assert_eq!(closed["version"]["name"], "Guardado");
+        assert_eq!(post("/edits/result", applied(ids)).0, HTTP_CONFLICT);
+        let missing = Json::from([MISSING.parse::<u64>().unwrap()]);
+        assert_eq!(post("/edits/result", applied(missing)).0, HTTP_NOT_FOUND);
 
         let (status, forbidden) = post(
             "/edits",

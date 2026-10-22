@@ -12,23 +12,23 @@ $e = fn($text) => htmlspecialchars((string)$text, ENT_QUOTES, 'UTF-8');
 ?>
 <?= Modulo2Ui::styles(); ?>
 <div class="m2-page">
-<a class="m2-back" href="<?= $e($this->getVar('index_url')); ?>">‹ <?= _t('Volver a las versiones'); ?></a>
+<a class="m2-back" href="<?= $e($this->getVar('index_url')); ?>">‹ <?= Modulo2I18n::t('Back to the versions'); ?></a>
 <?php if ($error || !$version) { ?>
-	<div class="notification-error-box"><?= $e($error ?: _t('La versión no existe.')); ?></div>
+	<div class="notification-error-box"><?= $e($error ?: Modulo2I18n::t('The version does not exist.')); ?></div>
 </div>
 <?php return; } ?>
 
-<h1><?= _t('Restaurar la versión %1', (int)$version['number']); ?></h1>
+<h1><?= Modulo2I18n::t('Restore version %1', (int)$version['number']); ?></h1>
 <p class="m2-muted"><?= $e($version['name']); ?> · <?= $e($version['created_by']['name']); ?> · <?= $e(Modulo2Dates::friendly((int)$version['created_at'])); ?></p>
-<p><?= _t('Al restaurarla, estas configuraciones vuelven a como estaban en esa versión:'); ?></p>
+<p><?= Modulo2I18n::t('When it is restored, these settings go back to how they were in that version:'); ?></p>
 <?= Modulo2Ui::settingChanges($changes, $this->getVar('data_type_names') ?? [], $this->getVar('database_differs')); ?>
 
 <form method="post" action="<?= $e($this->getVar('form_url')); ?>" class="m2-actions">
 	<input type="hidden" name="csrfToken" value="<?= $e($this->getVar('csrf_token')); ?>"/>
 	<input type="hidden" name="id" value="<?= (int)$version['id']; ?>"/>
 	<input type="hidden" name="expected_hash" value="<?= $e($this->getVar('expected_hash')); ?>"/>
-	<button type="submit" class="m2-btn m2-btn-primary"><?= _t('Restaurar la versión %1', (int)$version['number']); ?></button>
-	<a class="m2-btn" href="<?= $e($this->getVar('index_url')); ?>"><?= _t('Cancelar'); ?></a>
-	<span class="m2-muted"><?= _t('La configuración actual se guarda antes, así se puede volver a ella.'); ?></span>
+	<button type="submit" class="m2-btn m2-btn-primary"><?= Modulo2I18n::t('Restore version %1', (int)$version['number']); ?></button>
+	<a class="m2-btn" href="<?= $e($this->getVar('index_url')); ?>"><?= Modulo2I18n::t('Cancel'); ?></a>
+	<span class="m2-muted"><?= Modulo2I18n::t('The current configuration is saved first, so you can go back to it.'); ?></span>
 </form>
 </div>

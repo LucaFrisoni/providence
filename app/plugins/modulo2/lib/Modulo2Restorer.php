@@ -32,7 +32,7 @@ class Modulo2Restorer {
 			'user' => $operator->user(),
 			'expected_hash' => $expected_hash,
 			'state' => $this->state->current(),
-			'version' => $operator->automaticVersion(_t('Antes de restaurar otra versión'))
+			'version' => $operator->automaticVersion(Modulo2I18n::t('Before restoring another version'))
 		]);
 		$failure = $this->replaceAndVerify($plan['files'] ?? []);
 		if ($failure !== null) { $failure .= $this->rollback($previous); }
@@ -63,9 +63,9 @@ class Modulo2Restorer {
 	private function rollback(array $previous) : string {
 		try {
 			$this->local->replaceAll($previous);
-			return ' '._t('Los archivos se dejaron como estaban.');
+			return ' '.Modulo2I18n::t('The files were left as they were.');
 		} catch (Modulo2ConfigException $e) {
-			return ' '._t('Además, no se pudieron dejar los archivos como estaban: %1', $e->getMessage());
+			return ' '.Modulo2I18n::t('Also, the files could not be left as they were: %1', $e->getMessage());
 		}
 	}
 	# -------------------------------------------------------

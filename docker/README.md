@@ -83,8 +83,8 @@ menos de un minuto. Para seguir el progreso: `docker compose logs -f providence`
 
 Ingresar con `CA_ADMIN_USERNAME` y `CA_ADMIN_PASSWORD` de `.env`.
 
-Cada módulo que ya tiene plugin agrega su menú en la barra principal (el del módulo 2 se llama
-**Gestión**).
+Cada módulo que ya tiene plugin agrega su menú en la barra principal (el del módulo 2 ocupa
+el lugar de **Manage** y se llama **Management**).
 
 ## 3. Cómo se monta el código
 

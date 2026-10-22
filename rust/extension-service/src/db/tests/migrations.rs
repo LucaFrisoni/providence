@@ -126,6 +126,15 @@ fn id_matches_file_name() {
         MIGRATIONS[3].id(),
         "modulo2/0004_optimizando_indices_modulo2"
     );
+    assert_eq!(
+        MIGRATIONS[4].id(),
+        "modulo2/0005_versiones_borrables_modulo2"
+    );
+    assert_eq!(MIGRATIONS[5].id(), "modulo2/0006_hash_de_archivos_modulo2");
+    assert_eq!(
+        MIGRATIONS[6].id(),
+        "modulo2/0007_numeracion_sin_saltos_modulo2"
+    );
     assert_eq!(numbered("m", 12, "").id(), "m/0012_prueba");
 }
 

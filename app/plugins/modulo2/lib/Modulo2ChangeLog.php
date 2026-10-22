@@ -13,10 +13,9 @@ class Modulo2ChangeLog {
 	# -------------------------------------------------------
 	/**
 	 * @param array $catalog Catálogo del servicio
-	 * @param array $numbers id de versión => número que ve el usuario
 	 * @param array $names Nombre de cada tipo de dato
 	 */
-	public function __construct(private array $catalog, private array $numbers, private array $names) {}
+	public function __construct(private array $catalog, private array $names) {}
 	# -------------------------------------------------------
 	/** Filas listas para mostrar de una página de cambios del servicio */
 	public function rows(array $changes) : array {
@@ -27,7 +26,8 @@ class Modulo2ChangeLog {
 		$row = ['when' => Modulo2Dates::friendly((int)$change['changed_at']), 'who' => (string)($change['user']['name'] ?? ''),
 			'result' => $change['result'], 'message' => $change['message'], 'detail' => '', 'before' => null, 'after' => null];
 		if ($change['action'] === 'restore') {
-			return ['what' => _t('Restauración de la versión %1', $this->numbers[$change['version_after']] ?? '?')] + $row;
+			$number = $change['version_after_number'] ?? null;
+			return ['what' => $number ? Modulo2I18n::t('Restore of version %1', $number) : Modulo2I18n::t('Restore of a deleted version')] + $row;
 		}
 		$found = Modulo2CatalogMatrix::findEntry($this->catalog, (string)$change['file'], (string)$change['key']);
 		if (!$found) { return ['what' => (string)$change['key']] + $row; }

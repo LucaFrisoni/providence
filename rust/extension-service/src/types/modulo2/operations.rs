@@ -1,8 +1,10 @@
 //! Pedidos del plugin (editar, restaurar, crear o renombrar una versión, cerrar un cambio) y sus resultados.
 
+use std::collections::BTreeMap;
+
 use crate::json::Json;
 
-use super::versions::{ChangeResult, State, User, VersionInfo};
+use super::versions::{Change, ChangeResult, State, User, Version, VersionInfo};
 
 /// Valor validado: como se escribe en el `.conf` y como lo compara el plugin.
 #[derive(Debug, PartialEq)]
@@ -19,11 +21,9 @@ pub enum EditAction {
     Reset,
 }
 
-/// Edición de una configuración.
+/// Cambio de una configuración dentro de un guardado.
 #[derive(Debug, Clone)]
-pub struct EditRequest {
-    pub user: User,
-    pub allowed_risks: Vec<String>,
+pub struct EditItem {
     pub file: String,
     pub key: String,
     pub action: EditAction,
@@ -31,17 +31,42 @@ pub struct EditRequest {
     pub current: Json,
     pub expected: Json,
     pub distribution: Json,
-    /// Claves del archivo local, leídas por Providence.
+}
+
+/// Guardado de varios cambios a la vez: se aplican todos o ninguno.
+#[derive(Debug, Clone)]
+pub struct EditRequest {
+    pub user: User,
+    pub allowed_risks: Vec<String>,
+    pub edits: Vec<EditItem>,
+    /// Claves de cada archivo local, leídas por Providence: {"app.conf": {...}}.
     pub local: Json,
     pub state: State,
+    /// Versión automática del estado anterior.
     pub version: VersionInfo,
 }
 
-/// Edición aceptada: valor nuevo y contenido del archivo (None: el archivo se borra).
+/// Guardado aceptado: valor nuevo de cada cambio, en orden, y contenido de cada archivo (None: se borra).
 #[derive(Debug, PartialEq)]
 pub struct EditPlan {
-    pub new_value: Json,
-    pub content: Option<String>,
+    pub values: Vec<Json>,
+    pub files: BTreeMap<String, Option<String>>,
+}
+
+/// Resultado de un guardado que informa el plugin; si se aplicó, se guarda el estado final como versión.
+pub struct FinishEditsRequest {
+    pub change_ids: Vec<u64>,
+    pub user: User,
+    pub close: CloseRequest,
+    pub version: Option<VersionInfo>,
+}
+
+/// Resultado de cerrar un guardado.
+#[derive(Debug, PartialEq)]
+pub enum FinishedEdits {
+    Done(Vec<Change>, Option<Version>),
+    NotFound,
+    NotPending,
 }
 
 /// Por qué se rechaza una operación.
@@ -56,6 +81,8 @@ pub enum RejectionReason {
 pub struct Rejection {
     pub reason: RejectionReason,
     pub message: String,
+    /// En un guardado, la posición del cambio rechazado.
+    pub item: Option<usize>,
 }
 
 impl Rejection {
@@ -63,6 +90,15 @@ impl Rejection {
         Self {
             reason,
             message: message.into(),
+            item: None,
+        }
+    }
+
+    /// El mismo rechazo, del cambio en la posición `item`.
+    pub fn at(self, item: usize) -> Self {
+        Self {
+            item: Some(item),
+            ..self
         }
     }
 
@@ -112,6 +148,14 @@ pub struct CloseRequest {
     pub message: Option<String>,
     /// Estado que quedó; en una restauración se compara con la versión.
     pub state: Option<State>,
+}
+
+/// Página de versiones: hasta `limit` anteriores a `before` (o las últimas), con `search` en el nombre.
+#[derive(Debug, PartialEq, Eq)]
+pub struct VersionPage {
+    pub limit: u32,
+    pub before: Option<u32>,
+    pub search: Option<String>,
 }
 
 /// Página del historial: hasta `limit` cambios anteriores a `before` (o los últimos).

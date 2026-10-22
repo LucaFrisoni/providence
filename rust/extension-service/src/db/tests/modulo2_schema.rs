@@ -1,4 +1,4 @@
-//! Pruebas de las tablas del módulo 2 (migraciones `modulo2/0001` a `0003`) contra el MySQL de Docker.
+//! Pruebas de las tablas del módulo 2 (migraciones `modulo2/0001` a `0006`) contra el MySQL de Docker.
 //!
 //! - Estructura: columnas, índices, claves foráneas, motor y collation, leídos de information_schema.
 //! - Comportamiento: solo las reglas de las que depende el módulo (sin versiones repetidas, registro
@@ -90,8 +90,8 @@ fn error_code(result: Result<(), mysql::Error>) -> u16 {
 /// Inserta una versión con el hash dado y devuelve su id.
 fn insert_version(tx: &mut Transaction, hash: &str) -> u64 {
     tx.exec_drop(
-        "INSERT INTO m2_versions (name, content_hash, created_by_user_id, created_by_user_name)
-         VALUES ('prueba', ?, 1, 'administrator')",
+        "INSERT INTO m2_versions (version_number, name, content_hash, files_hash, created_by_user_id, created_by_user_name)
+         SELECT COALESCE(MAX(version_number), 0) + 1, 'prueba', ?, '', 1, 'administrator' FROM m2_versions",
         (hash,),
     )
     .unwrap();
@@ -142,11 +142,13 @@ fn versions_table_has_expected_columns() {
         columns("m2_versions"),
         vec![
             column("version_id", "int unsigned", false, None),
+            column("version_number", "int unsigned", false, None),
             column("name", "varchar(255)", false, None),
             column("description", "text", true, None),
             column("is_automatic", "tinyint(1)", false, Some("0")),
             column("parent_version_id", "int unsigned", true, None),
             column("content_hash", "varchar(64)", false, None),
+            column("files_hash", "varchar(64)", false, None),
             column("created_by_user_id", "int unsigned", false, None),
             column("created_by_user_name", "varchar(255)", false, None),
             column("created_at", "datetime", false, Some("CURRENT_TIMESTAMP")),
@@ -206,8 +208,10 @@ fn tables_have_expected_indexes() {
         vec![
             index("fk_m2_versions_parent", false, "parent_version_id"),
             index("idx_m2_versions_created_at", false, "created_at"),
+            index("idx_m2_versions_files_hash", false, "files_hash"),
             index("PRIMARY", true, "version_id"),
             index("uq_m2_versions_content_hash", true, "content_hash"),
+            index("uq_m2_versions_number", true, "version_number"),
         ]
     );
     assert_eq!(
@@ -230,7 +234,8 @@ fn tables_have_expected_indexes() {
     );
 }
 
-/// Las claves foráneas apuntan a m2_versions; solo los archivos se borran en cascada con su versión.
+/// Las claves foráneas apuntan a m2_versions: los archivos se borran con su versión y el registro de
+/// cambios queda sin el enlace.
 #[test]
 #[ignore = "requiere el MySQL de Docker"]
 fn foreign_keys_reference_versions() {
@@ -259,13 +264,13 @@ fn foreign_keys_reference_versions() {
                 "fk_m2_change_log_after",
                 "version_after_id",
                 "m2_versions",
-                "NO ACTION"
+                "SET NULL"
             ),
             foreign_key(
                 "fk_m2_change_log_before",
                 "version_before_id",
                 "m2_versions",
-                "NO ACTION"
+                "SET NULL"
             ),
         ]
     );
@@ -282,8 +287,8 @@ fn rejects_two_versions_with_the_same_hash() {
     insert_version(&mut tx, "hash-repetido");
 
     let result = tx.exec_drop(
-        "INSERT INTO m2_versions (name, content_hash, created_by_user_id, created_by_user_name)
-         VALUES ('otra', 'hash-repetido', 1, 'administrator')",
+        "INSERT INTO m2_versions (version_number, name, content_hash, files_hash, created_by_user_id, created_by_user_name)
+         VALUES (4294967295, 'otra', 'hash-repetido', '', 1, 'administrator')",
         (),
     );
     assert_eq!(error_code(result), ER_DUP_ENTRY);
@@ -296,8 +301,8 @@ fn rejects_nonexistent_parent_version() {
     let mut conn = migrated_connection();
     let mut tx = conn.start_transaction(TxOpts::default()).unwrap();
     let result = tx.exec_drop(
-        "INSERT INTO m2_versions (name, parent_version_id, content_hash, created_by_user_id, created_by_user_name)
-         VALUES ('huérfana', 4294967295, 'hash-huerfana', 1, 'administrator')",
+        "INSERT INTO m2_versions (version_number, name, parent_version_id, content_hash, files_hash, created_by_user_id, created_by_user_name)
+         VALUES (4294967295, 'huérfana', 4294967295, 'hash-huerfana', '', 1, 'administrator')",
         (),
     );
     assert_eq!(error_code(result), ER_NO_REFERENCED_ROW);
@@ -327,16 +332,42 @@ fn deleting_a_version_deletes_its_files() {
     assert_eq!(files, Some(0));
 }
 
-/// Una versión usada en el registro de cambios no se puede borrar (error 1451).
+/// Borrar una versión usada en el registro de cambios conserva el cambio, sin la versión.
 #[test]
 #[ignore = "requiere el MySQL de Docker"]
-fn cannot_delete_a_version_referenced_by_the_change_log() {
+fn deleting_a_version_keeps_its_changes_without_the_link() {
     let mut conn = migrated_connection();
     let mut tx = conn.start_transaction(TxOpts::default()).unwrap();
     let id = insert_version(&mut tx, "hash-referenciada");
     insert_change(&mut tx, "edit", "applied", Some(id)).unwrap();
+    let change_id = tx.last_insert_id().unwrap();
 
-    let result = tx.exec_drop("DELETE FROM m2_versions WHERE version_id = ?", (id,));
+    tx.exec_drop("DELETE FROM m2_versions WHERE version_id = ?", (id,))
+        .unwrap();
+    let before: Option<Option<u64>> = tx
+        .exec_first(
+            "SELECT version_before_id FROM m2_change_log WHERE change_id = ?",
+            (change_id,),
+        )
+        .unwrap();
+    assert_eq!(before, Some(None));
+}
+
+/// Una versión a la que apunta otra como anterior no se puede borrar sin cambiar esa referencia (error 1451).
+#[test]
+#[ignore = "requiere el MySQL de Docker"]
+fn cannot_delete_a_version_that_is_a_parent() {
+    let mut conn = migrated_connection();
+    let mut tx = conn.start_transaction(TxOpts::default()).unwrap();
+    let parent = insert_version(&mut tx, "hash-padre");
+    let child = insert_version(&mut tx, "hash-hija");
+    tx.exec_drop(
+        "UPDATE m2_versions SET parent_version_id = ? WHERE version_id = ?",
+        (parent, child),
+    )
+    .unwrap();
+
+    let result = tx.exec_drop("DELETE FROM m2_versions WHERE version_id = ?", (parent,));
     assert_eq!(error_code(result), ER_ROW_IS_REFERENCED);
 }
 
@@ -350,4 +381,43 @@ fn change_log_rejects_unknown_action_or_result() {
     assert_eq!(error_code(unknown_action), ER_DATA_TRUNCATED);
     let unknown_result = insert_change(&mut tx, "edit", "ok", None);
     assert_eq!(error_code(unknown_result), ER_DATA_TRUNCATED);
+}
+
+/// El hash de archivos que calcula la migración 0006 para las versiones viejas es el mismo que
+/// calcula el servicio (State::files_hash), con varios archivos, acentos y la exportación de la base.
+#[test]
+#[ignore = "requiere el MySQL de Docker"]
+fn migration_files_hash_matches_the_service() {
+    use crate::types::modulo2::versions::State;
+    let mut conn = migrated_connection();
+    let mut tx = conn.start_transaction(TxOpts::default()).unwrap();
+    let id = insert_version(&mut tx, "hash-migracion");
+    let state = State {
+        files: [
+            ("b.conf", "x = ñandú\n"),
+            ("App.conf", "a = 1\n"),
+            (crate::constants::DATABASE_FILE, "<profile/>"),
+        ]
+        .map(|(n, c)| (n.to_string(), c.to_string()))
+        .into(),
+    };
+    for (name, content) in &state.files {
+        tx.exec_drop(
+            "INSERT INTO m2_version_files (version_id, file_name, content) VALUES (?, ?, ?)",
+            (id, name, content),
+        )
+        .unwrap();
+    }
+    let sql = include_str!("../migrations/modulo2/0006_hash_de_archivos_modulo2.sql");
+    let update = sql.split(';').find(|s| s.contains("UPDATE")).unwrap();
+    tx.query_drop("SET SESSION group_concat_max_len = 1073741824")
+        .unwrap();
+    tx.query_drop(update).expect("el UPDATE de la migración");
+    let hash: Option<String> = tx
+        .exec_first(
+            "SELECT files_hash FROM m2_versions WHERE version_id = ?",
+            (id,),
+        )
+        .unwrap();
+    assert_eq!(hash, Some(state.files_hash()));
 }

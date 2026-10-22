@@ -23,7 +23,7 @@ pub fn prepare(
     if request.state.hash() != request.expected_hash {
         let rejection = Rejection::new(
             RejectionReason::Conflict,
-            "la configuración cambió desde que se abrió la pantalla: volver a abrirla",
+            "the configuration changed after the page was opened: open it again",
         );
         let change_id = log_conflict(conn, request, &target, &rejection.message)?;
         return Ok(Some(Prepared::Rejected(rejection, Some(change_id))));
@@ -31,7 +31,7 @@ pub fn prepare(
     if request.state.conf_files() == target_state.conf_files() {
         let rejection = Rejection::new(
             RejectionReason::Invalid,
-            "la configuración ya es la de esa versión",
+            "the configuration is already the one in that version",
         );
         return Ok(Some(Prepared::Rejected(rejection, None)));
     }

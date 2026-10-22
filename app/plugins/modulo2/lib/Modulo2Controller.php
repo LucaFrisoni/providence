@@ -62,7 +62,7 @@ abstract class Modulo2Controller extends ActionController {
 	protected function validChange(array $back) : bool {
 		$valid = $this->request->getRequestMethod() === 'POST' && caValidateCSRFToken($this->request, null, ['notifications' => $this->notification]);
 		if (!$valid) {
-			$this->notify(_t('La operación no se aplicó: el formulario venció o no es válido. Volver a intentarlo.'), true);
+			$this->notify(Modulo2I18n::t('Nothing was changed: the form expired or is not valid. Please try again.'), true);
 			$this->redirectTo(...$back);
 		}
 		return $valid;

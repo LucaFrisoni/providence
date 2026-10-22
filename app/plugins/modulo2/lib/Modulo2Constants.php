@@ -4,6 +4,8 @@
  * Constantes del módulo 2: las comparten el plugin, los controladores, las librerías y las pruebas.
  * ----------------------------------------------------------------------
  */
+require_once(__DIR__.'/Modulo2I18n.php');
+
 final class Modulo2Constants {
 	# -------------------------------------------------------
 	/** Permiso (acción de rol) que habilita el uso del módulo 2: ver configuraciones, versiones e historial */
@@ -47,9 +49,13 @@ final class Modulo2Constants {
 	const STATE_PATH = self::API_PATH.'/state';
 	const VERSIONS_PATH = self::API_PATH.'/versions';
 	const EDITS_PATH = self::API_PATH.'/edits';
+	const EDITS_RESULT_PATH = self::EDITS_PATH.'/result';
 	const CHANGES_PATH = self::API_PATH.'/changes';
-	/** Cambios por página del historial (se cargan más al llegar al final) */
+	/** Cambios por página del historial y versiones por página de su lista (se cargan más al llegar al final) */
 	const CHANGES_PAGE_SIZE = 50;
+	const VERSIONS_PAGE_SIZE = 50;
+	/** Cambios que se pueden guardar juntos (MAX_EDITS_PER_SAVE en constants.rs) */
+	const MAX_EDITS_PER_SAVE = 1000;
 	/** Profundidad máxima al decodificar JSON (valor por defecto de json_decode) */
 	const JSON_MAX_DEPTH = 512;
 	# -------------------------------------------------------
@@ -59,6 +65,14 @@ final class Modulo2Constants {
 	const LOCAL_FILE_PATTERN = '/^[A-Za-z0-9_-]{1,95}\.conf\z/';
 	/** Archivo de bloqueo, en el directorio temporal, para que dos cambios no escriban app/conf/local a la vez */
 	const LOCK_FILE_NAME = 'ca_modulo2_conf_local.lock';
+	/** Caché de la exportación de la configuración en base: espacio y duración (30 días) */
+	const EXPORT_CACHE = 'modulo2_database_export';
+	const EXPORT_CACHE_TTL = 2592000;
+	/** Tablas de Providence que entran en la exportación de la configuración en base (por prefijo) */
+	const EXPORTED_TABLE_PREFIXES = ['ca_locales', 'ca_list', 'ca_metadata_element', 'ca_metadata_type_restrictions', 'ca_metadata_dictionary',
+		'ca_editor_ui', 'ca_relationship_type', 'ca_user_roles', 'ca_user_groups', 'ca_bundle_display', 'ca_search_form'];
+	/** Tablas con esos prefijos que tienen datos de los registros, no configuración */
+	const NOT_EXPORTED_TABLES = ['ca_metadata_dictionary_rule_violations'];
 	/** Variable de sesión que pide rearmar la barra de menú después de un cambio */
 	const REFRESH_MENU_FLAG = 'modulo2_refresh_menu';
 	/** Catálogo: tipos de valor de una configuración ("kind" en el JSON del catálogo, Kind en catalog.rs) */

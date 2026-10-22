@@ -14,15 +14,17 @@ use PHPUnit\Framework\TestCase;
 #[TestDox('Módulo 2 · valores del formulario y permisos de quien opera')]
 final class Modulo2FormValueTest extends TestCase {
 	# -------------------------------------------------------
-	#[TestDox('Convierte cada tipo de valor; lo que no se puede convertir queda como texto para que el servicio lo rechace')]
+	// La pantalla envía JSON: los valores ya tienen su tipo, salvo los que el usuario escribió mal
+	#[TestDox('Convierte cada tipo de valor; lo que no se puede convertir queda igual para que el servicio lo rechace')]
 	public function testInputIsConvertedByKind() : void {
 		$cases = [
-			['boolean', '1', true], ['boolean', '0', false], ['boolean', 'sí', 'sí'], ['boolean', '', ''],
-			['number', '12', 12], ['number', '-1', '-1'], ['number', '2.5', '2.5'],
-			['color', ' #A1B2C3 ', 'A1B2C3'],
-			['subtype_list', ['book', 'artwork'], ['book', 'artwork']], ['subtype_list', '', []],
+			['boolean', true, true], ['boolean', '1', true], ['boolean', '0', false], ['boolean', 'sí', 'sí'],
+			['number', 12, 12], ['number', '12', 12], ['number', '-1', '-1'], ['number', '2.5', '2.5'], ['number', [1], [1]],
+			['color', ' #A1B2C3 ', 'a1b2c3'],
+			['subtype_list', ['book', 'artwork'], ['book', 'artwork']], ['subtype_list', 'book', 'book'],
+			['table_list', ['ca_objects', 'ca_places'], ['ca_objects', 'ca_places']],
 			['table_list', "ca_objects\r\n ca_places ,ca_entities\n\n", ['ca_objects', 'ca_places', 'ca_entities']],
-			['text', '^ca_objects.idno <br/> "x"', '^ca_objects.idno <br/> "x"'], ['choice', '~', '~'], ['text', ['x'], '']
+			['text', '^ca_objects.idno <br/> "x"', '^ca_objects.idno <br/> "x"'], ['choice', '~', '~'], ['text', ['x'], ['x']]
 		];
 		foreach ($cases as [$kind, $raw, $expected]) {
 			$this->assertSame($expected, Modulo2FormValue::fromInput($kind, $raw), "{$kind}: ".var_export($raw, true));
@@ -51,7 +53,7 @@ final class Modulo2FormValueTest extends TestCase {
 	public function testVersionNames() : void {
 		$operator = new Modulo2Operator(7, 'ana', fn($action) => true);
 
-		$this->assertSame(_t('Versión del %1', date('d/m/Y H:i', 0)), $operator->versionName(0));
+		$this->assertSame(_t('Version of %1', date('d/m/Y H:i', 0)), $operator->versionName(0));
 		$this->assertSame(['id' => 7, 'name' => 'ana'], $operator->user());
 		$this->assertSame(['name' => 'Antes de cambiar «Activo»', 'description' => null], $operator->automaticVersion('Antes de cambiar «Activo»'));
 	}

@@ -70,12 +70,15 @@ pub const CHANGES_SEGMENT: &str = "changes";
 pub const RESTORE_SEGMENT: &str = "restore";
 pub const RESULT_SEGMENT: &str = "result";
 pub const NAME_SEGMENT: &str = "name";
+pub const DELETE_SEGMENT: &str = "delete";
 /// Módulo 2: nombre con el que se guarda, junto a los archivos de una versión, la exportación de la
 /// configuración en base. No termina en `.conf`, así no se confunde con un archivo de app/conf/local.
 pub const DATABASE_FILE: &str = "database_profile.xml";
 /// Módulo 2: cambios por página del historial (`?limit=`), por defecto y como máximo.
 pub const CHANGE_LOG_PAGE_SIZE: u32 = 50;
 pub const MAX_CHANGE_LOG_PAGE_SIZE: u32 = 200;
+/// Módulo 2: cambios que se pueden guardar juntos.
+pub const MAX_EDITS_PER_SAVE: usize = 1000;
 /// Módulo 2: límites de los valores que se aceptan al editar (ver services/modulo2/values.rs).
 pub const MAX_TEXT_CHARS: usize = 2000;
 pub const MAX_NUMBER: u64 = 1_000_000;

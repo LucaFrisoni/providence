@@ -76,14 +76,26 @@ cambios de Providence (`ca_change_log`).
 
 - **Todo centralizado en el Panel de gestión.** Se decidió que el módulo no sea solo un lugar para
   configuraciones nuevas, sino una versión mejorada de Manage. Para los usuarios con el permiso del
-  módulo, el menú **Gestión** ocupa el lugar de Manage en la barra principal y abre el panel:
+  módulo, el menú **Management** del módulo ocupa el lugar de Manage en la barra principal y abre el
+  **Management panel** (Gestión → Panel de gestión en castellano):
     - **Panel de gestión:** todas las secciones de Manage, agrupadas por tema,
       con buscador, una descripción de cada una y enlaces a sus páginas. Las que todavía no se
       mejoraron enlazan a su pantalla de Providence; las que completa otro módulo del proyecto lo
       indican con una nota.
-    - Desde el panel se abren también las pantallas del módulo: **Nuevas configuraciones** (las del
+    - Desde el panel se abren también las pantallas del módulo: **New settings** (las del
       [catálogo](#catálogo-de-configuraciones), que Providence solo permite cambiar editando
-      archivos), **Versiones de la configuración** e **Historial de cambios**.
+      archivos), **Configuration versions** y **Change history**. Se ven como las demás secciones,
+      sin etiqueta ni color propio.
+- **Interfaz en el idioma del usuario:** los textos se escriben en inglés (el idioma por defecto de
+  Providence) con `Modulo2I18n::t()` y se muestran en el idioma que el usuario elige en My
+  preferences. Providence solo busca traducciones en `app/locale` y en el tema, así que el módulo trae
+  las suyas en `app/plugins/modulo2/locale/<idioma>.php` (por ahora `es.php`, para todos los
+  `es_*`); un idioma sin archivo se ve en inglés. Orden: los reemplazos de la institución
+  (`translations.conf`), la tabla del módulo y las traducciones de Providence. También se traducen el
+  catálogo y los mensajes del servicio (que los escribe en inglés). `Modulo2I18nTest` falla si un
+  texto de las pantallas no tiene traducción, y `Modulo2CatalogIntegrationTest`, si le falta a una
+  configuración del catálogo. Para sumar un idioma alcanza con copiar `es.php` y traducirlo. Los
+  comentarios del código y la documentación siguen en castellano.
 - **Trabaja con una lista blanca.** Solo muestra y modifica las configuraciones del catálogo.
 - **Escribe solo en `app/conf/local/`.** Es el lugar que Providence prevé para los cambios propios de
   cada instalación: lo que se define ahí reemplaza al valor de `app/conf/`. Los archivos de
@@ -91,7 +103,7 @@ cambios de Providence (`ca_change_log`).
   configuración de `app/conf/local/`. En Docker, esa carpeta es el volumen `conf_local`.
 - **La configuración que está en la base de Providence** (listas, elementos de metadatos, interfaces
   de edición...) se sigue editando con las pantallas de Providence. El módulo la incluye en las
-  versiones, la resume en Nuevas configuraciones y la enlaza desde el panel.
+  versiones, la resume en New settings y la enlaza desde el panel.
 
 ## Catálogo de configuraciones
 
@@ -153,22 +165,26 @@ reemplace. Por ejemplo, si `app/conf/local/app.conf` dice `ca_places_disable = 1
 aparecen aunque el valor por defecto sea 0. El módulo cambia siempre el valor efectivo y resalta los
 que son distintos del valor por defecto.
 
-**Aplicar un cambio** (detalle en [Fase 2](#fase-2-edición)):
+**Guardar cambios** (detalle en [Fase 2](#fase-2-edición)): en la pantalla se cambian todas las
+configuraciones que se quiera; quedan pendientes hasta "Save changes", que las aplica **todas juntas o
+ninguna** y guarda el resultado como una versión nueva.
 
-1. El plugin bloquea `app/conf/local/` para que dos cambios no se pisen, y lee el valor efectivo,
-   las claves del archivo local (con el lector de Providence) y el estado completo.
-2. El servicio valida que la configuración esté en el catálogo y se pueda editar, que el usuario
-   tenga permiso para su nivel de riesgo y que el valor sea válido. Si el valor actual ya no es el que
-   se veía al abrir la pantalla, es un **conflicto** y no se aplica nada.
+1. El plugin bloquea `app/conf/local/` para que dos guardados no se pisen, y lee el valor efectivo de
+   cada configuración, las claves de cada archivo local (con el lector de Providence) y el estado completo.
+2. El servicio valida cada cambio: que la configuración esté en el catálogo y se pueda editar, que el
+   usuario tenga permiso para su nivel de riesgo, que el valor sea válido y que no se repita. Si el
+   valor actual ya no es el que se veía al abrir la pantalla, es un **conflicto**. Si un cambio se
+   rechaza, no se aplica ninguno y se informa cuál fue.
 3. El servicio guarda una versión automática del estado anterior (o usa la idéntica que ya exista),
-   registra el cambio como **pendiente** y devuelve el contenido nuevo del archivo, en forma canónica.
-4. El plugin escribe `app/conf/local/<archivo>.conf` sin dejarlo a medio escribir (archivo temporal y
-   luego renombrado) y limpia las cachés de configuración.
-5. El plugin verifica que Providence tomó el cambio: que el archivo quedó como se escribió, que las
-   demás claves del archivo se leen igual que antes y que el valor efectivo es el pedido. Si algo no
-   coincide, deja el archivo como estaba.
-6. El plugin informa el resultado y el servicio cierra el registro: quién, cuándo, qué clave, valor
-   anterior y nuevo, versión anterior y resultado (aplicado o falló, con el motivo).
+   registra cada cambio como **pendiente** y devuelve el contenido nuevo de cada archivo, en forma canónica.
+4. El plugin escribe los archivos de `app/conf/local/` sin dejarlos a medio escribir (archivo temporal
+   y luego renombrado) y limpia las cachés de configuración.
+5. El plugin verifica que Providence tomó todos los cambios: que cada archivo quedó como se escribió,
+   que las demás claves se leen igual que antes y que el valor efectivo de cada configuración es el
+   pedido. Si algo no coincide, deja todos los archivos como estaban.
+6. El plugin informa el resultado. Si se aplicó, el servicio guarda el estado nuevo como **versión**
+   (con el nombre y la nota que se escribieron al guardar) y cierra cada cambio del registro: quién,
+   cuándo, qué clave, valor anterior y nuevo, versión anterior y nueva, y resultado.
 
 Los rechazos y los conflictos también quedan en el registro, con su motivo, y no generan versión.
 
@@ -192,9 +208,24 @@ de sus claves. El archivo empieza con un aviso de que lo escribe el módulo. Con
       con el exportador de perfiles de Providence (`ConfigurationExporter`), sin los usuarios. En la
       instalación de desarrollo ocupa unos 500 KB, tarda un segundo y medio y es siempre igual para la
       misma configuración.
-    - **Datos de la versión:** nombre, autor, fecha, descripción, si es automática y la versión
-      anterior (la última creada). Las guardadas a mano proponen un nombre con la fecha ("Versión del
-      17/10/2026 14:32"), que se puede editar; las automáticas se llaman como su motivo.
+    - **Datos de la versión:** número, nombre, autor, fecha, descripción, si es automática y la
+      versión anterior (la última creada). Las que se guardan al guardar cambios o a mano proponen un
+      nombre con la fecha ("Version of 17/10/2026 14:32"), que se puede editar; las automáticas se
+      llaman como su motivo ("Before the changes of ...").
+- **Número sin saltos:** se guarda al crearla (el más alto + 1). Al borrar una versión, las
+  siguientes bajan un número (migración `numeracion_sin_saltos_modulo2`, que también corrigió los
+  saltos de los borrados anteriores).
+- **Borrar:** solo quien creó una versión la puede borrar (lo verifica el servicio). Sus archivos se
+  borran; la versión siguiente pasa a compararse con la anterior a la borrada, y el historial conserva
+  los cambios, sin el enlace a la versión ("Restore of a deleted version").
+- **Versión actual:** la idéntica (archivos y base) o, si no hay, la última con los mismos archivos
+  `.conf` (`files_hash`, migración `hash_de_archivos_modulo2`). Así, después de restaurar una versión
+  se la reconoce como actual aunque la configuración en base haya cambiado desde entonces (la
+  restauración no toca la base); la pantalla lo avisa y ofrece guardar una versión nueva.
+- **Exportación de la base en caché:** exportarla tarda un par de segundos. El plugin calcula una suma
+  de verificación (`CHECKSUM TABLE`, unos milisegundos) de las tablas que exporta el perfil y guarda la
+  exportación en la caché de Providence con esa clave: mientras no cambien, se reutiliza
+  (`Modulo2State::exportDatabase`).
 - **Sin versiones repetidas:** cada versión guarda un hash SHA-256 de su contenido, y la base no
   admite dos versiones con el mismo hash.
     - **Cálculo:** sobre los archivos ordenados por nombre, con el nombre, el largo y el contenido de
@@ -206,9 +237,9 @@ de sus claves. El archivo empieza con un aviso de que lo escribe el módulo. Con
       estado anterior. La pantalla de versiones indica si el estado actual ya está guardado.
     - **Ediciones a mano:** un cambio solo de comentarios o espacios en un `.conf` cambia el hash y
       genera una versión nueva, porque el archivo cambió.
-- **Ver cambios:** qué configuraciones del catálogo cambiaron de la versión anterior a esta, con su
+- **View changes:** qué configuraciones del catálogo cambiaron de la versión anterior a esta, con su
   valor antes y después (no el texto de los archivos).
-- **Restaurar** una versión:
+- **Restore** una versión:
     1. La pantalla muestra qué cambia del estado actual a la versión y guarda el hash del estado que
        mostró.
     2. Al confirmar, se verifica que nadie haya cambiado la configuración desde entonces (el hash
@@ -234,9 +265,9 @@ siguen en los `.conf` de Providence, y el catálogo es código.
 
 | Tabla              | Qué guarda                                                                                                                                                                 |
 | ------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `m2_versions`      | Cada versión: nombre, descripción, si se creó sola antes de un cambio, versión anterior, hash, usuario y fecha                                                            |
+| `m2_versions`      | Cada versión: número, nombre, descripción, si se creó sola antes de un cambio, versión anterior, hash, usuario y fecha                                                    |
 | `m2_version_files` | El contenido de cada archivo de `app/conf/local/` en esa versión y, como `database_profile.xml`, la exportación de la base                                               |
-| `m2_change_log`    | Cada cambio: usuario, fecha, acción (editar o restaurar), configuración, valor anterior y nuevo, versiones y resultado (pendiente, aplicado, rechazado, falló o conflicto) |
+| `m2_change_log`    | Cada cambio: usuario, fecha, acción (editar o restaurar), configuración, valor anterior y nuevo, versiones (anterior y nueva, o restaurada) y resultado (pendiente, aplicado, rechazado, falló o conflicto). Si se borra una versión, queda sin el enlace |
 
 Los usuarios son los de Providence, que están en otra base: se guarda su id y su nombre.
 
@@ -246,7 +277,7 @@ riesgo, también en el servicio), no solo en la pantalla.
 
 | Acción de rol                  | Qué permite                                                            |
 | ------------------------------ | ---------------------------------------------------------------------- |
-| `can_use_modulo2`              | Ver el menú Gestión, las configuraciones, las versiones y el historial |
+| `can_use_modulo2`              | Ver el menú Manage del módulo, las configuraciones, las versiones y el historial |
 | `can_edit_modulo2_low_risk`    | Editar configuraciones de riesgo bajo                                  |
 | `can_edit_modulo2_medium_risk` | Editar configuraciones de riesgo medio                                 |
 | `can_edit_modulo2_high_risk`   | Editar configuraciones de riesgo crítico (control de acceso)           |
@@ -279,7 +310,7 @@ secciones del panel (las Fases 2 y 3 se adelantaron).
 
 ### Fase 0: infraestructura
 
-- **Plugin `modulo2`:** agrega el menú **Gestión** y el permiso `can_use_modulo2`, que se asigna
+- **Plugin `modulo2`:** agrega el menú **Management** y el permiso `can_use_modulo2`, que se asigna
   desde los roles de Providence.
 - **Servicio Rust:** el plugin se comunica con él por HTTP. La ruta `/api/modulo2/health` sigue
   disponible para verificar el servicio, aunque la interfaz no la usa.
@@ -289,7 +320,7 @@ secciones del panel (las Fases 2 y 3 se adelantaron).
 
 ### Fase 1: catálogo y lectura
 
-**Qué ve el usuario:** **Gestión → Nuevas configuraciones** muestra el catálogo agrupado por sección,
+**Qué ve el usuario:** **Manage → New settings** muestra el catálogo agrupado por sección,
 con las secciones plegadas al cargar. Una sección por tipo de dato es una tabla con una fila por
 tipo de dato y una columna por configuración; una de toda la instalación es una lista con valor y
 descripción. Cada valor es el efectivo (✓ verde o ✗ rojo para sí o no) y se resalta si es distinto
@@ -301,7 +332,7 @@ solo las modificadas. Es de solo lectura.
 
 ```
 Providence (plugin modulo2)                          Servicio Rust
-Nuevas configuraciones ── pide el catálogo ──────►   catálogo (models/modulo2/catalog.rs)
+New settings ────────── pide el catálogo ──────►   catálogo (models/modulo2/catalog.rs)
             │           ◄── lista de configuraciones
             └── lee el valor efectivo y el por defecto de cada una en Providence
 ```
@@ -353,7 +384,7 @@ Nuevas configuraciones ── pide el catálogo ──────►   catálog
 
 ### Panel de gestión
 
-- **Menú:** `modulo2Plugin::hookRenderMenuBar` reemplaza "Manage" por "Gestión" en la barra
+- **Menú:** `modulo2Plugin::hookRenderMenuBar` reemplaza el "Manage" de Providence por el del módulo en la barra
   principal, en el mismo lugar. Solo cambia la barra: las pantallas de Manage siguen con su menú
   lateral, y un usuario sin `can_use_modulo2` sigue viendo Manage.
 - **Contenido:** los nombres, enlaces y permisos de cada sección se leen del menú Manage de
@@ -365,14 +396,23 @@ Nuevas configuraciones ── pide el catálogo ──────►   catálog
 
 ### Fase 2: edición
 
-**Qué ve el usuario:** en **Nuevas configuraciones**, una explicación breve en viñetas y, en cada
-sección, los valores; los que el usuario puede cambiar (configuración editable y permiso para su
-riesgo) se abren con un clic. El formulario muestra el nombre de la configuración, su descripción, el
-valor actual y el original de Providence, y un campo según el tipo de valor: sí o no (con la
-etiqueta en positivo de las invertidas), número, texto, color, opciones, casillas con los subtipos o
-una lista de tipos de dato. Si el valor está modificado, ofrece volver al original. No se muestran
-claves ni archivos de Providence. Al guardar o cancelar se vuelve a la lista con las mismas secciones
-abiertas.
+**Qué ve el usuario:** en **New settings**, una explicación breve en viñetas y, en cada sección,
+los valores; los que el usuario puede cambiar (configuración editable y permiso para su riesgo) se
+cambian **en el lugar**:
+
+- Un sí o no cambia con un clic. Los demás abren un diálogo con el nombre de la configuración, su
+  descripción, el valor actual y el de Providence, y un campo según el tipo de valor: número, texto,
+  color, opciones, casillas con los subtipos o una lista ordenable de tipos de dato. "Use the
+  Providence default" vuelve al valor original.
+- Cada cambio queda **pendiente** (la celda se marca en azul) y una barra abajo dice cuántos hay, con
+  "Discard" y "Review and save changes". Los pendientes se recuerdan en la pestaña del navegador
+  (`sessionStorage`) hasta guardarlos; al volver a la página se descartan los de valores que
+  cambiaron mientras tanto (por ejemplo, porque ya se guardaron).
+- "Review and save changes" muestra cada cambio con su valor actual y el nuevo (se puede deshacer
+  uno), pide el nombre de la versión nueva y una nota, y envía todo junto.
+- "Expand all" y "Collapse all" son botones debajo de la barra de herramientas.
+
+No se muestran claves ni archivos de Providence.
 
 Por ahora se editan los valores simples de primer nivel. Las configuraciones con estructura
 (`formats`, `strings`, `replacements`, `fields`) y los órdenes de los menús se siguen mostrando sin
@@ -382,17 +422,21 @@ editar: se completan en la Fase 4.
 
 ```
 Providence (plugin modulo2)                               Servicio Rust
-ConfigurationsController::Save
+ConfigurationsController::Save (JSON con todos los cambios)
   Modulo2Editor (con app/conf/local bloqueada)
-    lee el valor efectivo, las claves locales y el estado
-    ── POST /edits ─────────────────────────────────────►  valida (catálogo, permiso, valor, conflicto)
+    lee los valores efectivos, las claves locales y el estado
+    ── POST /edits ─────────────────────────────────────►  valida cada cambio (todos o ninguno)
                                                            guarda la versión anterior
-                                                           registra el cambio como pendiente
-    ◄── contenido del archivo y valor esperado ─────────   arma el archivo canónico (conf_writer.rs)
-    escribe app/conf/local/<archivo>.conf
-    verifica con Providence; si falla, lo deja como estaba
-    ── POST /changes/{id}/result ───────────────────────►  cierra el registro (applied o failed)
+                                                           registra cada cambio como pendiente
+    ◄── contenido de cada archivo y valores esperados ──   arma los archivos canónicos (conf_writer.rs)
+    escribe los archivos de app/conf/local
+    verifica con Providence; si falla, los deja como estaban
+    ── POST /edits/result (con el estado nuevo) ────────►  guarda la versión nueva y cierra los cambios
 ```
+
+- `Modulo2EditorData` arma lo que la página necesita para editar (las entradas que el usuario puede
+  cambiar, los subtipos y los tipos de dato); la edición en el lugar está en
+  `configurations_editor_html.php`.
 
 - **Validación en el servidor:** el servicio valida el formato de cada tipo de valor
   (`services/modulo2/values.rs`); el plugin valida lo que solo Providence sabe: que los subtipos y los
@@ -408,40 +452,48 @@ ConfigurationsController::Save
 
 ### Fase 3: versionado
 
-**Qué ve el usuario:** **Versiones de la configuración** explica en viñetas qué es una versión, dice
+**Qué ve el usuario:** **Configuration versions** explica en viñetas qué es una versión, dice
 si la configuración actual ya está guardada y, si no, permite guardarla con un nombre propuesto
-("Versión del 21/10/2026 14:32") y una nota. La lista muestra cada versión con su número
+("Version of 21/10/2026 14:32") y una nota. La lista muestra cada versión con su número
 correlativo (1, 2, 3...), su nombre (las automáticas se llaman como su motivo, por ejemplo "Antes de
 cambiar «Activo · Lugares»"), quién y cuándo (en formato amable: "Hoy, 14:32", "21 de octubre,
 10:00"), y dos acciones:
 
-- **Ver cambios:** qué configuraciones cambiaron respecto de la versión anterior, con su valor antes
+- **View changes:** qué configuraciones cambiaron respecto de la versión anterior, con su valor antes
   y después.
-- **Restaurar:** muestra qué configuraciones cambian al volver a esa versión y pide confirmación.
+- **Restore:** muestra qué configuraciones cambian al volver a esa versión y pide confirmación.
 
 En ningún caso se muestran archivos, hashes ni ids internos. Si la configuración en base también
-cambió, se avisa que eso no se restaura. **Historial de cambios** lista cada cambio y restauración
-con quién, cuándo, el nombre de la configuración, el valor antes y después y el resultado.
+cambió, se avisa que eso no se restaura. Quien creó una versión la puede renombrar o borrar (con
+confirmación). La lista carga 50 versiones y las siguientes al llegar al final, y el buscador busca
+por nombre en el servidor, así funciona igual con muchas versiones. **Change history** lista cada
+cambio y restauración con quién, cuándo, el nombre de la configuración, el valor antes y después y
+el resultado. Las acciones de cada versión son botones con ícono (Font Awesome, como Providence):
+ver cambios, restaurar, renombrar y borrar; el nombre se ve al pasar el mouse. Las confirmaciones
+(borrar una versión, descartar los cambios pendientes) son avisos abajo a la derecha
+(`Modulo2Ui::toastScript`), no alertas del navegador.
 
 **Diferencias por configuración:** las calcula el plugin (`Modulo2SettingsDiff`): lee con
 Providence los `.conf` de cada estado, superpuestos a los valores de `app/conf`, y compara el valor de
 cada entrada del catálogo. Así se muestra lo que cambia para el usuario y no el texto de los archivos.
 
 **Número de versión:** el id de la tabla puede tener saltos (por ejemplo, las pruebas usan ids en
-transacciones que se deshacen), así que el servicio devuelve también `number`, la posición de la
-versión por orden de creación, que es el que ve el usuario.
+transacciones que se deshacen), así que cada versión guarda también `version_number`, el que ve el
+usuario (migración `versiones_borrables_modulo2`). Al borrar una versión, las siguientes bajan un número.
 
 **API del servicio** (todas bajo `/api/modulo2`; los cuerpos son JSON):
 
 | Ruta                          | Cuerpo                                                                                             | Respuesta                                                                                   |
 | ----------------------------- | -------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------- |
 | `POST /state`                 | `{state}`                                                                                          | `{hash, version}` (la idéntica o null)                                                      |
-| `GET /versions`               |                                                                                                    | `{versions: [...]}`, de la más nueva a la más vieja                                         |
+| `GET /versions?limit&before&search` |                                                                                              | `{versions: [...], next_before}`: hasta `limit` (50, máx. 200) con id menor que `before` y `search` en el nombre |
 | `POST /versions`              | `{user, version: {name, description}, state}`                                                      | 201 `{version}`; 409 `{error, version}` si ya existe                                        |
 | `POST /versions/{id}/name`    | `{user, name}`                                                                                     | `{version}`; 403 si el usuario no la creó, 404 si no existe                                 |
+| `POST /versions/{id}/delete`  | `{user}`                                                                                           | `{version}` (la borrada); 403 si el usuario no la creó, 404 si no existe                    |
 | `GET /versions/{id}`          |                                                                                                    | `{version, files: {nombre: contenido}, database_hash}`                                      |
 | `POST /versions/{id}/restore` | `{user, expected_hash, state, version}`                                                            | `{change_id, version_before, version, files, database_differs}`; 409 si el hash no coincide |
-| `POST /edits`                 | `{user, allowed_risks, file, key, value \| reset, current, expected, distribution, local, state, version}` | `{change_id, version_before, version_created, file, content, value}`; 403, 409 o 422 si se rechaza |
+| `POST /edits`                 | `{user, allowed_risks, edits: [{file, key, value \| reset, current, expected, distribution}], local: {archivo: claves}, state, version}` | `{change_ids, version_before, version_created, files: {archivo: contenido \| null}, values}`; 403, 409 o 422 con `item` (el cambio rechazado) |
+| `POST /edits/result`          | `{change_ids, user, result: applied \| failed, message, state, version}`                           | `{changes, version}`: si se aplicó, la versión nueva con `state`; 409 si ya no estaban pendientes |
 | `GET /changes?limit&before`   |                                                                                                    | `{changes: [...], next_before}`: hasta `limit` (50, máx. 200) cambios con id menor que `before`; `next_before` es null si no hay más |
 | `POST /changes/{id}/result`   | `{result: applied \| failed, message, state}`                                                      | `{change}`; 409 si ya no estaba pendiente                                                   |
 
@@ -449,8 +501,10 @@ versión por orden de creación, que es el que ve el usuario.
 - `state`: `{"files": {"app.conf": "..."}, "database": "<profile>...</profile>" | null}`.
 - `user`: `{"id": 1, "name": "administrator"}`, el usuario de Providence de la sesión.
 - `allowed_risks`: los niveles que el usuario puede editar según sus acciones de rol.
-- `local`: las claves del archivo local tal como las lee Providence.
-- `content: null` en `/edits` significa que el archivo queda sin claves y se borra.
+- `local`: las claves de cada archivo local tal como las lee Providence.
+- Un archivo `null` en `files` de `/edits` queda sin claves y se borra.
+- Cada cambio del historial trae también `version_before_number` y `version_after_number` (null si la
+  versión se borró).
 - Un error responde `{"error": "motivo"}` con su código: 400 (petición inválida), 403 (sin permiso),
   404 (no existe), 409 (conflicto o repetida), 422 (valor no válido), 500 (base) o 503 (sin base).
 
@@ -487,7 +541,8 @@ Convenciones: `[x]` hecho, `[ ]` pendiente. Los números `#N` refieren al
 - [x] Plugin base, menú y permiso `can_use_modulo2`
 - [x] Volumen `conf_local` para `app/conf/local`
 - [x] Base propia de la extensión (`ca_extension`), conexión del servicio Rust y migraciones del
-      módulo 2 (`creando_tablas_modulo2`, `creando_indices_modulo2` y `optimizando_indices_modulo2`)
+      módulo 2 (`creando_tablas_modulo2`, `creando_indices_modulo2`, `optimizando_indices_modulo2` y
+      `versiones_borrables_modulo2`)
 - [x] Estructura de pruebas (Rust y PHP) y pruebas de aislamiento entre las bases
 
 ### Fase 1: catálogo y lectura
@@ -503,7 +558,7 @@ Convenciones: `[x]` hecho, `[ ]` pendiente. Los números `#N` refieren al
 ### Panel de gestión
 
 - [x] Relevamiento de Manage: secciones, permisos y qué módulo completa cada una
-- [x] Menú **Gestión** en el lugar de Manage, con el panel y las nuevas configuraciones
+- [x] Menú **Management** en el lugar de Manage, con el panel y las nuevas configuraciones
 - [x] Panel con todas las secciones de Manage enlazadas, agrupadas por tema, con buscador, estado de
       cada sección y nota de las que completa otro módulo (1, 3 o 5)
 - [ ] My preferences mejorado: una sola página con buscador y tablas tipo de dato × preferencia
@@ -530,6 +585,9 @@ Convenciones: `[x]` hecho, `[ ]` pendiente. Los números `#N` refieren al
 ### Fase 3: versionado
 
 - [x] Crear una versión con nombre autocompletado (fecha, hora y usuario) y editable
+- [x] Guardar varios cambios juntos (todos o ninguno), con una sola versión nueva por guardado
+- [x] Borrar una versión (solo quien la creó), con número estable y el historial conservado
+- [x] Lista de versiones con carga progresiva y búsqueda por nombre en el servidor
 - [x] Versión automática antes de cada cambio y de cada restauración
 - [x] Hash de la versión completa y sin versiones repetidas (avisar cuál es la idéntica)
 - [x] Lista de versiones y cambios de cada una respecto de la anterior, por configuración
@@ -545,6 +603,28 @@ Convenciones: `[x]` hecho, `[ ]` pendiente. Los números `#N` refieren al
 
 Cada configuración se cierra cuando tiene validación, interfaz de edición, pruebas unitarias y de
 integración, y documentación.
+
+**Qué hace Providence con cada configuración.** `Modulo2ProvidenceBehaviorIntegrationTest` escribe
+la configuración en `app/conf/local` y mira el resultado con el código de Providence (la barra de
+menú real, el buscador de los campos de relación, `isDeletable`, `caTableIsActive`):
+
+| #  | Configuración                       | Dónde se ve (verificado en Providence 2.0.12)                                                                                                    |
+| -- | ----------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| 1  | Enabled                             | Menús New y Find, búsqueda rápida y campos de relación de los editores (`caTableIsActive`). Los registros no se borran                           |
+| 2  | Quick add                           | Al escribir en un campo de relación un nombre que no existe, la opción "... does not exist. Create?" (`BaseLookupController`). El botón de alta rápida del campo depende del permiso `can_quickadd_*` del rol |
+| 2  | Delete                              | El botón "Delete" del editor (`isDeletable`). **No impide** borrar por la URL: la restricción real es el permiso `can_delete_*` del rol          |
+| 2  | Basic/advanced search, builder, browse | Las opciones del tipo de dato en el menú Find (y la pantalla, si se entra por la URL)                                                       |
+| 2  | Duplicate items                     | Solo existe para sets: duplicar los elementos de un set (`SetEditorController`)                                                                  |
+| 3  | Shown in the menu                   | El tipo de dato en el menú New (sigue en Find)                                                                                                   |
+| 3  | Top-level types only                | Saca del menú New los subtipos que dependen de otro                                                                                              |
+| 3  | Only these / Except these types     | Filtran los subtipos del menú New. **Limitación de Providence** (`BaseEditorController::_getSubTypes`): "Only these" oculta los subtipos anidados aunque estén elegidos y "Except these" no saca los anidados |
+| 4  | Types in the menu / in a submenu    | Find muestra una entrada por subtipo en lugar del tipo de dato, o el tipo de dato con un submenú                                                 |
+| 4  | Only these / Except these types     | Filtran los subtipos de Find solo cuando el menú los muestra (con una de las dos anteriores)                                                    |
+
+**Datos de ejemplo:** `make seed-demo` carga en el Providence de desarrollo unos 80 registros (objetos de
+cada subtipo, entidades, lugares, colecciones, ocurrencias, lotes, ubicaciones, préstamos y
+movimientos) y subtipos anidados de objetos (Oil painting y Watercolor debajo de Painting; Letter y
+Manuscript debajo de Document), para probar a mano. Se puede correr varias veces.
 
 - [ ] #1 Tipos de dato
 - [ ] #2 Funciones por tipo de dato

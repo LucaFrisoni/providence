@@ -54,7 +54,7 @@ class Modulo2LocalConfig {
 		$config = (new ReflectionClass(Configuration::class))->newInstanceWithoutConstructor();
 		(new ReflectionProperty(Configuration::class, 'ops_config_settings'))->setValue($config, ['scalars' => [], 'lists' => [], 'assoc' => []]);
 		if (!$config->loadFile($path)) {
-			throw new Modulo2ConfigException(_t('Providence no pudo leer %1: %2', basename($path), strip_tags((string)$config->getError())));
+			throw new Modulo2ConfigException(Modulo2I18n::t('Providence could not read %1: %2', basename($path), strip_tags((string)$config->getError())));
 		}
 		$entries = [];
 		foreach ($config->getScalarKeys() as $key) { $entries[$key] = $config->getScalar($key); }
@@ -86,13 +86,13 @@ class Modulo2LocalConfig {
 	public function write(string $name, ?string $content) : void {
 		$path = $this->path(self::checkedName($name));
 		if ($content === null) {
-			if (is_file($path) && !unlink($path)) { throw new Modulo2ConfigException(_t('No se pudo borrar %1', $name)); }
+			if (is_file($path) && !unlink($path)) { throw new Modulo2ConfigException(Modulo2I18n::t('%1 could not be deleted', $name)); }
 			return;
 		}
 		$temp = $this->path('.'.$name.'.'.bin2hex(random_bytes(6)).'.tmp');
 		if (file_put_contents($temp, $content, LOCK_EX) !== strlen($content) || !rename($temp, $path)) {
 			@unlink($temp);
-			throw new Modulo2ConfigException(_t('No se pudo escribir %1 en app/conf/local', $name));
+			throw new Modulo2ConfigException(Modulo2I18n::t('%1 could not be written in app/conf/local', $name));
 		}
 	}
 	# -------------------------------------------------------
@@ -115,7 +115,7 @@ class Modulo2LocalConfig {
 	 */
 	public function withLock(callable $operation) {
 		$lock = fopen($this->lock_path, 'c');
-		if (!$lock || !flock($lock, LOCK_EX)) { throw new Modulo2ConfigException(_t('No se pudo bloquear app/conf/local para el cambio')); }
+		if (!$lock || !flock($lock, LOCK_EX)) { throw new Modulo2ConfigException(Modulo2I18n::t('app/conf/local could not be locked for the change')); }
 		try {
 			return $operation();
 		} finally {
@@ -129,7 +129,7 @@ class Modulo2LocalConfig {
 	}
 	# -------------------------------------------------------
 	private static function checkedName(string $name) : string {
-		if (!self::isValidName($name)) { throw new Modulo2ConfigException(_t('Nombre de archivo de configuración no válido: %1', $name)); }
+		if (!self::isValidName($name)) { throw new Modulo2ConfigException(Modulo2I18n::t('Invalid configuration file name: %1', $name)); }
 		return $name;
 	}
 	# -------------------------------------------------------

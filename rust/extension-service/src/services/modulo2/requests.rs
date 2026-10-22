@@ -5,14 +5,15 @@ use std::collections::BTreeMap;
 
 use super::state::is_conf_file_name;
 use crate::constants::{
-    CHANGE_LOG_PAGE_SIZE, DATABASE_FILE, MAX_CHANGE_LOG_PAGE_SIZE, MAX_NAME_CHARS, MAX_STATE_FILES,
+    CHANGE_LOG_PAGE_SIZE, DATABASE_FILE, MAX_CHANGE_LOG_PAGE_SIZE, MAX_EDITS_PER_SAVE,
+    MAX_NAME_CHARS, MAX_STATE_FILES,
 };
 use crate::json::Json;
 use crate::types::modulo2::catalog::Code;
 use crate::types::modulo2::catalog::Risk;
 use crate::types::modulo2::operations::{
-    ChangePage, CloseRequest, CreateVersionRequest, EditAction, EditRequest, RenameRequest,
-    RestoreRequest,
+    ChangePage, CloseRequest, CreateVersionRequest, EditAction, EditItem, EditRequest,
+    FinishEditsRequest, RenameRequest, RestoreRequest, VersionPage,
 };
 use crate::types::modulo2::versions::{ChangeResult, State, User, VersionInfo};
 
@@ -21,7 +22,7 @@ pub fn user(value: &Json) -> Result<User, String> {
     let id = value["id"]
         .as_u32()
         .filter(|id| *id > 0)
-        .ok_or("user.id tiene que ser un número entero mayor que 0")?;
+        .ok_or("user.id must be an integer greater than 0")?;
     Ok(User {
         id,
         name: required_text(&value["name"], "user.name")?,
@@ -35,7 +36,7 @@ pub fn version_info(value: &Json) -> Result<VersionInfo, String> {
         Json::Null => None,
         text => Some(
             text.as_str()
-                .ok_or("version.description tiene que ser texto")?
+                .ok_or("version.description must be text")?
                 .trim()
                 .to_string(),
         ),
@@ -50,62 +51,100 @@ pub fn version_info(value: &Json) -> Result<VersionInfo, String> {
 pub fn state(value: &Json) -> Result<State, String> {
     if !value["files"].is_object() || value["files"].len() > MAX_STATE_FILES {
         return Err(format!(
-            "state.files tiene que ser un objeto con hasta {MAX_STATE_FILES} archivos"
+            "state.files must be an object with up to {MAX_STATE_FILES} files"
         ));
     }
     let mut files = BTreeMap::new();
     for (name, content) in value["files"].entries() {
         let content = content
             .as_str()
-            .ok_or_else(|| format!("el contenido de {name} tiene que ser texto"))?;
+            .ok_or_else(|| format!("the content of {name} must be text"))?;
         if !is_conf_file_name(name) {
-            return Err(format!("{name:?} no es un nombre de archivo .conf válido"));
+            return Err(format!("{name:?} is not a valid .conf file name"));
         }
         files.insert(name.to_string(), content.to_string());
     }
     if !value["database"].is_null() {
         let xml = value["database"]
             .as_str()
-            .ok_or("state.database tiene que ser texto o null")?;
+            .ok_or("state.database must be text or null")?;
         files.insert(DATABASE_FILE.to_string(), xml.to_string());
     }
     Ok(State { files })
 }
 
+/// Guardado: `{user, allowed_risks, edits: [{file, key, value | reset, current, expected,
+/// distribution}], local: {archivo: claves}, state, version}`.
 pub fn edit(body: &Json) -> Result<EditRequest, String> {
-    let text = |field: &str| {
-        body[field]
-            .as_str()
-            .map(str::to_string)
-            .ok_or(format!("{field} tiene que ser texto"))
-    };
     if !body["local"].is_object() {
-        return Err("local tiene que ser un objeto con las claves del archivo".into());
+        return Err("local must be an object with the keys of each file".into());
     }
-    let action = if body["reset"].as_bool() == Some(true) {
-        EditAction::Reset
-    } else {
-        EditAction::SetValue(body["value"].clone())
-    };
+    let count = body["edits"].len();
+    if !body["edits"].is_array() || count == 0 || count > MAX_EDITS_PER_SAVE {
+        return Err(format!(
+            "edits must be a list of 1 to {MAX_EDITS_PER_SAVE} changes"
+        ));
+    }
     Ok(EditRequest {
         user: user(&body["user"])?,
         allowed_risks: risks(&body["allowed_risks"])?,
-        file: text("file")?,
-        key: text("key")?,
-        action,
-        current: body["current"].clone(),
-        expected: body["expected"].clone(),
-        distribution: body["distribution"].clone(),
+        edits: body["edits"]
+            .members()
+            .map(edit_item)
+            .collect::<Result<_, _>>()?,
         local: body["local"].clone(),
         state: state(&body["state"])?,
         version: version_info(&body["version"])?,
     })
 }
 
+/// Un cambio del guardado: el valor pedido, o vuelve al valor por defecto si trae `reset: true`.
+fn edit_item(item: &Json) -> Result<EditItem, String> {
+    let text = |field: &str| {
+        item[field]
+            .as_str()
+            .map(str::to_string)
+            .ok_or(format!("edits.{field} must be text"))
+    };
+    let action = if item["reset"].as_bool() == Some(true) {
+        EditAction::Reset
+    } else {
+        EditAction::SetValue(item["value"].clone())
+    };
+    Ok(EditItem {
+        file: text("file")?,
+        key: text("key")?,
+        action,
+        current: item["current"].clone(),
+        expected: item["expected"].clone(),
+        distribution: item["distribution"].clone(),
+    })
+}
+
+/// Resultado de un guardado: `{change_ids, user, result, message, state, version}`.
+pub fn finish_edits(body: &Json) -> Result<FinishEditsRequest, String> {
+    let ids: Option<Vec<u64>> = body["change_ids"].members().map(Json::as_u64).collect();
+    let change_ids = ids
+        .filter(|ids| {
+            body["change_ids"].is_array() && !ids.is_empty() && ids.len() <= MAX_EDITS_PER_SAVE
+        })
+        .ok_or("change_ids must be a list of change ids")?;
+    let version = match &body["version"] {
+        Json::Null => None,
+        info => Some(version_info(info)?),
+    };
+    Ok(FinishEditsRequest {
+        change_ids,
+        user: user(&body["user"])?,
+        close: close(body)?,
+        version,
+    })
+}
+
 pub fn restore(body: &Json) -> Result<RestoreRequest, String> {
     let expected_hash = body["expected_hash"]
         .as_str()
-        .ok_or("expected_hash tiene que ser texto")?;
+        .ok_or("expected_hash must be text")?;
     Ok(RestoreRequest {
         user: user(&body["user"])?,
         expected_hash: expected_hash.to_string(),
@@ -122,6 +161,11 @@ pub fn create_version(body: &Json) -> Result<CreateVersionRequest, String> {
     })
 }
 
+/// `{"user": ...}`: quien borra una versión.
+pub fn delete(body: &Json) -> Result<User, String> {
+    user(&body["user"])
+}
+
 /// `{"user": ..., "name": "..."}`
 pub fn rename(body: &Json) -> Result<RenameRequest, String> {
     Ok(RenameRequest {
@@ -135,15 +179,11 @@ pub fn close(body: &Json) -> Result<CloseRequest, String> {
     let result = match body["result"].as_str() {
         Some("applied") => ChangeResult::Applied,
         Some("failed") => ChangeResult::Failed,
-        _ => return Err("result tiene que ser applied o failed".into()),
+        _ => return Err("result must be applied or failed".into()),
     };
     let message = match &body["message"] {
         Json::Null => None,
-        text => Some(
-            text.as_str()
-                .ok_or("message tiene que ser texto")?
-                .to_string(),
-        ),
+        text => Some(text.as_str().ok_or("message must be text")?.to_string()),
     };
     let state = if body["state"].is_null() {
         None
@@ -165,13 +205,66 @@ pub fn change_page(limit: Option<&str>, before: Option<&str>) -> Result<ChangePa
             .filter(|n| *n <= u64::from(MAX_CHANGE_LOG_PAGE_SIZE))
             .map(|n| n as u32)
             .ok_or(format!(
-                "limit tiene que ser un número entre 1 y {MAX_CHANGE_LOG_PAGE_SIZE}"
+                "limit must be a number from 1 to {MAX_CHANGE_LOG_PAGE_SIZE}"
             ))?,
     };
     let before = before
-        .map(|text| positive(text).ok_or("before tiene que ser un número mayor que 0"))
+        .map(|text| positive(text).ok_or("before must be a number greater than 0"))
         .transpose()?;
     Ok(ChangePage { limit, before })
+}
+
+/// `?limit=50&before=12&search=texto`: tamaño de página (hasta el máximo), último id ya mostrado y
+/// texto a buscar en el nombre.
+pub fn version_page(
+    limit: Option<&str>,
+    before: Option<&str>,
+    search: Option<&str>,
+) -> Result<VersionPage, String> {
+    let page = change_page(limit, before)?;
+    let before = page
+        .before
+        .map(|id| u32::try_from(id).map_err(|_| "before is not a version id".to_string()))
+        .transpose()?;
+    let search = search
+        .map(url_decoded)
+        .transpose()?
+        .map(|text| text.trim().to_string())
+        .filter(|text| !text.is_empty());
+    if search
+        .as_ref()
+        .is_some_and(|text| text.chars().count() > MAX_NAME_CHARS)
+    {
+        return Err(format!(
+            "search cannot be longer than {MAX_NAME_CHARS} characters"
+        ));
+    }
+    Ok(VersionPage {
+        limit: page.limit,
+        before,
+        search,
+    })
+}
+
+/// Valor de un parámetro de la URL: `+` es un espacio y `%XX`, un byte en hexadecimal.
+fn url_decoded(text: &str) -> Result<String, String> {
+    let mut bytes = Vec::with_capacity(text.len());
+    let mut rest = text.bytes();
+    while let Some(byte) = rest.next() {
+        bytes.push(match byte {
+            b'+' => b' ',
+            b'%' => {
+                let hex = [rest.next(), rest.next()];
+                let hex = hex.map(|b| b.map(char::from).and_then(|c| c.to_digit(16)));
+                match hex {
+                    [Some(high), Some(low)] => (high * 16 + low) as u8,
+                    _ => return Err("search is not correctly encoded".into()),
+                }
+            }
+            other => other,
+        });
+    }
+    String::from_utf8(bytes).map_err(|_| "search is not UTF-8 text".into())
 }
 
 /// Entero mayor que 0 escrito solo con dígitos.
@@ -196,16 +289,16 @@ fn risks(value: &Json) -> Result<Vec<String>, String> {
         .collect();
     risks
         .filter(|_| value.is_array())
-        .ok_or("allowed_risks tiene que ser una lista de niveles de riesgo".into())
+        .ok_or("allowed_risks must be a list of risk levels".into())
 }
 
 /// Texto obligatorio, sin espacios alrededor, de hasta 255 caracteres.
 fn required_text(value: &Json, field: &str) -> Result<String, String> {
     let text = value.as_str().map(str::trim).filter(|t| !t.is_empty());
-    let text = text.ok_or_else(|| format!("{field} es obligatorio"))?;
+    let text = text.ok_or_else(|| format!("{field} is required"))?;
     if text.chars().count() > MAX_NAME_CHARS {
         return Err(format!(
-            "{field} no puede tener más de {MAX_NAME_CHARS} caracteres"
+            "{field} cannot be longer than {MAX_NAME_CHARS} characters"
         ));
     }
     Ok(text.to_string())
@@ -314,44 +407,110 @@ mod tests {
         assert!(state_of(files(MAX_STATE_FILES + 1), Json::Null).is_err());
     }
 
-    /// Cuerpo de una edición como lo envía el plugin.
-    fn edit_body() -> Json {
+    /// Cambio de menu_color como lo envía el plugin.
+    fn color_item() -> Json {
         json_object! {
-            user: json_object! { id: 1, name: "admin" },
-            allowed_risks: ["low"],
             file: "app.conf",
             key: "menu_color",
             value: "ff0000",
             current: "000000",
             expected: "000000",
             distribution: "000000",
+        }
+    }
+
+    /// Cuerpo de un guardado con un cambio, como lo envía el plugin.
+    fn edit_body_with(item: Json) -> Json {
+        json_object! {
+            user: json_object! { id: 1, name: "admin" },
+            allowed_risks: ["low"],
+            edits: [item],
             local: Json::object(),
             state: json_object! { files: Json::object(), database: Json::Null },
             version: json_object! { name: "antes de editar" },
         }
     }
 
-    /// Una edición lleva el valor pedido, o vuelve al valor por defecto si trae reset: true.
+    fn edit_body() -> Json {
+        edit_body_with(color_item())
+    }
+
+    /// Cada cambio lleva el valor pedido, o vuelve al valor por defecto si trae reset: true.
     #[test]
     fn edit_reads_the_value_or_a_reset() {
         let read = edit(&edit_body()).unwrap();
         assert_eq!(
-            (read.key.as_str(), read.action),
-            ("menu_color", EditAction::SetValue(Json::from("ff0000")))
+            (read.edits[0].key.as_str(), &read.edits[0].action),
+            ("menu_color", &EditAction::SetValue(Json::from("ff0000")))
         );
-        let mut reset = edit_body();
+        let mut reset = color_item();
         reset.insert("reset", Json::from(true));
-        assert_eq!(edit(&reset).unwrap().action, EditAction::Reset);
+        assert_eq!(
+            edit(&edit_body_with(reset)).unwrap().edits[0].action,
+            EditAction::Reset
+        );
     }
 
-    /// Una edición sin archivo local, clave, permisos, estado, versión o usuario se rechaza.
+    /// Un guardado sin archivo local, cambios, permisos, estado, versión o usuario se rechaza, igual
+    /// que un cambio sin clave.
     #[test]
     fn edit_requires_its_context() {
-        for field in ["local", "key", "allowed_risks", "state", "version", "user"] {
+        for field in [
+            "local",
+            "edits",
+            "allowed_risks",
+            "state",
+            "version",
+            "user",
+        ] {
             let mut body = edit_body();
             body.remove(field);
             assert!(edit(&body).is_err(), "sin {field}");
         }
+        let mut without_key = color_item();
+        without_key.remove("key");
+        assert!(edit(&edit_body_with(without_key)).is_err());
+        let mut empty = edit_body();
+        empty.insert("edits", Json::array());
+        assert!(edit(&empty).is_err(), "sin cambios");
+    }
+
+    /// El resultado de un guardado necesita los ids de los cambios; la versión nueva es opcional.
+    #[test]
+    fn finish_edits_needs_the_change_ids() {
+        let body = json_object! {
+            change_ids: [3, 4], user: json_object! { id: 1, name: "a" }, result: "applied",
+        };
+        let read = finish_edits(&body).unwrap();
+        assert_eq!((read.change_ids, read.version), (vec![3, 4], None));
+        for ids in [Json::array(), Json::from(["3"]), Json::Null] {
+            let mut invalid = body.clone();
+            invalid.insert("change_ids", ids.clone());
+            assert!(finish_edits(&invalid).is_err(), "{ids}");
+        }
+    }
+
+    /// La página de versiones usa los límites del historial y recorta la búsqueda.
+    #[test]
+    fn version_page_has_limits_and_an_optional_search() {
+        assert_eq!(
+            version_page(Some("10"), Some("5"), Some("  marzo ")),
+            Ok(VersionPage {
+                limit: 10,
+                before: Some(5),
+                search: Some("marzo".into())
+            })
+        );
+        assert_eq!(version_page(None, None, Some(" ")).unwrap().search, None);
+        assert_eq!(
+            version_page(None, None, Some("Versi%C3%B3n+del+1"))
+                .unwrap()
+                .search,
+            Some("Versión del 1".into())
+        );
+        assert!(version_page(None, None, Some("%zz")).is_err());
+        assert!(version_page(None, Some("99999999999"), None).is_err());
+        assert!(version_page(None, None, Some(&"x".repeat(MAX_NAME_CHARS + 1))).is_err());
     }
 
     /// Una restauración necesita el hash esperado además del usuario, el estado y la versión.

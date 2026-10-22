@@ -24,74 +24,74 @@ final class Modulo2ManageMap {
 	/** Grupos del panel, en orden: [id => ['title' => ..., 'sections' => [id => sección]]] */
 	public static function groups() : array {
 		return [
-			'configuration' => ['title' => _t('Configuración y administración'), 'sections' => self::configurationSections()],
-			'work' => ['title' => _t('Mi trabajo'), 'sections' => self::workSections()],
-			'data' => ['title' => _t('Datos y vocabularios'), 'sections' => self::dataSections()],
-			'access' => ['title' => _t('Usuarios y acceso'), 'sections' => self::accessSections()],
-			'community' => ['title' => _t('Contenido y comunidad'), 'sections' => self::communitySections()],
-			'monitoring' => ['title' => _t('Seguimiento'), 'sections' => self::monitoringSections()]
+			'configuration' => ['title' => Modulo2I18n::t('Configuration and administration'), 'sections' => self::configurationSections()],
+			'work' => ['title' => Modulo2I18n::t('My work'), 'sections' => self::workSections()],
+			'data' => ['title' => Modulo2I18n::t('Data and vocabularies'), 'sections' => self::dataSections()],
+			'access' => ['title' => Modulo2I18n::t('Users and access'), 'sections' => self::accessSections()],
+			'community' => ['title' => Modulo2I18n::t('Content and community'), 'sections' => self::communitySections()],
+			'monitoring' => ['title' => Modulo2I18n::t('Monitoring'), 'sections' => self::monitoringSections()]
 		];
 	}
 	# -------------------------------------------------------
 	/** Nombre de cada módulo del proyecto, para la nota de las secciones que completa otro módulo */
 	public static function moduleNames() : array {
 		return [
-			1 => _t('Módulo 1 (modelo de información)'),
-			3 => _t('Módulo 3 (administración por institución o área)'),
-			5 => _t('Módulo 5 (mappings e interoperabilidad)')
+			1 => Modulo2I18n::t('Module 1 (information model)'),
+			3 => Modulo2I18n::t('Module 3 (administration by institution or area)'),
+			5 => Modulo2I18n::t('Module 5 (mappings and interoperability)')
 		];
 	}
 	# -------------------------------------------------------
 	private static function configurationSections() : array {
 		return [
-			'configurations' => self::internal(['Configurations', 'Index'], _t('Nuevas configuraciones'),
-				_t('Configuraciones que Providence solo permite cambiar editando sus archivos y que este módulo trae a la interfaz: tipos de dato, menús, identificadores, búsqueda, textos y más.')),
-			'versions' => self::internal(['Versions', 'Index'], _t('Versiones de la configuración'),
-				_t('Copias de la configuración guardadas en distintos momentos: ver qué cambió en cada una y volver a una anterior.')),
-			'changes' => self::internal(['Changes', 'Index'], _t('Historial de cambios'),
-				_t('Quién cambió cada configuración, cuándo y qué valor tenía antes y después.')),
-			'system_config' => self::native(['system_config'], _t('Interfaces de edición, elementos de metadatos, tipos de relación, idiomas, diccionario de datos, chequeo de configuración y mantenimiento (reindexar, exportar la configuración).'), self::STATUS_PLANNED),
-			'preferences' => self::native(['preferences'], _t('Cómo trabaja cada usuario en Providence: idioma y tema de la interfaz, pantallas de edición por tipo de dato, búsqueda, alta rápida, qué se copia al duplicar un registro y unidades de medida.'), self::STATUS_PLANNED)
+			'configurations' => self::internal(['Configurations', 'Index'], Modulo2I18n::t('New settings'),
+				Modulo2I18n::t('Settings that Providence only lets you change by editing its files, brought to the interface: data types, menus, identifiers, search, texts and more.')),
+			'versions' => self::internal(['Versions', 'Index'], Modulo2I18n::t('Configuration versions'),
+				Modulo2I18n::t('Copies of the configuration saved at different times: see what changed in each one and go back to an earlier one.')),
+			'changes' => self::internal(['Changes', 'Index'], Modulo2I18n::t('Change history'),
+				Modulo2I18n::t('Who changed each setting, when, and its value before and after.')),
+			'system_config' => self::native(['system_config'], Modulo2I18n::t('User interfaces, metadata elements, relationship types, locales, data dictionary, configuration check and maintenance (reindexing, exporting the configuration).'), self::STATUS_PLANNED),
+			'preferences' => self::native(['preferences'], Modulo2I18n::t('How each user works in Providence: interface language and theme, editor screens by data type, search, quick add, what is copied when duplicating a record and units of measurement.'), self::STATUS_PLANNED)
 		];
 	}
 	# -------------------------------------------------------
 	private static function workSections() : array {
 		return [
-			'sets' => self::native(['sets', 'sets_submenu'], _t('Conjuntos de registros para trabajar o publicar juntos.')),
-			'user_displays' => self::native(['user_displays'], _t('Formatos de visualización: qué campos se muestran en resultados e informes.')),
-			'search_tools' => self::native(['search_tools'], _t('Formularios de búsqueda, búsquedas guardadas y ordenamientos propios.')),
-			'watched_items' => self::native(['watched_items'], _t('Registros que el usuario sigue para enterarse de sus cambios.')),
-			'metadata_alerts' => self::native(['metadata_alerts'], _t('Reglas que avisan cuando un registro cumple una condición.')),
-			'export_download' => self::native(['export_download'], _t('Descargas generadas por exportaciones e informes.')),
-			'plugin_tools' => self::native(['plugin_tools'], _t('Herramientas que agregan los plugins instalados.'))
+			'sets' => self::native(['sets', 'sets_submenu'], Modulo2I18n::t('Groups of records to work on or publish together.')),
+			'user_displays' => self::native(['user_displays'], Modulo2I18n::t('Displays: which fields are shown in results and reports.')),
+			'search_tools' => self::native(['search_tools'], Modulo2I18n::t('Search forms, saved searches and custom sorts.')),
+			'watched_items' => self::native(['watched_items'], Modulo2I18n::t('Records the user watches to be notified of their changes.')),
+			'metadata_alerts' => self::native(['metadata_alerts'], Modulo2I18n::t('Rules that notify when a record meets a condition.')),
+			'export_download' => self::native(['export_download'], Modulo2I18n::t('Downloads generated by exports and reports.')),
+			'plugin_tools' => self::native(['plugin_tools'], Modulo2I18n::t('Tools added by the installed plugins.'))
 		];
 	}
 	# -------------------------------------------------------
 	private static function dataSections() : array {
 		return [
-			'list_editor_menu_item' => self::native(['list_editor_menu_item'], _t('Listas y vocabularios, incluidos los subtipos de cada tipo de dato y el orden de sus ítems.')) + ['owner' => 1],
-			'export' => self::native(['export'], _t('Exportadores de metadatos a otros formatos.')) + ['owner' => 5]
+			'list_editor_menu_item' => self::native(['list_editor_menu_item'], Modulo2I18n::t('Lists and vocabularies, including the types of each data type and the order of their items.')) + ['owner' => 1],
+			'export' => self::native(['export'], Modulo2I18n::t('Metadata exporters to other formats.')) + ['owner' => 5]
 		];
 	}
 	# -------------------------------------------------------
 	private static function accessSections() : array {
 		return [
-			'access_control' => self::native(['access_control'], _t('Usuarios, grupos y roles con sus permisos.')) + ['owner' => 3],
-			'user_groups' => self::native(['user_groups'], _t('Equipos de trabajo del usuario.')) + ['owner' => 3]
+			'access_control' => self::native(['access_control'], Modulo2I18n::t('Users, groups and roles with their permissions.')) + ['owner' => 3],
+			'user_groups' => self::native(['user_groups'], Modulo2I18n::t('Work groups of the user.')) + ['owner' => 3]
 		];
 	}
 	# -------------------------------------------------------
 	private static function communitySections() : array {
 		return [
-			'user_generated_content' => self::native(['user_generated_content'], _t('Moderación de comentarios y etiquetas que dejan los usuarios.')),
-			'pawtucket' => self::native(['pawtucket'], _t('Páginas y textos del sitio público (Pawtucket), si la institución lo usa.'))
+			'user_generated_content' => self::native(['user_generated_content'], Modulo2I18n::t('Moderation of comments and tags left by users.')),
+			'pawtucket' => self::native(['pawtucket'], Modulo2I18n::t('Pages and texts of the public site (Pawtucket), if the institution uses it.'))
 		];
 	}
 	# -------------------------------------------------------
 	private static function monitoringSections() : array {
 		return [
-			'logs' => self::native(['logs'], _t('Registros de cambios, eventos, búsquedas y descargas.')),
-			'statistics' => self::native(['statistics'], _t('Estadísticas de uso del sistema.'))
+			'logs' => self::native(['logs'], Modulo2I18n::t('Logs of changes, events, searches and downloads.')),
+			'statistics' => self::native(['statistics'], Modulo2I18n::t('System usage statistics.'))
 		];
 	}
 	# -------------------------------------------------------

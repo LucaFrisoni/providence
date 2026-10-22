@@ -78,13 +78,34 @@ final class Modulo2VersioningIntegrationTest extends TestCase {
 		$client = Modulo2ServiceClient::fromConfig($config);
 
 		$info = $client->getStateInfo(Modulo2State::fromConfig($config)->current());
-		$versions = $client->getVersions();
+		$versions = $client->getVersions(Modulo2Constants::VERSIONS_PAGE_SIZE)['versions'];
 
 		$this->assertArrayHasKey('version', $info);
 		$ids = array_column($versions, 'id');
 		$sorted = $ids;
 		rsort($sorted);
 		$this->assertSame($sorted, $ids);
+	}
+	# -------------------------------------------------------
+	// Exportar la configuración en base tarda segundos: se reutiliza mientras sus tablas no cambien
+	#[TestDox('La exportación de la base se reutiliza mientras no cambie, y se rehace cuando cambia una lista')]
+	public function testDatabaseExportIsReusedUntilItChanges() : void {
+		$first = Modulo2State::exportDatabase();
+		$fingerprint = Modulo2State::databaseFingerprint();
+		$this->assertSame($first, Modulo2State::exportDatabase());
+
+		$list = new ca_lists();
+		$list->load(['list_code' => 'object_types']);
+		$list->setMode(ACCESS_WRITE);
+		$item = $list->addItem('m2test_cache', true, false, null, null, 'm2test_cache');
+		try {
+			$item->addLabel(['name_singular' => 'M2 cache', 'name_plural' => 'M2 cache'], ca_locales::codeToID('en_US'), null, true);
+			$this->assertNotSame($fingerprint, Modulo2State::databaseFingerprint());
+			$this->assertStringContainsString('m2test_cache', Modulo2State::exportDatabase());
+		} finally {
+			$item->setMode(ACCESS_WRITE);
+			$item->delete(true, ['hard' => true]);
+		}
 	}
 	# -------------------------------------------------------
 }

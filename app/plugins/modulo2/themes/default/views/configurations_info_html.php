@@ -11,8 +11,8 @@
 $catalog = $this->getVar('catalog');
 $e = fn($text) => htmlspecialchars((string)$text, ENT_QUOTES, 'UTF-8');
 $groups = [
-	Modulo2Constants::SCOPE_DATA_TYPE => _t('Por tipo de dato'),
-	Modulo2Constants::SCOPE_GLOBAL => _t('De toda la instalación')
+	Modulo2Constants::SCOPE_DATA_TYPE => Modulo2I18n::t('By data type'),
+	Modulo2Constants::SCOPE_GLOBAL => Modulo2I18n::t('Whole installation')
 ];
 // Texto en el que busca el buscador: nombre de la sección y nombre y claves de sus configuraciones
 $search_text = function(array $section) {
@@ -35,8 +35,8 @@ $search_text = function(array $section) {
 	.m2-search-hidden { display: none; }
 </style>
 <div class="m2-sidebar" id="m2-sidebar">
-	<div class="m2-search"><input type="search" id="m2-search" placeholder="<?= $e(_t('Buscar configuración…')); ?>" aria-label="<?= $e(_t('Buscar configuración')); ?>"/></div>
-	<p class="m2-no-results" id="m2-no-results"><?= _t('Ninguna configuración coincide con la búsqueda.'); ?></p>
+	<div class="m2-search"><input type="search" id="m2-search" placeholder="<?= $e(Modulo2I18n::t('Search settings…')); ?>" aria-label="<?= $e(Modulo2I18n::t('Search settings')); ?>"/></div>
+	<p class="m2-no-results" id="m2-no-results"><?= Modulo2I18n::t('No setting matches the search.'); ?></p>
 <?php foreach ($groups as $scope => $title) { ?>
 	<div class="m2-sidebar-group">
 		<h2><a href="#" data-m2-toggle="m2-group-<?= $e($scope); ?>"><?= $e($title); ?> &rsaquo;</a></h2>
@@ -50,9 +50,9 @@ $search_text = function(array $section) {
 	</div>
 <?php } ?>
 	<div class="m2-sidebar-group">
-		<h2><a href="#" data-m2-toggle="m2-group-database"><?= _t('En la base de datos'); ?> &rsaquo;</a></h2>
+		<h2><a href="#" data-m2-toggle="m2-group-database"><?= Modulo2I18n::t('In the database'); ?> &rsaquo;</a></h2>
 		<ul class="arrow" id="m2-group-database">
-			<li data-m2-section="database" data-m2-search="<?= $e(_t('Configuración en la base de datos').' '.implode(' ', Modulo2DatabaseConfiguration::labels())); ?>"><a href="#m2-section-database"><?= _t('Listas, metadatos, interfaces…'); ?></a></li>
+			<li data-m2-section="database" data-m2-search="<?= $e(Modulo2I18n::t('Configuration in the database').' '.implode(' ', Modulo2DatabaseConfiguration::labels())); ?>"><a href="#m2-section-database"><?= Modulo2I18n::t('Lists, metadata, interfaces…'); ?></a></li>
 		</ul>
 	</div>
 </div>

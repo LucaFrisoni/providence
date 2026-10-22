@@ -16,12 +16,12 @@ $e = fn($text) => htmlspecialchars((string)$text, ENT_QUOTES, 'UTF-8');
 	.m2-history-status { padding: 10px; text-align: center; color: #666; font-size: 12px; }
 </style>
 <div class="m2-page">
-<h1><?= _t('Historial de cambios'); ?></h1>
-<p><?= _t('Todos los cambios de configuración y las restauraciones de versiones, del más reciente al más antiguo.'); ?></p>
+<h1><?= Modulo2I18n::t('Change history'); ?></h1>
+<p><?= Modulo2I18n::t('All the setting changes and version restores, from the newest to the oldest.'); ?></p>
 <?php if ($error) { ?>
 	<div class="notification-error-box"><?= $e($error); ?></div>
 <?php } elseif ($rows_html === '') { ?>
-	<p><?= _t('Todavía no hay cambios registrados.'); ?></p>
+	<p><?= Modulo2I18n::t('There are no changes yet.'); ?></p>
 <?php } else { ?>
 <div class="m2-history" id="m2-history">
 	<table class="m2-table">
@@ -30,8 +30,8 @@ $e = fn($text) => htmlspecialchars((string)$text, ENT_QUOTES, 'UTF-8');
 		</colgroup>
 		<thead>
 			<tr>
-				<th><?= _t('Cuándo'); ?></th><th><?= _t('Quién'); ?></th><th><?= _t('Configuración'); ?></th>
-				<th><?= _t('Antes'); ?></th><th><?= _t('Después'); ?></th><th><?= _t('Resultado'); ?></th><th><?= _t('Detalle'); ?></th>
+				<th><?= Modulo2I18n::t('When'); ?></th><th><?= Modulo2I18n::t('Who'); ?></th><th><?= Modulo2I18n::t('Setting'); ?></th>
+				<th><?= Modulo2I18n::t('Before'); ?></th><th><?= Modulo2I18n::t('After'); ?></th><th><?= Modulo2I18n::t('Result'); ?></th><th><?= Modulo2I18n::t('Details'); ?></th>
 			</tr>
 		</thead>
 		<tbody id="m2-history-rows"><?= $rows_html; ?></tbody>
@@ -49,16 +49,16 @@ $e = fn($text) => htmlspecialchars((string)$text, ENT_QUOTES, 'UTF-8');
 			var next = status.getAttribute('data-next');
 			if (loading || !next) { return; }
 			loading = true;
-			status.textContent = <?= json_encode(_t('Cargando…')); ?>;
+			status.textContent = <?= json_encode(Modulo2I18n::t('Loading…')); ?>;
 			var url = status.getAttribute('data-url') + '/before/' + encodeURIComponent(next);
 			fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' }, credentials: 'same-origin' })
 				.then(function(response) { return response.json(); })
 				.then(function(page) {
 					rows.insertAdjacentHTML('beforeend', page.html || '');
 					status.setAttribute('data-next', page.next || '');
-					status.textContent = page.error || (page.next ? '' : <?= json_encode(_t('No hay cambios más antiguos.')); ?>);
+					status.textContent = page.error || (page.next ? '' : <?= json_encode(Modulo2I18n::t('There are no older changes.')); ?>);
 				})
-				.catch(function() { status.textContent = <?= json_encode(_t('No se pudieron cargar más cambios.')); ?>; })
+				.catch(function() { status.textContent = <?= json_encode(Modulo2I18n::t('More changes could not be loaded.')); ?>; })
 				.then(function() { loading = false; });
 		};
 		new IntersectionObserver(function(entries) {

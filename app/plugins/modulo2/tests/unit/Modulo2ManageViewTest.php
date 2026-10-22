@@ -19,8 +19,19 @@ final class Modulo2ManageViewTest extends TestCase {
 		$html = $this->render();
 
 		$this->assertStringContainsString('<h3><a href="/index.php/administrate/access/Users/ListUsers">Access control</a></h3>', $html);
-		$this->assertStringContainsString('m2-manage-status-native">'._t('Pantalla de Providence').'</span>', $html);
+		$this->assertStringContainsString('m2-manage-status-native">'._t('Providence screen').'</span>', $html);
 		$this->assertStringContainsString('<li><a href="/index.php/administrate/access/Roles/ListRoles">Access roles</a></li>', $html);
+	}
+	# -------------------------------------------------------
+	// Las pantallas propias se ven como las demás: sin etiqueta ni color propio
+	#[TestDox('Las pantallas del módulo no llevan etiqueta de estado ni un estilo distinto')]
+	public function testOwnScreensLookLikeTheOthers() : void {
+		$html = $this->render();
+
+		$this->assertStringContainsString('<h3><a href="/index.php/modulo2/Configurations/Index">New settings</a></h3>', $html);
+		$this->assertStringNotContainsString('m2-manage-status-improved', $html);
+		$this->assertStringNotContainsString('m2-manage-card m2-manage-own', $html);
+		$this->assertSame(3, substr_count($html, '<div class="m2-manage-card" '));
 	}
 	# -------------------------------------------------------
 	// Las secciones de otro módulo quedan marcadas para que su responsable las complete
@@ -28,7 +39,7 @@ final class Modulo2ManageViewTest extends TestCase {
 	public function testOwnerNote() : void {
 		$html = $this->render();
 
-		$this->assertStringContainsString(_t('La completa el %1. Por ahora enlaza a la pantalla de Providence.', 'Módulo 3 (prueba)'), $html);
+		$this->assertStringContainsString(_t('Completed by %1. For now it links to the Providence screen.', 'Módulo 3 (prueba)'), $html);
 		$this->assertSame(1, substr_count($html, 'class="m2-manage-owner"'));
 	}
 	# -------------------------------------------------------
@@ -53,6 +64,9 @@ final class Modulo2ManageViewTest extends TestCase {
 	# -------------------------------------------------------
 	private function sampleGroups(string $sets_label) : array {
 		return [
+			'configuration' => ['title' => 'Configuration', 'sections' => [
+				['id' => 'configurations', 'label' => 'New settings', 'description' => 'Settings', 'status' => 'improved', 'owner' => null, 'url' => '/index.php/modulo2/Configurations/Index', 'links' => []]
+			]],
 			'work' => ['title' => 'Mi trabajo', 'sections' => [
 				['id' => 'sets', 'label' => $sets_label, 'description' => 'Sets', 'status' => 'native', 'owner' => null, 'url' => '/index.php/manage/Set/ListSets', 'links' => []]
 			]],

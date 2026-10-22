@@ -111,6 +111,8 @@ pub fn change(change: &Change) -> Json {
         new_value: parsed(&change.new_value),
         version_before: change.version_before,
         version_after: change.version_after,
+        version_before_number: change.version_before_number,
+        version_after_number: change.version_after_number,
         result: &change.result,
         message: change.message.as_deref(),
     }
@@ -122,6 +124,14 @@ pub fn change_page(changes: &[Change], limit: u32) -> Json {
         .then(|| changes.last().map(|c| c.id))
         .flatten();
     json_object! { changes: changes.iter().map(change).collect::<Vec<Json>>(), next_before: next_before }
+}
+
+/// Página de versiones y desde dónde pedir la siguiente (null si no hay más).
+pub fn version_page(versions: &[Version], limit: u32) -> Json {
+    let next_before = (versions.len() as u32 == limit)
+        .then(|| versions.last().map(|v| v.id))
+        .flatten();
+    json_object! { versions: versions.iter().map(version).collect::<Vec<Json>>(), next_before: next_before }
 }
 
 #[cfg(test)]
@@ -163,6 +173,8 @@ mod tests {
             version_after: None,
             result: "applied".into(),
             message: None,
+            version_before_number: None,
+            version_after_number: None,
         }
     }
 

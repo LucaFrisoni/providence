@@ -33,7 +33,7 @@ class Modulo2ValueFormatter {
 	public static function text($value, array $setting, array $table_names = []) : string {
 		$value = self::displayed($value, $setting);
 		switch ($setting['kind'] ?? null) {
-			case Modulo2Constants::KIND_BOOLEAN: return $value ? _t('Sí') : _t('No');
+			case Modulo2Constants::KIND_BOOLEAN: return $value ? Modulo2I18n::t('Yes') : Modulo2I18n::t('No');
 			case Modulo2Constants::KIND_CHOICE: return self::optionLabel((string)$value, $setting['options'] ?? []);
 			case Modulo2Constants::KIND_TABLE_LIST: $value = array_map(fn($t) => $table_names[$t] ?? $t, $value); break;
 			case Modulo2Constants::KIND_COLOR: return strlen($value) ? '#'.$value : '—';
@@ -44,7 +44,7 @@ class Modulo2ValueFormatter {
 		return strlen((string)$value) ? (string)$value : '—';
 	}
 	# -------------------------------------------------------
-	/** Nombre para mostrar de una entrada: la configuración y, si es por tipo de dato, cuál ("Activo · Lugares") */
+	/** Nombre para mostrar de una entrada: la configuración y, si es por tipo de dato, cuál ("Enabled · Places") */
 	public static function entryLabel(array $setting, array $entry, array $table_names = []) : string {
 		$data_type = $entry['data_type'] ?? null;
 		return $setting['label'].($data_type ? ' · '.ucfirst($table_names[$data_type] ?? $data_type) : '');
@@ -65,10 +65,10 @@ class Modulo2ValueFormatter {
 		return join("\n", $lines);
 	}
 	# -------------------------------------------------------
-	/** "1 elemento", "3 elementos" o "—" si no hay ninguno */
+	/** "1 item", "3 items" o "—" si no hay ninguno */
 	private static function countText(int $count) : string {
 		if (!$count) { return '—'; }
-		return ($count === 1) ? _t('1 elemento') : _t('%1 elementos', $count);
+		return ($count === 1) ? Modulo2I18n::t('1 item') : Modulo2I18n::t('%1 items', $count);
 	}
 	# -------------------------------------------------------
 	private static function scalarText($value) : string {

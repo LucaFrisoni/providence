@@ -10,10 +10,10 @@ $groups = $this->getVar('groups') ?? [];
 $module_names = $this->getVar('module_names') ?? [];
 
 $e = fn($text) => htmlspecialchars((string)$text, ENT_QUOTES, 'UTF-8');
+// Las pantallas propias no llevan etiqueta: se ven como las demás
 $status_labels = [
-	Modulo2ManageMap::STATUS_IMPROVED => _t('Del módulo'),
-	Modulo2ManageMap::STATUS_PLANNED => _t('Mejora prevista'),
-	Modulo2ManageMap::STATUS_NATIVE => _t('Pantalla de Providence')
+	Modulo2ManageMap::STATUS_PLANNED => Modulo2I18n::t('Improvement planned'),
+	Modulo2ManageMap::STATUS_NATIVE => Modulo2I18n::t('Providence screen')
 ];
 // Texto en el que busca el filtro: nombre, descripción y nombres de las páginas de la sección
 $search_text = fn(array $section) => join(' ', array_merge([$section['label'], $section['description']], array_column($section['links'], 'label')));
@@ -34,9 +34,7 @@ $search_text = fn(array $section) => join(' ', array_merge([$section['label'], $
 	.m2-manage-card li a { color: #0b5e8a; font-size: 12px; text-decoration: underline; text-underline-offset: 2px; }
 	.m2-manage-card li a::before { content: "› "; text-decoration: none; display: inline-block; margin-right: 2px; color: #138290; }
 	.m2-manage-card li a:hover { color: #138290; text-decoration-thickness: 2px; }
-	.m2-manage-card.m2-manage-own { border-color: #8fcf9e; background: #f6fcf7; }
 	.m2-manage-status { display: inline-block; padding: 0 6px; border-radius: 3px; font-size: 10px; text-transform: uppercase; }
-	.m2-manage-status-improved { background: #d1f0d8; color: #1e5b2c; }
 	.m2-manage-status-planned { background: #fff3cd; color: #664d03; }
 	.m2-manage-status-native { background: #eee; color: #555; }
 	.m2-manage-owner { margin-top: 6px; padding: 4px 6px; background: #eef4fb; border-left: 3px solid #5b8ec9; font-size: 11px; color: #33547a; }
@@ -45,22 +43,24 @@ $search_text = fn(array $section) => join(' ', array_merge([$section['label'], $
 </style>
 
 <div class="m2-manage" id="m2-manage">
-<h1><?= _t('Panel de gestión'); ?></h1>
-<p><?= _t('Todo lo que se administra en Providence, agrupado por tema: las secciones de Manage y las configuraciones que agrega este módulo. Solo aparece lo que tu usuario puede usar.'); ?></p>
+<h1><?= Modulo2I18n::t('Management panel'); ?></h1>
+<p><?= Modulo2I18n::t('Everything that is managed in Providence, grouped by topic. Only what your user can use is shown.'); ?></p>
 
 <div class="m2-manage-filter">
-	<input type="search" id="m2-manage-search" placeholder="<?= $e(_t('Buscar en el panel…')); ?>" aria-label="<?= $e(_t('Buscar en el panel')); ?>"/>
+	<input type="search" id="m2-manage-search" placeholder="<?= $e(Modulo2I18n::t('Search…')); ?>" aria-label="<?= $e(Modulo2I18n::t('Search')); ?>"/>
 </div>
-<p class="m2-manage-none" id="m2-manage-none"><?= _t('Nada coincide con la búsqueda.'); ?></p>
+<p class="m2-manage-none" id="m2-manage-none"><?= Modulo2I18n::t('Nothing matches the search.'); ?></p>
 
 <?php foreach ($groups as $group_id => $group) { ?>
 <div class="m2-manage-block" id="m2-manage-<?= $e($group_id); ?>">
 	<h2 class="m2-manage-group"><?= $e($group['title']); ?></h2>
 	<div class="m2-manage-grid">
 <?php 	foreach ($group['sections'] as $section) { ?>
-		<div class="m2-manage-card<?= ($section['status'] === Modulo2ManageMap::STATUS_IMPROVED) ? ' m2-manage-own' : ''; ?>" data-m2-search="<?= $e($search_text($section)); ?>">
+		<div class="m2-manage-card" data-m2-search="<?= $e($search_text($section)); ?>">
 			<h3><a href="<?= $e($section['url']); ?>"><?= $e($section['label']); ?></a></h3>
-			<span class="m2-manage-status m2-manage-status-<?= $e($section['status']); ?>"><?= $e($status_labels[$section['status']] ?? ''); ?></span>
+<?php 		if (isset($status_labels[$section['status']])) { ?>
+			<span class="m2-manage-status m2-manage-status-<?= $e($section['status']); ?>"><?= $e($status_labels[$section['status']]); ?></span>
+<?php 		} ?>
 			<p><?= $e($section['description']); ?></p>
 <?php 		if ($section['links']) { ?>
 			<ul>
@@ -70,7 +70,7 @@ $search_text = fn(array $section) => join(' ', array_merge([$section['label'], $
 			</ul>
 <?php 		} ?>
 <?php 		if ($section['owner']) { ?>
-			<div class="m2-manage-owner"><?= $e(_t('La completa el %1. Por ahora enlaza a la pantalla de Providence.', $module_names[$section['owner']] ?? _t('módulo %1', $section['owner']))); ?></div>
+			<div class="m2-manage-owner"><?= $e(Modulo2I18n::t('Completed by %1. For now it links to the Providence screen.', $module_names[$section['owner']] ?? Modulo2I18n::t('module %1', $section['owner']))); ?></div>
 <?php 		} ?>
 		</div>
 <?php 	} ?>

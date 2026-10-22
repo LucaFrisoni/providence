@@ -25,7 +25,7 @@ pub fn validate(kind: Kind, value: &Json) -> Result<Validated, String> {
         Kind::SubtypeList => code_list(value, is_subtype_code, true),
         Kind::TableList => code_list(value, is_table_name, false),
         Kind::Structured | Kind::KeyOrder => {
-            Err("esta configuración todavía no se puede editar desde el módulo".into())
+            Err("this setting cannot be changed from here yet".into())
         }
     }
 }
@@ -33,7 +33,7 @@ pub fn validate(kind: Kind, value: &Json) -> Result<Validated, String> {
 fn boolean(value: &Json) -> Result<Validated, String> {
     let on = value
         .as_bool()
-        .ok_or("el valor tiene que ser sí o no (true o false)")?;
+        .ok_or("the value must be yes or no (true or false)")?;
     Ok(Validated {
         conf: if on { "1" } else { "0" }.into(),
         normalized: on.into(),
@@ -42,8 +42,8 @@ fn boolean(value: &Json) -> Result<Validated, String> {
 
 fn number(value: &Json) -> Result<Validated, String> {
     let number = value.as_u64().filter(|n| *n <= MAX_NUMBER);
-    let number = number
-        .ok_or_else(|| format!("el valor tiene que ser un número entero entre 0 y {MAX_NUMBER}"))?;
+    let number =
+        number.ok_or_else(|| format!("the value must be a whole number from 0 to {MAX_NUMBER}"))?;
     Ok(Validated {
         conf: number.to_string().into(),
         normalized: number.into(),
@@ -55,11 +55,11 @@ fn text(value: &Json) -> Result<&str, String> {
     let text = value.as_str().ok_or("el valor tiene que ser un texto")?;
     if text.chars().count() > MAX_TEXT_CHARS {
         return Err(format!(
-            "el texto no puede tener más de {MAX_TEXT_CHARS} caracteres"
+            "the text cannot be longer than {MAX_TEXT_CHARS} characters"
         ));
     }
     if text.chars().any(char::is_control) {
-        return Err("el texto no puede tener saltos de línea ni caracteres de control".into());
+        return Err("the text cannot have line breaks or control characters".into());
     }
     Ok(text)
 }
@@ -68,7 +68,7 @@ fn color(value: &Json) -> Result<Validated, String> {
     let color = value
         .as_str()
         .filter(|c| c.len() == 6 && c.chars().all(|ch| ch.is_ascii_hexdigit()));
-    let color = color.ok_or("el color tiene que tener seis dígitos hexadecimales, sin #")?;
+    let color = color.ok_or("the color must have six hexadecimal digits, without #")?;
     Ok(same(color.to_ascii_lowercase().into()))
 }
 
@@ -76,7 +76,7 @@ fn choice(value: &Json, options: &[ChoiceOption]) -> Result<Validated, String> {
     let chosen = value
         .as_str()
         .filter(|v| options.iter().any(|option| option.value == *v));
-    let chosen = chosen.ok_or("el valor no es una de las opciones de la configuración")?;
+    let chosen = chosen.ok_or("the value is not one of the options of the setting")?;
     Ok(same(chosen.into()))
 }
 
@@ -92,9 +92,9 @@ fn code_list(value: &Json, valid: fn(&str) -> bool, sort: bool) -> Result<Valida
         let code = item
             .as_str()
             .filter(|code| valid(code))
-            .ok_or("la lista tiene un código con un formato no válido")?;
+            .ok_or("the list has a code with an invalid format")?;
         if codes.contains(&code) {
-            return Err(format!("la lista repite el código {code}"));
+            return Err(format!("the list repeats the code {code}"));
         }
         codes.push(code);
     }
