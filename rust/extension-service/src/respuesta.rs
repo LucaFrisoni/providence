@@ -2,7 +2,7 @@
 
 use json::JsonValue;
 
-use crate::constants::{CODIGO_NO_ENCONTRADO, CODIGO_OK, CODIGO_PETICION_INCORRECTA};
+use crate::constants::{CODIGO_NO_ENCONTRADO, CODIGO_OK, CODIGO_PETICION_INCORRECTA, CODIGO_ERROR_INTERNO};
 
 #[derive(Debug, PartialEq, Eq)]
 //estado y cuerpo de la respuesta http
@@ -35,6 +35,14 @@ impl Respuesta{
             cuerpo: json::object! { error: mensaje }.dump(),
         }
     }
+
+    //respuesta 500 Error interno, por ej la base de la extensión no responde
+    pub fn error_interno(mensaje: &str) -> Self {
+        Self {
+            estado: CODIGO_ERROR_INTERNO,
+            cuerpo: json::object! { error: mensaje }.dump(),
+        }
+    }
 }
 
 #[cfg(test)]
@@ -47,5 +55,13 @@ mod tests {
         let respuesta = Respuesta::no_encontrado("ruta inexistente");
         assert_eq!(respuesta.estado, CODIGO_NO_ENCONTRADO);
         assert_eq!(respuesta.cuerpo, r#"{"error":"ruta inexistente"}"#);
+    }
+
+    /// Respuesta::error_interno responde 500 con {"error": mensaje}.
+    #[test]
+    fn internal_error_responds_500_with_error_message() {
+        let respuesta = Respuesta::error_interno("sin base");
+        assert_eq!(respuesta.estado, CODIGO_ERROR_INTERNO);
+        assert_eq!(respuesta.cuerpo, r#"{"error":"sin base"}"#);
     }
 }

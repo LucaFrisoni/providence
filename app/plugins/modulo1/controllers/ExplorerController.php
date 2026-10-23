@@ -41,6 +41,66 @@ class ExplorerController extends ActionController {
 	public function Relaciones() {
 		$this->mostrar('getVistaRelaciones', 'vista', 'explorer_relaciones_html.php');
 	}
+	
+	//6.5: perfil del modelo y de su configuración. Con el parámetro `accion` también registra una decisión o guarda una versión y muestra el perfil ya actualizado.
+	public function Perfil() {
+		if (!$this->request->user->canDoAction('can_use_modulo1')) { return; }
+		try {
+			$cliente = $this->createClient();
+			$modelo = (new Modulo1ModeloReader())->leerModelo();
+			$this->aplicarAccion($cliente, $modelo);
+			$this->view->setVar('vista', $cliente->getPerfil($modelo));
+		} catch (Modulo1ServiceException $e) {
+			$this->view->setVar('error', $e->getMessage());
+		}
+		$this->render('explorer_perfil_html.php');
+	}
+	
+	//6.5: versiones guardadas del perfil
+	public function Versiones() {
+		if (!$this->request->user->canDoAction('can_use_modulo1')) { return; }
+		try {
+			$cliente = $this->createClient();
+			$this->view->setVar('versiones', $cliente->getVersiones()['versiones']);
+			$ver = (int)$this->request->getParameter('ver', pString);
+			if ($ver) { $this->view->setVar('detalle', $cliente->getVersion($ver)); }
+			$this->compararSiSePidio($cliente);
+		} catch (Modulo1ServiceException $e) {
+			$this->view->setVar('error', $e->getMessage());
+		}
+		$this->render('explorer_versiones_html.php');
+	}
+	
+	//compara y deja el resultado en la variable 'comparacion'
+	private function compararSiSePidio(Modulo1ServiceClient $cliente) {
+		$desde = (int)$this->request->getParameter('desde', pString);
+		if (!$desde) { return; }
+		$hasta = (int)$this->request->getParameter('hasta', pString);
+		$modelo = $hasta ? [] : (new Modulo1ModeloReader())->leerModelo();
+		$this->view->setVar('comparacion', $cliente->compararVersiones($desde, $hasta ?: null, $modelo));
+	}
+	
+	private function aplicarAccion(Modulo1ServiceClient $cliente, array $modelo) {
+		$accion = $this->request->getParameter('accion', pString);
+		$texto = function($nombre) { return trim((string)$this->request->getParameter($nombre, pString)); };
+		try {
+			if ($accion === 'decision') {
+				$cliente->registrarDecision($texto('referencia'), $texto('proposito'), $this->usuario());
+				$this->view->setVar('aviso', _t('Se actualizó la decisión.'));
+			} elseif ($accion === 'version') {
+				$resultado = $cliente->guardarVersion($modelo, $texto('nombre'), $texto('descripcion'), $this->usuario());
+				$this->view->setVar('aviso', $resultado['creada'] ? _t('Se guardó la versión «%1».', $resultado['version']['nombre']) : $resultado['mensaje']);
+			}
+		} catch (Modulo1ServiceException $e) {
+			$this->view->setVar('aviso', $e->getMessage());
+			$this->view->setVar('aviso_error', true);
+		}
+	}
+	
+	private function usuario() : array {
+		$id = (int)$this->request->getUserID();
+		return ['id' => $id, 'nombre' => (string)$this->request->user->get('user_name') ?: 'usuario '.$id];
+	}
 
 	// Lee el modelo, se lo manda al servicio y muestra la vista.
 	private function mostrar(string $metodo_cliente, string $variable, string $vista) {

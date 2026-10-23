@@ -142,6 +142,15 @@ pub struct Configuracion {
     pub valor: String,
 }
 
+//decision institucional que explica una parte del modelo o de su configuracion (RF-MODELO-06)
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Decision {
+    pub referencia: String, //parte del modelo a la que se refiere, con la clave que le da el perfil
+    pub proposito: String,  //propóoito o criterio institucional que explica la decision
+    pub usuario: String, //quien la registro
+    pub fecha: String, //cuando se registro
+}
+
 
 #[cfg(test)]
 mod tests {

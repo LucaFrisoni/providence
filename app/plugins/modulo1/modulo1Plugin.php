@@ -54,6 +54,20 @@ class modulo1Plugin extends BaseApplicationPlugin {
 					'is_enabled' => 1,
 					'requires' => [],
 					'parameters' => []
+ 				], 
+				'perfil' => [
+					'displayName' => _t('Perfil del modelo'),
+					'default' => ['module' => 'modulo1', 'controller' => 'Explorer', 'action' => 'Perfil'],
+					'is_enabled' => 1,
+					'requires' => [],
+					'parameters' => []
+				],
+				'versiones' => [
+					'displayName' => _t('Versiones del perfil'),
+					'default' => ['module' => 'modulo1', 'controller' => 'Explorer', 'action' => 'Versiones'],
+					'is_enabled' => 1,
+					'requires' => [],
+					'parameters' => []
  				]
 			]
 		];

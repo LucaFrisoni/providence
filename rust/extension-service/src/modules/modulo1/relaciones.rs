@@ -46,7 +46,7 @@ fn relacion_json(relacion: &Relacion, modelo: &Modelo) -> JsonValue {
 }
 
 //una relacion entre registros de la misma entidad forma un grafo; entre entidades distintas no
-fn clase_de(relacion: &Relacion) -> &'static str {
+pub(super) fn clase_de(relacion: &Relacion) -> &'static str {
     if relacion.origen == relacion.destino {
         CLASE_GRAFO
     } else {

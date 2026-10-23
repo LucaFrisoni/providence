@@ -23,10 +23,10 @@ use respuesta::Respuesta;
 use mysql::Pool;
 
 fn main() {
-    // Todavía ninguna ruta usa la base: se conecta al iniciar para fallar temprano si no responde
-    // y para crear o actualizar sus tablas
+    // Se conecta al iniciar para fallar temprano si la base no responde y para crear o actualizar sus tablas. El pool se guarda para los módulos que usan la base (hoy, el módulo 1)
     let pool = connect_database();
     run_migrations(&pool);
+    db::guardar_pool(pool);
     let addr = listen_addr();
     let servidor =
         Server::http(addr).unwrap_or_else(|e| panic!("No se pudo escuchar en {addr}: {e}"));

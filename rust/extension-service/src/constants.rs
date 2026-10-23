@@ -45,6 +45,7 @@ pub const MODULO7: &str = "modulo7";
 pub const CODIGO_OK: u16 = 200;
 pub const CODIGO_NO_ENCONTRADO: u16 = 404;
 pub const CODIGO_PETICION_INCORRECTA: u16 = 400;
+pub const CODIGO_ERROR_INTERNO: u16 = 500;
 
 //cabecera de la respuesta json
 pub const CABECERA_CONTENT_TYPE: &str = "Content-Type";
@@ -134,6 +135,81 @@ pub const NOTA_MULTIPLICIDAD: &str = "Providence no guarda un límite de cantida
 cada relación es una fila de una tabla de enlace, así que un registro puede relacionarse con varios \
 (muchos a muchos). En las jerarquías cada registro tiene un solo padre (uno a muchos).";
 
+//perfil del modelo y de su configuración (6.5)
+
+//prefijos de las claves con que el perfil identifica cada una de sus partes
+pub const PREFIJO_ENTIDAD: &str = "entidad:";
+pub const PREFIJO_ELEMENTO: &str = "elemento:";
+pub const PREFIJO_CONTENEDOR: &str = "contenedor:";
+pub const PREFIJO_RELACION: &str = "relacion:";
+pub const PREFIJO_CONFIGURACION: &str = "configuracion:";
+pub const PREFIJO_DECISION: &str = "decision:";
+
+//campos del json del perfil
+pub const CAMPO_COMPONENTES: &str = "componentes";
+pub const CAMPO_CONTENEDORES: &str = "contenedores";
+pub const CAMPO_DECISIONES: &str = "decisiones";
+pub const CAMPO_DECISION: &str = "decision";
+pub const CAMPO_CLAVE: &str = "clave";
+pub const CAMPO_TEXTO: &str = "texto";
+pub const CAMPO_REFERENCIA: &str = "referencia";
+pub const CAMPO_PROPOSITO: &str = "proposito";
+pub const CAMPO_USUARIO: &str = "usuario";
+pub const CAMPO_FECHA: &str = "fecha";
+pub const CAMPO_VIGENTE: &str = "vigente";
+
+//campos del json de la comparacion entre dos perfiles
+pub const CAMPO_AGREGADOS: &str = "agregados";
+pub const CAMPO_ELIMINADOS: &str = "eliminados";
+pub const CAMPO_MODIFICADOS: &str = "modificados";
+pub const CAMPO_CAMBIOS: &str = "cambios";
+pub const CAMPO_CAMPO: &str = "campo";
+pub const CAMPO_ANTES: &str = "antes";
+pub const CAMPO_DESPUES: &str = "despues";
+pub const CAMPO_SIN_CAMBIOS: &str = "sin_cambios";
+
+//texto con que se muestra un valor vacio en una comparacion
+pub const TEXTO_VACIO: &str = "(vacío)";
+
+//rutas y datos del perfil guardado (decisiones y versiones del 6.5)
+
+//rutas relativas a `/api/modulo1` del perfil
+pub const RUTA_PERFIL: &str = "/perfil";
+pub const RUTA_PERFIL_DECISION: &str = "/perfil/decision";
+pub const RUTA_PERFIL_VERSION: &str = "/perfil/version";
+pub const RUTA_PERFIL_VERSIONES: &str = "/perfil/versiones";
+pub const RUTA_PERFIL_VERSION_VER: &str = "/perfil/version/ver";
+pub const RUTA_PERFIL_COMPARAR: &str = "/perfil/comparar";
+
+//campos del json de las respuestas y los pedidos del perfil
+pub const CAMPO_ID: &str = "id";
+pub const CAMPO_PERFIL: &str = "perfil";
+pub const CAMPO_REFERENCIAS: &str = "referencias";
+pub const CAMPO_VERSION: &str = "version";
+pub const CAMPO_VERSIONES: &str = "versiones";
+pub const CAMPO_ULTIMA_VERSION: &str = "ultima_version";
+pub const CAMPO_HAY_CAMBIOS: &str = "hay_cambios";
+pub const CAMPO_HUELLA: &str = "huella";
+pub const CAMPO_CREADA: &str = "creada";
+pub const CAMPO_MENSAJE: &str = "mensaje";
+pub const CAMPO_ACCION: &str = "accion";
+pub const CAMPO_DESDE: &str = "desde";
+pub const CAMPO_HASTA: &str = "hasta";
+pub const CAMPO_MODELO: &str = "modelo";
+
+//qué se hizo con una decision
+pub const ACCION_GUARDADA: &str = "guardada";
+pub const ACCION_ELIMINADA: &str = "eliminada";
+
+pub const MAX_REFERENCIA: usize = 255;
+pub const MAX_PROPOSITO: usize = 2000;
+pub const MAX_NOMBRE_VERSION: usize = 255;
+pub const MAX_DESCRIPCION_VERSION: usize = 2000;
+
+//mensajes de error del perfil guardado
+pub const MENSAJE_SIN_BASE: &str = "no se pudo acceder a la base de la extensión";
+pub const MENSAJE_SIN_CAMBIOS: &str = "El perfil no cambió desde la última versión, no se creó una nueva.";
+
 
 /// ----------------------------------------------------Módulo 2: ruta del catálogo de configuraciones, relativa a `/api/modulo2`.
 pub const CATALOG_ROUTE: &str = "/catalog";
@@ -169,6 +245,9 @@ pub const ER_DATA_TRUNCATED: u16 = 1265;
 /// Pruebas (db): base de sistema de MySQL, a la que el servicio tampoco debe acceder.
 #[cfg(test)]
 pub const MYSQL_SYSTEM_DB: &str = "mysql";
+/// Pruebas (db): tablas que crea la migración creando_tablas_modulo1.
+#[cfg(test)]
+pub const MODULO1_TABLES: [&str; 2] = ["m1_decisions", "m1_profile_versions"];
 /// Pruebas (db): tablas que crea la migración creando_tablas_modulo2.
 #[cfg(test)]
 pub const MODULO2_TABLES: [&str; 3] = ["m2_versions", "m2_version_files", "m2_change_log"];

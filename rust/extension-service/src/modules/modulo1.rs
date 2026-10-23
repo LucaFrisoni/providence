@@ -7,6 +7,9 @@ mod arbol;
 mod entidades;
 mod uso;
 mod relaciones;
+mod perfil;
+pub(crate) mod almacen;
+mod servicio_perfil;
 #[allow(dead_code)]
 mod dominio;
 #[allow(dead_code)]
@@ -22,9 +25,10 @@ use self::entidades::vista_de_entidades;
 use self::uso::vista_de_elementos;
 use self::relaciones::vista_de_relaciones;
 use self::modelo::Modelo;
+use self::servicio_perfil::{comparar_versiones, con_almacen, guardar_version, listar_versiones, registrar_decision, ver_perfil, ver_version,};
 use crate::respuesta::Respuesta;
 use super::health_response;
-use crate::constants::{HEALTH_ROUTE, MODULO1, RUTA_ARBOL_ELEMENTOS, RUTA_VISTA_ENTIDADES, RUTA_VISTA_USOS, RUTA_VISTA_RELACIONES,};
+use crate::constants::{HEALTH_ROUTE, MODULO1, RUTA_ARBOL_ELEMENTOS, RUTA_PERFIL, RUTA_PERFIL_COMPARAR, RUTA_PERFIL_DECISION, RUTA_PERFIL_VERSION, RUTA_PERFIL_VERSIONES, RUTA_PERFIL_VERSION_VER,RUTA_VISTA_ENTIDADES, RUTA_VISTA_RELACIONES, RUTA_VISTA_USOS,};
 
 //atiende las peticiones del modulo
 pub fn responder(metodo: &Method, ruta: &str, cuerpo: &str) -> Respuesta {
@@ -34,6 +38,12 @@ pub fn responder(metodo: &Method, ruta: &str, cuerpo: &str) -> Respuesta {
         (Method::Post, RUTA_VISTA_ENTIDADES) => responder_vista(cuerpo, vista_de_entidades),
         (Method::Post, RUTA_VISTA_USOS) => responder_vista(cuerpo, vista_de_elementos),
         (Method::Post, RUTA_VISTA_RELACIONES) => responder_vista(cuerpo, vista_de_relaciones),
+        (Method::Post, RUTA_PERFIL) => con_almacen(|a| ver_perfil(a, cuerpo)),
+        (Method::Post, RUTA_PERFIL_DECISION) => con_almacen(|a| registrar_decision(a, cuerpo)),
+        (Method::Post, RUTA_PERFIL_VERSION) => con_almacen(|a| guardar_version(a, cuerpo)),
+        (Method::Get, RUTA_PERFIL_VERSIONES) => con_almacen(listar_versiones),
+        (Method::Post, RUTA_PERFIL_VERSION_VER) => con_almacen(|a| ver_version(a, cuerpo)),
+        (Method::Post, RUTA_PERFIL_COMPARAR) => con_almacen(|a| comparar_versiones(a, cuerpo)),
         _ => Respuesta::no_encontrado("ruta inexistente"),
     }
 }

@@ -59,18 +59,25 @@ class Modulo1Html {
 	//tabla de relaciones que devuelve el servicio, una fila por tipo de relacion, con el origen, el tipo, el destino, la relación inversa, la clase, la multiplicidad y las características
 	public static function relaciones(array $relaciones) : string {
 		if (!$relaciones) { return ''; }
-		$columnas = [_t('Origen'), _t('Tipo de relación'), _t('Destino'), _t('Relación inversa'), _t('Clase'), _t('Multiplicidad'), _t('Características')];
-		$html = '<table class="modulo1-tabla"><thead><tr>';
-		foreach ($columnas as $columna) { $html .= '<th>'.self::e($columna).'</th>'; }
-		$html .= '</tr></thead><tbody>';
-		foreach ($relaciones as $r) {
-			$celdas = [
+		$filas = array_map(function($r) {
+			return [
 				$r['nombre_origen'].' ('.$r['origen'].')', $r['tipo'], $r['nombre_destino'].' ('.$r['destino'].')',
 				$r['inverso'], $r['clase'], $r['multiplicidad'], self::caracteristicas($r)
 			];
-			$html .= '<tr>'.implode('', array_map(function($celda) { return '<td>'.self::e($celda).'</td>'; }, $celdas)).'</tr>';
-		}
-		return $html.'</tbody></table>';
+		}, $relaciones);
+		return self::tabla([_t('Origen'), _t('Tipo de relación'), _t('Destino'), _t('Relación inversa'), _t('Clase'), _t('Multiplicidad'), _t('Características')], $filas);
+	}
+	
+	//tabla con las columnas y las filas indicadas, cada fila es una lista de textos
+	public static function tabla(array $columnas, array $filas) : string {
+		if (!$filas) { return ''; }
+		$html = '<table class="modulo1-tabla"><thead><tr>';
+		foreach ($columnas as $columna) { $html .= '<th>'.self::e($columna).'</th>'; }
+		$html .= '</tr></thead><tbody>';
+		foreach ($filas as $fila) {
+			$html .= '<tr>'.implode('', array_map(function($celda) { return '<td>'.self::e($celda).'</td>'; }, $fila)).'</tr>';
+ 		}
+ 		return $html.'</tbody></table>';
 	}
 	
 	public static function caracteristicas(array $relacion) : string {
@@ -88,4 +95,103 @@ class Modulo1Html {
 		});
 	}
 
-}
+	//Perfil del modelo (6.5)
+
+	//Decisión institucional de una parte del perfil
+	public static function decision($proposito) : string {
+		return $proposito === null || $proposito === '' ? '—' : (string)$proposito;
+	}
+	
+	//entidades del perfil, elementos asignados  y decisión
+	public static function perfilEntidades(array $entidades) : string {
+		return self::tabla([_t('Entidad'), _t('Campos propios'), _t('Elementos asignados'), _t('Decisión')], array_map(function($e) {
+			$asignados = array_map(function($a) { return $a['etiqueta'] === null ? $a['codigo'] : $a['codigo'].' («'.$a['etiqueta'].'»)'; }, $e['elementos']);
+			return [$e['nombre'].' ('.$e['codigo'].')', implode(', ', $e['campos']), implode(', ', $asignados), self::decision($e['decision'])];
+		}, $entidades));
+	}
+	
+	//Elementos de metadatos del perfil: tipo, contenedor y decisión
+	public static function perfilElementos(array $elementos) : string {
+		return self::tabla([_t('Elemento'), _t('Tipo'), _t('Contenedor'), _t('Decisión')], array_map(function($e) {
+			return [$e['nombre'].' ('.$e['codigo'].')', $e['tipo'], $e['contenedor'] ?? '—', self::decision($e['decision'])];
+		}, $elementos));
+	}
+	
+	//Contenedores del perfil con los elementos que tienen adentro
+	public static function perfilContenedores(array $contenedores) : string {
+		return self::lista($contenedores, function($c) {
+			return $c['texto'].' → '.($c['elementos'] ? implode(', ', $c['elementos']) : '—');
+		});
+	}
+	
+	//Relaciones del perfil con sus características y la decision
+	public static function perfilRelaciones(array $relaciones) : string {
+		return self::tabla([_t('Origen'), _t('Tipo de relación'), _t('Destino'), _t('Relación inversa'), _t('Características'), _t('Decisión')], array_map(function($r) {
+			return [$r['origen'], $r['tipo'], $r['destino'], $r['inverso'], self::caracteristicas($r), self::decision($r['decision'])];
+		}, $relaciones));
+	}
+
+	//Configuraciones aplicadas a cada entidad con la decisión que las explica 
+	public static function perfilConfiguraciones(array $configuraciones) : string {
+		return self::tabla([_t('Entidad'), _t('Configuración'), _t('Valor'), _t('Decisión')], array_map(function($c) {
+			return [$c['entidad'], $c['nombre'], $c['valor'], self::decision($c['decision'])];
+		}, $configuraciones));
+	}
+	
+	// Decisiones registradas: a qué parte se refieren, quién las tomó y si esa parte sigue existiendo 
+	public static function perfilDecisiones(array $decisiones) : string {
+		return self::tabla([_t('Parte del perfil'), _t('Propósito'), _t('Usuario'), _t('Fecha'), _t('Estado')], array_map(function($d) {
+			return [$d['referencia'], $d['proposito'], $d['usuario'], $d['fecha'], $d['vigente'] ? _t('Vigente') : _t('La parte ya no existe en el modelo')];
+		}, $decisiones));
+	}
+
+	//Todo el perfil: componentes, relaciones, configuraciones y decisiones, cada parte en su sección
+	public static function perfil(array $perfil) : string {
+		$componentes = $perfil['componentes'];
+		return self::seccion(_t('Entidades'), self::perfilEntidades($componentes['entidades']))
+			.self::seccion(_t('Elementos de metadatos'), self::perfilElementos($componentes['elementos']))
+			.self::seccion(_t('Contenedores'), self::perfilContenedores($componentes['contenedores']))
+			.self::seccion(_t('Relaciones'), self::perfilRelaciones($perfil['relaciones']))
+			.self::seccion(_t('Configuraciones'), self::perfilConfiguraciones($perfil['configuraciones']))
+			.self::seccion(_t('Decisiones institucionales'), self::perfilDecisiones($perfil['decisiones']));
+	}
+	
+	//Datos de una versión: nombre, usuario, fecha y descripción 
+	public static function textoDeVersion(array $version) : string {
+		$texto = '#'.$version['id'].' · '.$version['nombre'].' · '.$version['usuario'].' · '.$version['fecha'];
+		return $version['descripcion'] === '' ? $texto : $texto.' · '.$version['descripcion'];
+	}
+	
+	//Lista de versiones, cada una tiene un enlace para ver su perfil
+	public static function versiones(array $versiones) : string {
+		if (!$versiones) { return ''; }
+		$html = '<ul>';
+		foreach ($versiones as $v) {
+			$html .= '<li><a href="?ver='.(int)$v['id'].'">'.self::e(self::textoDeVersion($v)).'</a></li>';
+		}
+		return $html.'</ul>';
+	}
+	
+	//Opciones de un selector, cada una es [valor, texto]; $elegida es el valor marcado 
+	public static function opciones(array $opciones, $elegida = null) : string {
+		$html = '';
+		foreach ($opciones as [$valor, $texto]) {
+			$marca = (string)$valor === (string)$elegida ? ' selected' : '';
+			$html .= '<option value="'.self::e($valor).'"'.$marca.'>'.self::e($texto).'</option>';
+		}
+		return $html;
+	}
+	
+	//Resultado de comparar dos perfiles: partes agregadas, eliminadas y modificadas
+	public static function cambios(array $cambios) : string {
+		if ($cambios['sin_cambios']) { return '<p>'._t('No hay diferencias.').'</p>'; }
+		$modificados = array_map(function($m) {
+			return $m['texto'].': '.implode('; ', array_map(function($c) { return $c['campo'].': «'.$c['antes'].'» → «'.$c['despues'].'»'; }, $m['cambios']));
+		}, $cambios['modificados']);
+		$texto = function($parte) { return $parte['texto']; };
+		return self::seccion(_t('Agregado'), self::lista($cambios['agregados'], $texto))
+			.self::seccion(_t('Eliminado'), self::lista($cambios['eliminados'], $texto))
+			.self::seccion(_t('Modificado'), self::lista($modificados, function($t) { return $t; }));
+	}
+ }
+

@@ -1,9 +1,10 @@
 //! Pruebas de la base de datos de la extensión: acceso y aislamiento (`access`), configuración de la
-//! conexión (`config`), migraciones (`migrations`) y tablas del módulo 2 (`modulo2_schema`).
+//! conexión (`config`), migraciones (`migrations`) y tablas del módulo 1 y 2 (`modulo1_schema`, `modulo2_schema`).
 
 mod access;
 mod config;
 mod migrations;
+mod modulo1_schema;
 mod modulo2_schema;
 
 use std::sync::OnceLock;

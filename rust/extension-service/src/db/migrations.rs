@@ -20,7 +20,7 @@ use std::fmt;
 
 use mysql::prelude::Queryable;
 
-use crate::constants::{MIGRATIONS_TABLE, MODULO2};
+use crate::constants::{MIGRATIONS_TABLE, MODULO1, MODULO2};
 
 /// Una migración: el SQL que aplica y cómo se identifica en `ext_migrations`.
 pub struct Migration {
@@ -43,6 +43,12 @@ pub const MIGRATIONS: &[Migration] = &[
         version: 2,
         name: "creando_indices_modulo2",
         sql: include_str!("migrations/modulo2/0002_creando_indices_modulo2.sql"),
+    },
+    Migration {
+        module: MODULO1,
+        version: 1,
+        name: "creando_tablas_modulo1",
+        sql: include_str!("migrations/modulo1/0001_creando_tablas_modulo1.sql"),
     },
 ];
 
