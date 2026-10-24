@@ -1,4 +1,4 @@
-//! Pruebas de las tablas del módulo 2 (migraciones `modulo2/0001` y `0002`) contra el MySQL de Docker.
+//! Pruebas de las tablas del módulo 2 (migraciones `modulo2/0001` a `0003`) contra el MySQL de Docker.
 //!
 //! - Estructura: columnas, índices, claves foráneas, motor y collation, leídos de information_schema.
 //! - Comportamiento: solo las reglas de las que depende el módulo (sin versiones repetidas, registro
@@ -6,20 +6,12 @@
 //!   transacción que se deshace al terminar, así la base queda como estaba.
 
 use mysql::prelude::Queryable;
-use mysql::{PooledConn, Transaction, TxOpts};
+use mysql::{Transaction, TxOpts};
 
-use super::open_connection;
+use super::environment::migrated_connection;
 use crate::constants::{
     ER_DATA_TRUNCATED, ER_DUP_ENTRY, ER_NO_REFERENCED_ROW, ER_ROW_IS_REFERENCED, MODULO2_TABLES,
 };
-use crate::db::migrations::{run, MIGRATIONS};
-
-/// Conexión con las migraciones aplicadas.
-fn migrated_connection() -> PooledConn {
-    let mut conn = open_connection();
-    run(&mut conn, MIGRATIONS).unwrap();
-    conn
-}
 
 /// Columnas de una tabla, en orden: (nombre, tipo, admite NULL, valor por defecto).
 fn columns(table: &str) -> Vec<(String, String, String, Option<String>)> {
@@ -66,14 +58,24 @@ fn column(
     default: Option<&str>,
 ) -> (String, String, String, Option<String>) {
     let nullable = if nullable { "YES" } else { "NO" };
-    (name.into(), column_type.into(), nullable.into(), default.map(Into::into))
+    (
+        name.into(),
+        column_type.into(),
+        nullable.into(),
+        default.map(Into::into),
+    )
 }
 
 fn index(name: &str, unique: bool, columns: &str) -> (String, bool, String) {
     (name.into(), unique, columns.into())
 }
 
-fn foreign_key(name: &str, column: &str, table: &str, rule: &str) -> (String, String, String, String) {
+fn foreign_key(
+    name: &str,
+    column: &str,
+    table: &str,
+    rule: &str,
+) -> (String, String, String, String) {
     (name.into(), column.into(), table.into(), rule.into())
 }
 
@@ -97,7 +99,12 @@ fn insert_version(tx: &mut Transaction, hash: &str) -> u64 {
 }
 
 /// Inserta un cambio con la acción y el resultado dados.
-fn insert_change(tx: &mut Transaction, action: &str, result: &str, version: Option<u64>) -> Result<(), mysql::Error> {
+fn insert_change(
+    tx: &mut Transaction,
+    action: &str,
+    result: &str,
+    version: Option<u64>,
+) -> Result<(), mysql::Error> {
     tx.exec_drop(
         "INSERT INTO m2_change_log (user_id, user_name, action, result, version_before_id)
          VALUES (1, 'administrator', ?, ?, ?)",
@@ -119,7 +126,11 @@ fn tables_use_innodb_and_providence_collation() {
                 (table,),
             )
             .unwrap();
-        assert_eq!(row, Some(("InnoDB".into(), "utf8mb4_general_ci".into())), "{table}");
+        assert_eq!(
+            row,
+            Some(("InnoDB".into(), "utf8mb4_general_ci".into())),
+            "{table}"
+        );
     }
 }
 
@@ -175,13 +186,18 @@ fn change_log_table_has_expected_columns() {
             column("new_value", "json", true, None),
             column("version_before_id", "int unsigned", true, None),
             column("version_after_id", "int unsigned", true, None),
-            column("result", "enum('applied','rejected','failed','conflict')", false, None),
+            column(
+                "result",
+                "enum('pending','applied','rejected','failed','conflict')",
+                false,
+                None
+            ),
             column("message", "text", true, None),
         ]
     );
 }
 
-/// Cada tabla tiene su clave primaria, los índices de la 0002 y los de sus claves foráneas.
+/// Cada tabla tiene su clave primaria, los índices de la 0002 y la 0004 y los de sus claves foráneas.
 #[test]
 #[ignore = "requiere el MySQL de Docker"]
 fn tables_have_expected_indexes() {
@@ -204,7 +220,11 @@ fn tables_have_expected_indexes() {
             index("fk_m2_change_log_after", false, "version_after_id"),
             index("fk_m2_change_log_before", false, "version_before_id"),
             index("idx_m2_change_log_changed_at", false, "changed_at"),
-            index("idx_m2_change_log_config_key", false, "config_key"),
+            index(
+                "idx_m2_change_log_config_key_changed_at",
+                false,
+                "config_key,changed_at"
+            ),
             index("PRIMARY", true, "change_id"),
         ]
     );
@@ -216,17 +236,37 @@ fn tables_have_expected_indexes() {
 fn foreign_keys_reference_versions() {
     assert_eq!(
         foreign_keys("m2_versions"),
-        vec![foreign_key("fk_m2_versions_parent", "parent_version_id", "m2_versions", "NO ACTION")]
+        vec![foreign_key(
+            "fk_m2_versions_parent",
+            "parent_version_id",
+            "m2_versions",
+            "NO ACTION"
+        )]
     );
     assert_eq!(
         foreign_keys("m2_version_files"),
-        vec![foreign_key("fk_m2_version_files_version", "version_id", "m2_versions", "CASCADE")]
+        vec![foreign_key(
+            "fk_m2_version_files_version",
+            "version_id",
+            "m2_versions",
+            "CASCADE"
+        )]
     );
     assert_eq!(
         foreign_keys("m2_change_log"),
         vec![
-            foreign_key("fk_m2_change_log_after", "version_after_id", "m2_versions", "NO ACTION"),
-            foreign_key("fk_m2_change_log_before", "version_before_id", "m2_versions", "NO ACTION"),
+            foreign_key(
+                "fk_m2_change_log_after",
+                "version_after_id",
+                "m2_versions",
+                "NO ACTION"
+            ),
+            foreign_key(
+                "fk_m2_change_log_before",
+                "version_before_id",
+                "m2_versions",
+                "NO ACTION"
+            ),
         ]
     );
 }
@@ -276,9 +316,13 @@ fn deleting_a_version_deletes_its_files() {
     )
     .unwrap();
 
-    tx.exec_drop("DELETE FROM m2_versions WHERE version_id = ?", (id,)).unwrap();
+    tx.exec_drop("DELETE FROM m2_versions WHERE version_id = ?", (id,))
+        .unwrap();
     let files: Option<u64> = tx
-        .exec_first("SELECT COUNT(*) FROM m2_version_files WHERE version_id = ?", (id,))
+        .exec_first(
+            "SELECT COUNT(*) FROM m2_version_files WHERE version_id = ?",
+            (id,),
+        )
         .unwrap();
     assert_eq!(files, Some(0));
 }
@@ -307,4 +351,3 @@ fn change_log_rejects_unknown_action_or_result() {
     let unknown_result = insert_change(&mut tx, "edit", "ok", None);
     assert_eq!(error_code(unknown_result), ER_DATA_TRUNCATED);
 }
-

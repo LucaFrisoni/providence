@@ -2,7 +2,7 @@
 /* ----------------------------------------------------------------------
  * app/plugins/modulo2/modulo2Plugin.php :
  * Módulo 2: administración gráfica de configuraciones.
- * Agrega el menú del módulo y declara sus permisos.
+ * Agrega el menú del módulo y declara sus permisos (ver, editar por nivel de riesgo, crear y restaurar versiones).
  * ----------------------------------------------------------------------
  */
 require_once(__DIR__.'/lib/Modulo2Constants.php');
@@ -28,10 +28,8 @@ class modulo2Plugin extends BaseApplicationPlugin {
 	}
 	# -------------------------------------------------------
 	/**
-	 * Reemplaza el menú "Manage" de la barra principal por "Gestión", en el mismo lugar: el panel de
-	 * gestión (todo Manage, mejorado) y las nuevas configuraciones (las del catálogo). Solo cambia la
-	 * barra principal: las pantallas de Manage siguen igual, con su menú lateral, y se llega a ellas
-	 * desde el panel. Un usuario sin el permiso del módulo sigue viendo "Manage"
+	 * Reemplaza "Manage" por "Gestión" en la barra principal. Configuraciones, versiones e historial
+	 * se abren desde el panel de gestión. Sin el permiso del módulo se sigue viendo "Manage"
 	 */
 	public function hookRenderMenuBar($menu_bar) {
 		$request = $this->getRequest();
@@ -39,10 +37,7 @@ class modulo2Plugin extends BaseApplicationPlugin {
 
 		return self::replaceManage($menu_bar, [
 			'displayName' => _t('Gestión'),
-			'navigation' => [
-				'manage' => self::menuItem(_t('Panel de gestión'), 'Manage'),
-				'configurations' => self::menuItem(_t('Nuevas configuraciones'), 'Configurations')
-			]
+			'navigation' => ['manage' => self::menuItem(_t('Panel de gestión'), 'Manage')]
 		]);
 	}
 	# -------------------------------------------------------
@@ -89,7 +84,27 @@ class modulo2Plugin extends BaseApplicationPlugin {
 		return [
 			Modulo2Constants::PERMISSION => [
 				'label' => _t('Puede usar el módulo 2'),
-				'description' => _t('El usuario puede acceder a la administración gráfica de configuraciones.')
+				'description' => _t('El usuario puede acceder a la administración gráfica de configuraciones: ver las configuraciones, las versiones y el historial de cambios.')
+			],
+			Modulo2Constants::PERMISSION_EDIT_LOW => [
+				'label' => _t('Módulo 2: editar configuraciones de riesgo bajo'),
+				'description' => _t('El usuario puede cambiar las configuraciones del catálogo de riesgo bajo.')
+			],
+			Modulo2Constants::PERMISSION_EDIT_MEDIUM => [
+				'label' => _t('Módulo 2: editar configuraciones de riesgo medio'),
+				'description' => _t('El usuario puede cambiar las configuraciones del catálogo de riesgo medio (tipos de dato, identificadores, jerarquías, bajas...).')
+			],
+			Modulo2Constants::PERMISSION_EDIT_HIGH => [
+				'label' => _t('Módulo 2: editar configuraciones de riesgo crítico'),
+				'description' => _t('El usuario puede cambiar las configuraciones del catálogo de riesgo crítico (control de acceso).')
+			],
+			Modulo2Constants::PERMISSION_CREATE_VERSION => [
+				'label' => _t('Módulo 2: crear versiones de la configuración'),
+				'description' => _t('El usuario puede guardar a mano una versión del estado actual de la configuración.')
+			],
+			Modulo2Constants::PERMISSION_RESTORE_VERSION => [
+				'label' => _t('Módulo 2: restaurar versiones de la configuración'),
+				'description' => _t('El usuario puede reemplazar los archivos de app/conf/local por los de una versión anterior.')
 			]
 		];
 	}

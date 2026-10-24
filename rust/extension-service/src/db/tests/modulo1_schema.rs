@@ -2,19 +2,11 @@
 //Escriben en las tablas reales dentro de una transacción que se deshace al terminar, así la base queda como estaba
 
 use mysql::prelude::Queryable;
-use mysql::{PooledConn, TxOpts};
+use mysql::TxOpts;
 
-use super::open_connection;
+use super::environment::migrated_connection;
 use crate::constants::MODULO1_TABLES;
-use crate::db::migrations::{run, MIGRATIONS};
-use crate::modules::modulo1::almacen::{Almacen, NuevaVersion, Usuario};
-
-/// Conexión con las migraciones aplicadas.
-fn migrated_connection() -> PooledConn {
-    let mut conn = open_connection();
-    run(&mut conn, MIGRATIONS).unwrap();
-    conn
-}
+use crate::db::dao::modulo1::almacen::{Almacen, NuevaVersion, Usuario};
 
 fn valentina() -> Usuario {
     Usuario { id: 7, nombre: "valentina".to_string() }

@@ -1,2 +1,2 @@
-//! Definiciones de cada módulo que no son rutas ni base de datos
+//! Datos fijos de cada módulo (por ejemplo, el catálogo del módulo 2).
 pub mod modulo2;

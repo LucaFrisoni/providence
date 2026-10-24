@@ -6,7 +6,7 @@ use crate::constants::{
     DB_HOST_ENV_VAR, DB_NAME_ENV_VAR, DB_PASSWORD_ENV_VAR, DB_PORT_ENV_VAR, DB_USER_ENV_VAR,
     DEFAULT_DB_PORT,
 };
-use crate::db::DbConfig;
+use crate::types::db::DbConfig;
 
 fn lookup_from(vars: &[(&str, &str)]) -> impl Fn(&str) -> Option<String> {
     let vars: HashMap<String, String> = vars

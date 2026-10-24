@@ -22,6 +22,39 @@ mediante plugins de Providence y un servicio desarrollado en Rust.
     6. Servicios externos e identificadores
     7. Recursos digitales, IIIF y 3D
 
+#### Organización del servicio Rust
+
+Una petición recorre estas capas, cada una con una sola responsabilidad:
+
+```
+main.rs ──► routes/mod.rs ──► routes/moduloN.rs ──► services/moduloN/ ──► db/dao/moduloN/ ──► MySQL
+arranque    router            endpoints             lógica de negocio      SQL                  (ca_extension)
+```
+
+1. **`main.rs`** conecta la base, aplica las migraciones pendientes y queda escuchando. Cada petición
+   se atiende en un hilo y pasa al router.
+2. **`routes/mod.rs` (router)** lee el cuerpo y deriva la petición al módulo según el prefijo
+   `/api/<modulo>`.
+3. **`routes/moduloN.rs`** declara todos los endpoints del módulo en una tabla: cada línea une un
+   método y una ruta con la función que la atiende. Esa función lee el pedido, llama al servicio y
+   arma la respuesta; no tiene reglas de negocio. Lo que se repite en todos los módulos (dividir la
+   ruta, leer un id, leer el cuerpo, abrir y confirmar la transacción) está en `routes/helpers.rs`.
+4. **`services/moduloN/`** tiene la lógica de negocio: validaciones, permisos, conflictos,
+   versionado. No sabe de HTTP. Para leer y escribir llama al DAO.
+5. **`db/dao/moduloN/`** es el DAO (*Data Access Object*): funciones que ejecutan el SQL, siempre
+   con parámetros `?`, y convierten las filas en tipos. No decide nada.
+
+Además:
+
+- **`types/`** tiene los structs y enums, cada uno con su `impl` en el mismo archivo. Acá están los
+  globales, que usan varias capas (`http.rs`, `db.rs`, `moduloN/`). Un tipo que pertenece a un
+  solo tema queda junto a ese tema (por ejemplo, el lector privado de `json/parser.rs`).
+- **`models/moduloN/`** tiene datos fijos escritos en el código, como el catálogo del módulo 2.
+- **`db/`** tiene además la conexión y las migraciones (ver abajo).
+
+Para agregar un endpoint: una línea en la tabla de `routes/moduloN.rs` y su función, la lógica en
+`services/moduloN/`, el SQL en `db/dao/moduloN/` y los tipos nuevos en `types/moduloN/`.
+
 ### Base de datos de la extensión
 
 La extensión guarda sus propios datos (versiones de configuración, registros de cambios,
@@ -61,7 +94,7 @@ Servicio Rust ───────► │ base de la extensión (ca_extension) 
    así no chocan entre ramas) y un nombre que describa el cambio, por ejemplo
    `0001_creando_tablas_modulo2.sql`.
 2. Registrarlo en `MIGRATIONS`, en [db/migrations.rs](rust/extension-service/src/db/migrations.rs).
-3. Reconstruir el servicio (`docker compose up -d --build extension-service`): al arrancar aplica las
+3. Reconstruir el servicio (`docker compose up -d --build extension-service`, o `make build-service`): al arrancar aplica las
    migraciones pendientes y las anota en la tabla `ext_migrations`.
 
 Las migraciones ya registradas en `ext_migrations` no se vuelven a ejecutar: reiniciar o
@@ -101,6 +134,10 @@ obligatorio) están en [docker/README.md](docker/README.md). En resumen:
 cp .env.example .env      # completar las credenciales
 docker compose up -d --build
 ```
+
+Con [make](#con-make) instalado, `make up` hace lo mismo que `docker compose up -d --build`, y
+`make build-service` reconstruye solo el servicio Rust (por ejemplo, después de agregar una
+migración).
 
 Con `-d` los contenedores quedan corriendo en segundo plano aunque se cierre la terminal. Sin `-d`,
 cerrar la terminal o presionar Ctrl+C los detiene. Los logs se ven con `docker compose logs -f` y el
@@ -158,20 +195,31 @@ En lo que sigue, `moduloN` es la carpeta o el archivo de cada módulo (`modulo1`
 
 ```
 rust/extension-service/src/
-├── constants.rs             Constantes del servicio (variables de entorno, rutas, nombres)
-├── routes.rs                Despacho de rutas a cada módulo, con sus pruebas al final del archivo
-├── modules/moduloN.rs       Rutas del módulo N, con sus pruebas al final del archivo
-├── models/moduloN/          Definiciones del módulo N (por ejemplo, el catálogo del módulo 2),
-│                            con sus pruebas al final de cada archivo
+├── constants.rs             Constantes del servicio (variables de entorno, rutas, códigos HTTP, límites)
+├── main.rs                  Arranque: base, migraciones y servidor (cada petición va a routes/)
+├── json/                    JSON propio: el tipo Json, su lectura (parser.rs) y su escritura (writer.rs)
+├── types/                   Tipos que comparten varias capas, con su `impl` y sus pruebas
+│   ├── http.rs              ApiRequest, ApiResponse y RouteError
+│   ├── db.rs                DbConfig (lectura de EXT_DB_*), Migration y MigrationError
+│   └── moduloN/             Tipos del módulo N
+├── routes/                  Rutas HTTP (ver "Arquitectura" > "Organización del servicio Rust")
+│   ├── mod.rs               Router: recibe cada petición, lee el cuerpo y la deriva a /api/<modulo>
+│   ├── helpers.rs           Ayudantes comunes: tramos de la ruta, id, cuerpo JSON y transacción
+│   └── moduloN.rs           Tabla de endpoints del módulo N (función `routes`), con sus pruebas al final
+├── services/moduloN/        Lógica de negocio del módulo N (validación, escritura, versionado...)
+├── models/moduloN/          Datos fijos del módulo N en el código (por ejemplo, el catálogo del módulo 2)
 └── db/                      Base de datos de la extensión
     ├── config.rs            Conexión
     ├── migrations.rs        Aplicación de las migraciones
     ├── migrations/moduloN/  SQL de las migraciones del módulo N
+    ├── dao/moduloN/         DAO del módulo N: el SQL de sus tablas (con parámetros), sin reglas de negocio
     └── tests/               Pruebas de la base: unitarias y de integración (#[ignore])
+        ├── environment.rs   Conexión que comparten las pruebas de integración (no tiene pruebas)
         ├── access.rs        Aislamiento: solo accede a su base, no a la de Providence
         ├── config.rs        Lectura de las variables EXT_DB_*
         ├── migrations.rs    Aplicación, numeración y registro de las migraciones
-        └── moduloN_schema.rs  Tablas del módulo N: columnas, índices, claves y restricciones
+        ├── moduloN_schema.rs  Tablas del módulo N: columnas, índices, claves y restricciones
+        └── moduloN_dao.rs   DAO del módulo N contra la base, en transacciones que se deshacen
 
 app/plugins/
 ├── tests/
@@ -180,7 +228,8 @@ app/plugins/
 │   └── integration/         Integración compartida por todos los módulos (ej.: aislamiento de bases)
 └── moduloN/tests/
     ├── unit/                Unitarias del módulo N
-    └── integration/         De integración del módulo N
+    ├── integration/         De integración del módulo N
+    └── fixtures/            Archivos de prueba (el módulo 2 comparte con Rust el formato de los .conf)
 
 tests/extension/             Scripts para ejecutar las pruebas (ver "Cómo ejecutarlas")
 ├── test-rust.sh
@@ -192,20 +241,25 @@ tests/extension/             Scripts para ejecutar las pruebas (ver "Cómo ejecu
 
 **Rust.** La convención de Rust es poner las pruebas en el mismo archivo que el código, en un bloque
 `#[cfg(test)] mod tests` al final. La excepción es `db/`, que tiene varios archivos y muchas pruebas
-de integración: sus pruebas están juntas en `db/tests/`. Hay tres clases de pruebas:
+de integración: sus pruebas están juntas en `db/tests/`. Los tipos de `types/` llevan sus pruebas
+en el mismo archivo, junto a su `impl`. Hay tres clases de pruebas:
 
 | Qué se prueba                                                 | Cómo                                                                                                                                      | Tipo                                      |
 | ------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------- |
 | **Lógica** (validaciones, cálculos, lectura de configuración) | Se llama a la función directamente                                                                                                        | Unitaria                                  |
-| **Rutas**                                                     | Se llama a `responder` con un método y una ruta, y se revisa el código de estado y el JSON de la `Respuesta`. No levanta el servidor HTTP | Unitaria, mientras la ruta no use la base |
+| **Rutas**                                                     | Se llama a `dispatch` o a `routes` con un método y una ruta, y se revisa el código de estado y el JSON de la `ApiResponse`. No levanta el servidor HTTP | Unitaria, mientras la ruta no use la base |
 | **Base de datos**                                             | Se conecta al MySQL de Docker                                                                                                             | Integración                               |
 
-- Cada módulo prueba sus rutas en `modules/moduloN.rs`, llamando a su `responder` con la ruta
-  relativa al módulo (por ejemplo, `/health`). `routes.rs` prueba que cada petición a
+- Cada módulo prueba sus rutas en `routes/moduloN.rs`, llamando a su función `routes` con la ruta
+  relativa al módulo (por ejemplo, `/health`). `routes/mod.rs` prueba que cada petición a
   `/api/moduloN/...` llegue al módulo correcto.
 - Las pruebas que necesitan la base se marcan con `#[ignore = "requiere el MySQL de Docker"]`, así
   `cargo test` sin Docker solo ejecuta las unitarias. Una ruta que lee o escribe la base se prueba
   como integración.
+- Las rutas confirman su transacción, así que sus pruebas de integración sí guardan datos: cada una
+  usa un `CommittedUser` (de `db/tests/environment.rs`), con un nombre único, que al terminar la
+  prueba borra los cambios y las versiones de ese usuario. Las demás pruebas de la base usan
+  transacciones que se deshacen.
 - El recorrido HTTP completo (plugin de Providence → servicio Rust) no se prueba en Rust: lo cubren
   las pruebas de integración PHP de cada módulo.
 
@@ -265,6 +319,27 @@ Windows, desde Git Bash. Si un script no tiene permiso de ejecución, se puede c
 
 Para ejecutar una sola prueba: `tests/extension/test-rust.sh all <parte del nombre>` o
 `tests/extension/test-php.sh unit moduloN --filter <nombre del método>`.
+
+#### Con make
+
+El [Makefile](Makefile) de la raíz agrupa los mismos scripts con nombres cortos, para ejecutarlos a
+mano o desde una futura CI. Necesita `make` y bash (en Windows, Git Bash con `make` instalado).
+`make help` lista todas las tareas.
+
+| Comando                            | Qué ejecuta                                                   |
+| ---------------------------------- | ------------------------------------------------------------- |
+| `make test`                        | Todas las pruebas (Rust y PHP)                                |
+| `make test-unit`                   | Solo las unitarias (Rust y PHP)                               |
+| `make test-integration`            | Solo las de integración (necesitan Docker)                    |
+| `make test-rust` / `make test-php` | Todas las de un lenguaje                                      |
+| `make test-rust-unit`              | Las unitarias de Rust (no necesitan Docker)                   |
+| `make test-php MODULE=moduloN`     | Las del módulo N (vale para cualquier tarea `test-*`)         |
+| `make lint`                        | Formato (`cargo fmt --check`) y avisos (`cargo clippy`) de Rust; falla si hay algo para corregir |
+| `make fmt`                         | Formatea el código de Rust                                    |
+| `make up` / `make build-service`   | Levanta el entorno / reconstruye solo el servicio Rust        |
+
+Una CI puede ejecutar `make lint` y `make test-rust-unit` sin Docker, y `make test` con el entorno
+levantado.
 
 ### Módulos
 

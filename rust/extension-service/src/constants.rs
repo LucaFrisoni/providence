@@ -26,8 +26,8 @@ pub const SERVICE_VERSION: &str = env!("CARGO_PKG_VERSION");
 /// Prefijo común de todas las rutas de la API: `/api/<modulo>`.
 pub const API_PREFIX: &str = "/api";
 
-/// Ruta de estado de cada módulo, relativa a `/api/<modulo>`.
-pub const HEALTH_ROUTE: &str = "/health";
+/// Tramo de la ruta de estado de cada módulo: `/api/<modulo>/health`.
+pub const HEALTH_SEGMENT: &str = "health";
 
 /// Valor de `status` cuando el módulo responde correctamente.
 pub const STATUS_OK: &str = "ok";
@@ -41,15 +41,22 @@ pub const MODULO5: &str = "modulo5";
 pub const MODULO6: &str = "modulo6";
 pub const MODULO7: &str = "modulo7";
 
-//codifos de estado http
-pub const CODIGO_OK: u16 = 200;
-pub const CODIGO_NO_ENCONTRADO: u16 = 404;
-pub const CODIGO_PETICION_INCORRECTA: u16 = 400;
-pub const CODIGO_ERROR_INTERNO: u16 = 500;
+/// Códigos de estado HTTP.
+pub const HTTP_OK: u16 = 200;
+pub const HTTP_CREATED: u16 = 201;
+pub const HTTP_BAD_REQUEST: u16 = 400;
+pub const HTTP_FORBIDDEN: u16 = 403;
+pub const HTTP_NOT_FOUND: u16 = 404;
+pub const HTTP_CONFLICT: u16 = 409;
+pub const HTTP_PAYLOAD_TOO_LARGE: u16 = 413;
+pub const HTTP_UNPROCESSABLE: u16 = 422;
+pub const HTTP_INTERNAL_ERROR: u16 = 500;
+pub const HTTP_UNAVAILABLE: u16 = 503;
 
-//cabecera de la respuesta json
-pub const CABECERA_CONTENT_TYPE: &str = "Content-Type";
-pub const TIPO_JSON: &str = "application/json";
+
+/// Tamaño máximo del cuerpo de una petición: el estado de la configuración (archivos de
+/// app/conf/local y la exportación de la configuración en base) ocupa alrededor de 1 MB.
+pub const MAX_BODY_BYTES: u64 = 32 * 1024 * 1024;
 
 //---------------------------------
 //constantes para el modulo1
@@ -210,9 +217,38 @@ pub const MAX_DESCRIPCION_VERSION: usize = 2000;
 pub const MENSAJE_SIN_BASE: &str = "no se pudo acceder a la base de la extensión";
 pub const MENSAJE_SIN_CAMBIOS: &str = "El perfil no cambió desde la última versión, no se creó una nueva.";
 
-
 /// ----------------------------------------------------Módulo 2: ruta del catálogo de configuraciones, relativa a `/api/modulo2`.
 pub const CATALOG_ROUTE: &str = "/catalog";
+
+/// Cabecera de las respuestas JSON.
+pub const CONTENT_TYPE_HEADER: &str = "Content-Type";
+pub const JSON_CONTENT_TYPE: &str = "application/json";
+
+/// ----------------------------------------------------Módulo 2: rutas, relativas a `/api/modulo2` (ver routes/modulo2.rs).
+pub const CATALOG_SEGMENT: &str = "catalog";
+pub const STATE_SEGMENT: &str = "state";
+pub const VERSIONS_SEGMENT: &str = "versions";
+pub const EDITS_SEGMENT: &str = "edits";
+pub const CHANGES_SEGMENT: &str = "changes";
+pub const RESTORE_SEGMENT: &str = "restore";
+pub const RESULT_SEGMENT: &str = "result";
+pub const NAME_SEGMENT: &str = "name";
+/// Módulo 2: nombre con el que se guarda, junto a los archivos de una versión, la exportación de la
+/// configuración en base. No termina en `.conf`, así no se confunde con un archivo de app/conf/local.
+pub const DATABASE_FILE: &str = "database_profile.xml";
+/// Módulo 2: cambios por página del historial (`?limit=`), por defecto y como máximo.
+pub const CHANGE_LOG_PAGE_SIZE: u32 = 50;
+pub const MAX_CHANGE_LOG_PAGE_SIZE: u32 = 200;
+/// Módulo 2: límites de los valores que se aceptan al editar (ver services/modulo2/values.rs).
+pub const MAX_TEXT_CHARS: usize = 2000;
+pub const MAX_NUMBER: u64 = 1_000_000;
+pub const MAX_LIST_ITEMS: usize = 500;
+/// Módulo 2: límites del estado que envía el plugin (ver services/modulo2/requests.rs).
+pub const MAX_STATE_FILES: usize = 200;
+/// Módulo 2: largo máximo de los textos que se guardan en columnas VARCHAR(255) y VARCHAR(100).
+pub const MAX_NAME_CHARS: usize = 255;
+pub const MAX_FILE_NAME_CHARS: usize = 100;
+
 /// Módulo 2: archivos de `app/conf` que leen las secciones del catálogo.
 pub const APP_CONF: &str = "app.conf";
 pub const NAVIGATION_CONF: &str = "navigation.conf";
@@ -230,12 +266,13 @@ pub const PROVIDENCE_TABLE: &str = "ca_users";
 pub const ER_DBACCESS_DENIED: u16 = 1044;
 #[cfg(test)]
 pub const ER_TABLEACCESS_DENIED: u16 = 1142;
-/// Pruebas (db): códigos de error de MySQL de usuario o contraseña incorrectos, clave única repetida,
-/// referencia a una fila inexistente, borrado de una fila referenciada y valor fuera de un ENUM.
+/// Código de error de MySQL de clave única repetida (lo usa el módulo 2 para detectar dos versiones
+/// iguales creadas al mismo tiempo).
+pub const ER_DUP_ENTRY: u16 = 1062;
+/// Pruebas (db): códigos de error de MySQL de usuario o contraseña incorrectos, referencia a una fila
+/// inexistente, borrado de una fila referenciada y valor fuera de un ENUM.
 #[cfg(test)]
 pub const ER_ACCESS_DENIED: u16 = 1045;
-#[cfg(test)]
-pub const ER_DUP_ENTRY: u16 = 1062;
 #[cfg(test)]
 pub const ER_NO_REFERENCED_ROW: u16 = 1452;
 #[cfg(test)]

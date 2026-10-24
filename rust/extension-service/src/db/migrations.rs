@@ -16,19 +16,11 @@
 //!   mitad, hay que corregir la base a mano antes de volver a arrancar.
 
 use std::collections::HashMap;
-use std::fmt;
 
 use mysql::prelude::Queryable;
 
 use crate::constants::{MIGRATIONS_TABLE, MODULO1, MODULO2};
-
-/// Una migración: el SQL que aplica y cómo se identifica en `ext_migrations`.
-pub struct Migration {
-    pub module: &'static str,
-    pub version: u32,
-    pub name: &'static str,
-    pub sql: &'static str,
-}
+use crate::types::db::{Migration, MigrationError};
 
 /// Todas las migraciones, agrupadas por módulo y en orden de versión.
 pub const MIGRATIONS: &[Migration] = &[
@@ -45,70 +37,25 @@ pub const MIGRATIONS: &[Migration] = &[
         sql: include_str!("migrations/modulo2/0002_creando_indices_modulo2.sql"),
     },
     Migration {
+        module: MODULO2,
+        version: 3,
+        name: "agregando_cambios_pendientes_modulo2",
+        sql: include_str!("migrations/modulo2/0003_agregando_cambios_pendientes_modulo2.sql"),
+    },
+    Migration {
+        module: MODULO2,
+        version: 4,
+        name: "optimizando_indices_modulo2",
+        sql: include_str!("migrations/modulo2/0004_optimizando_indices_modulo2.sql"),
+
+    },
+    Migration {
         module: MODULO1,
         version: 1,
         name: "creando_tablas_modulo1",
         sql: include_str!("migrations/modulo1/0001_creando_tablas_modulo1.sql"),
     },
 ];
-
-/// Error al aplicar las migraciones.
-#[derive(Debug)]
-pub enum MigrationError {
-    /// Error de MySQL.
-    Database(mysql::Error),
-    /// El SQL de una migración ya aplicada cambió (contiene su identificador).
-    Modified(String),
-    /// La migración no tiene el número que sigue en su módulo (contiene su identificador).
-    Numbering(String),
-    /// Una migración registrada en `ext_migrations` ya no está en el código (contiene su identificador).
-    Missing(String),
-}
-
-impl Migration {
-    /// Identificador legible, por ejemplo `modulo2/0001_creando_tablas_modulo2`.
-    pub fn id(&self) -> String {
-        format!("{}/{:04}_{}", self.module, self.version, self.name)
-    }
-
-    /// Checksum del SQL (FNV-1a de 64 bits, en hexadecimal). Solo detecta cambios en el archivo;
-    /// no es un hash criptográfico.
-    pub fn checksum(&self) -> String {
-        let hash = self
-            .sql
-            .bytes()
-            .fold(0xcbf2_9ce4_8422_2325_u64, |hash, byte| {
-                (hash ^ u64::from(byte)).wrapping_mul(0x0000_0100_0000_01b3)
-            });
-        format!("{hash:016x}")
-    }
-}
-
-impl fmt::Display for MigrationError {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match self {
-            MigrationError::Database(e) => write!(f, "error de MySQL al aplicar migraciones: {e}"),
-            MigrationError::Modified(id) => write!(
-                f,
-                "la migración {id} ya estaba aplicada y su SQL cambió: los cambios van en una migración nueva"
-            ),
-            MigrationError::Numbering(id) => write!(
-                f,
-                "la migración {id} no sigue la numeración de su módulo (desde 1, sin saltos ni repetidos)"
-            ),
-            MigrationError::Missing(id) => write!(
-                f,
-                "la migración {id} está aplicada en la base pero ya no está en el código"
-            ),
-        }
-    }
-}
-
-impl From<mysql::Error> for MigrationError {
-    fn from(error: mysql::Error) -> Self {
-        MigrationError::Database(error)
-    }
-}
 
 /// Aplica las migraciones que faltan y devuelve los identificadores de las aplicadas.
 pub fn run(
@@ -146,13 +93,18 @@ fn check_none_missing(
     conn: &mut impl Queryable,
     migrations: &[Migration],
 ) -> Result<(), MigrationError> {
-    let registered: Vec<(String, u32, String)> =
-        conn.query(format!("SELECT module, version, name FROM {MIGRATIONS_TABLE}"))?;
+    let registered: Vec<(String, u32, String)> = conn.query(format!(
+        "SELECT module, version, name FROM {MIGRATIONS_TABLE}"
+    ))?;
     for (module, version, name) in registered {
         let module_listed = migrations.iter().any(|m| m.module == module);
-        let listed = migrations.iter().any(|m| m.module == module && m.version == version);
+        let listed = migrations
+            .iter()
+            .any(|m| m.module == module && m.version == version);
         if module_listed && !listed {
-            return Err(MigrationError::Missing(format!("{module}/{version:04}_{name}")));
+            return Err(MigrationError::Missing(format!(
+                "{module}/{version:04}_{name}"
+            )));
         }
     }
     Ok(())

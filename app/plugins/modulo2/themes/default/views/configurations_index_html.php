@@ -1,17 +1,18 @@
 <?php
 /* ----------------------------------------------------------------------
  * app/plugins/modulo2/themes/default/views/configurations_index_html.php :
- * Vista de todas las configuraciones del catálogo (solo lectura), agrupadas por sección.
- * Una sección por tipo de dato es una tabla (una fila por tipo de dato, una columna por
- * configuración); una sección de toda la instalación es una lista de configuraciones con su valor.
- * Al final, el resumen de la configuración que Providence guarda en su base.
- * El índice de secciones está en la barra lateral (configurations_info_html.php).
+ * Configuraciones del catálogo por sección. Cada valor que el usuario puede cambiar abre su
+ * formulario. Las secciones abiertas se recuerdan al volver a la página.
  * ----------------------------------------------------------------------
  */
 $catalog = $this->getVar('catalog');
 $data_type_names = $this->getVar('data_type_names') ?? [];
 $database_summary = $this->getVar('database_summary') ?? [];
 $error = $this->getVar('error');
+// Niveles de riesgo que el usuario puede editar, y URL del formulario de una entrada (null: sin enlaces)
+$allowed_risks = $this->getVar('allowed_risks') ?? [];
+$edit_url = $this->getVar('edit_url');
+$versions_url = $this->getVar('versions_url');
 
 $e = fn($text) => htmlspecialchars((string)$text, ENT_QUOTES, 'UTF-8');
 $data_type_name = fn($data_type) => ucfirst($data_type_names[$data_type] ?? $data_type);
@@ -42,12 +43,18 @@ $value_html = function($value, array $setting) use ($e, $data_type_names) {
 	}
 	return $text;
 };
-// Ayuda de la celda: la clave de Providence y, si cambió, el valor por defecto
+// Ayuda de la celda: si cambió, el valor original de Providence
 $cell_title = function(array $entry, array $setting) use ($e, $data_type_names) {
-	if (!$entry['modified']) { return $e($entry['key']); }
-	return $e($entry['key'].' · '._t('por defecto: %1', Modulo2ValueFormatter::text($entry['distribution'], $setting, $data_type_names)));
+	if (!$entry['modified']) { return ''; }
+	return ' title="'.$e(_t('Valor original: %1', Modulo2ValueFormatter::text($entry['distribution'], $setting, $data_type_names))).'"';
 };
-$cell = fn(array $entry, array $setting) => '<td class="m2-value'.($entry['modified'] ? ' m2-modified' : '').'" title="'.$cell_title($entry, $setting).'">'.$value_html($entry['current'], $setting).'</td>';
+// Valor con enlace a su formulario, si el usuario puede cambiarlo
+$editable = fn(array $setting) => $edit_url && !empty($setting['editable']) && in_array($setting['risk'], $allowed_risks, true);
+$cell_value = function(array $entry, array $setting, string $file) use ($e, $value_html, $editable, $edit_url) {
+	$html = $value_html($entry['current'], $setting);
+	return $editable($setting) ? '<a class="m2-edit" href="'.$e($edit_url($file, $entry['key'])).'">'.$html.'</a>' : $html;
+};
+$cell = fn(array $entry, array $setting, string $file) => '<td class="m2-value'.($entry['modified'] ? ' m2-modified' : '').'"'.$cell_title($entry, $setting).'>'.$cell_value($entry, $setting, $file).'</td>';
 $risk_badge = fn(array $setting) => isset($risk_labels[$setting['risk']]) ? ' <span class="m2-risk m2-risk-'.$e($setting['risk']).'">'.$risk_labels[$setting['risk']].'</span>' : '';
 $total_modified = $catalog ? array_sum(array_map([Modulo2CatalogMatrix::class, 'modifiedCount'], $catalog['sections'])) : 0;
 ?>
@@ -87,7 +94,10 @@ $total_modified = $catalog ? array_sum(array_map([Modulo2CatalogMatrix::class, '
 	.m2-descriptions dd::after { content: ""; display: block; }
 	.m2-only-modified .m2-section[data-modified="0"], .m2-only-modified .m2-row:not(.m2-row-modified), .m2-only-modified .m2-group, .m2-only-modified .m2-database { display: none; }
 	.m2-none-modified { display: none; padding: 8px 12px; background: #e9f5ec; border-radius: 4px; }
+	a.m2-edit { display: inline-block; color: inherit; text-decoration: none; border-bottom: 1px dashed #8aa; }
+	a.m2-edit:hover { border-bottom-color: #138290; background: #e3f4f6; }
 	.m2-only-modified[data-modified="0"] .m2-none-modified { display: block; }
+	.m2-intro { margin: 8px 0 12px 0; padding-left: 20px; line-height: 1.6; }
 </style>
 
 <div class="m2-panel" id="m2-panel" data-modified="<?= $total_modified; ?>">
@@ -98,12 +108,21 @@ $total_modified = $catalog ? array_sum(array_map([Modulo2CatalogMatrix::class, '
 </div>
 <?php return; } ?>
 
-<p><?= _t('Configuraciones que Providence solo permite cambiar editando sus archivos, agrupadas por sección, con el valor que usa ahora. Esta vista es de solo lectura.'); ?></p>
+<ul class="m2-intro">
+	<li><?= _t('Acá están las opciones de Providence que antes solo se podían cambiar editando archivos.'); ?></li>
+	<li><?= _t('Están agrupadas por tema: abrir una sección para ver sus opciones y el valor que tiene cada una.'); ?></li>
+<?php if ($allowed_risks) { ?>
+	<li><?= _t('Para cambiar un valor, hacer clic en él.'); ?></li>
+	<li><?= _t('Si un cambio no da el resultado esperado, se puede volver a una configuración anterior desde %1.', $versions_url ? '<a href="'.$e($versions_url).'">'._t('Versiones de la configuración').'</a>' : _t('Versiones de la configuración')); ?></li>
+<?php } else { ?>
+	<li><?= _t('No tiene permiso para cambiar configuraciones: solo puede consultarlas.'); ?></li>
+<?php } ?>
+</ul>
 
 <div class="m2-toolbar">
-	<span><span class="m2-bool m2-on">✓</span> <?= _t('activo'); ?> · <span class="m2-bool m2-off">✗</span> <?= _t('inactivo'); ?></span>
-	<span><span class="m2-modified">&nbsp;<?= _t('Resaltado'); ?>&nbsp;</span> <?= _t('distinto del valor por defecto (pasar el mouse para verlo)'); ?></span>
-	<label><input type="checkbox" id="m2-only-modified"/> <?= _t('Solo las modificadas (%1)', $total_modified); ?></label>
+	<span><span class="m2-bool m2-on">✓</span> <?= _t('activado'); ?> · <span class="m2-bool m2-off">✗</span> <?= _t('desactivado'); ?></span>
+	<span><span class="m2-modified m2-legend">&nbsp;<?= _t('Valor modificado'); ?>&nbsp;</span> <?= _t('ya no es el original de Providence (al pasar el mouse se ve el original)'); ?></span>
+	<label><input type="checkbox" id="m2-only-modified"/> <?= _t('Ver solo las modificadas (%1)', $total_modified); ?></label>
 	<span>
 		<a href="#" data-m2-open="1"><?= _t('Desplegar todo'); ?></a> ·
 		<a href="#" data-m2-open="0"><?= _t('Plegar todo'); ?></a>
@@ -118,7 +137,7 @@ $total_modified = $catalog ? array_sum(array_map([Modulo2CatalogMatrix::class, '
 <?php 	foreach ($catalog['sections'] as $section) { ?>
 <?php 		if (($section['scope'] ?? Modulo2Constants::SCOPE_DATA_TYPE) !== $scope) { continue; } ?>
 <?php 		$modified = Modulo2CatalogMatrix::modifiedCount($section); ?>
-<details class="m2-section" id="m2-section-<?= $e($section['id']); ?>" data-modified="<?= $modified; ?>">
+<details class="m2-section" open id="m2-section-<?= $e($section['id']); ?>" data-modified="<?= $modified; ?>" data-m2-scope="<?= $e($scope); ?>">
 	<summary>
 		<h2><?= $e($section['name']); ?></h2>
 		<?= $modified ? '<span class="m2-count">'.$e(_t('%1 modificadas', $modified)).'</span>' : ''; ?>
@@ -139,7 +158,7 @@ $total_modified = $catalog ? array_sum(array_map([Modulo2CatalogMatrix::class, '
 			<tr class="m2-row<?= $row_modified ? ' m2-row-modified' : ''; ?>">
 				<td title="<?= $e($data_type); ?>"><?= $e($data_type_name($data_type)); ?></td>
 <?php 				foreach ($section['settings'] as $setting) { ?>
-				<?= isset($cells[$setting['id']]) ? $cell($cells[$setting['id']], $setting) : '<td></td>'; ?>
+				<?= isset($cells[$setting['id']]) ? $cell($cells[$setting['id']], $setting, $section['file']) : '<td></td>'; ?>
 
 <?php 				} ?>
 			</tr>
@@ -161,7 +180,7 @@ $total_modified = $catalog ? array_sum(array_map([Modulo2CatalogMatrix::class, '
 <?php 			foreach ($section['settings'] as $setting) { $entry = $setting['entries'][0]; ?>
 			<tr class="m2-row<?= $entry['modified'] ? ' m2-row-modified' : ''; ?>">
 				<td><?= $e($setting['label']); ?><?= $risk_badge($setting); ?></td>
-				<?= $cell($entry, $setting); ?>
+				<?= $cell($entry, $setting, $section['file']); ?>
 
 				<td class="m2-help"><?= $e($setting['description']); ?></td>
 			</tr>
@@ -176,7 +195,7 @@ $total_modified = $catalog ? array_sum(array_map([Modulo2CatalogMatrix::class, '
 
 <div class="m2-database m2-group-block">
 <h2 class="m2-group"><?= _t('En la base de datos'); ?></h2>
-<details class="m2-section" id="m2-section-database" data-modified="0">
+<details class="m2-section" open id="m2-section-database" data-modified="0" data-m2-scope="database">
 	<summary><h2><?= _t('Configuración en la base de datos'); ?></h2></summary>
 	<p class="m2-section-description"><?= _t('Providence guarda esta configuración en su base, no en archivos. Se edita en su pantalla de Providence; el orden de los elementos de una lista, en el editor de listas.'); ?></p>
 	<table class="m2-table m2-global">
@@ -206,6 +225,35 @@ $total_modified = $catalog ? array_sum(array_map([Modulo2CatalogMatrix::class, '
 				panel.querySelectorAll('details.m2-section:not([data-modified="0"])').forEach(function(section) { section.open = true; });
 			}
 		});
+		// Arranca todo desplegado. Recuerda las secciones cerradas, así al volver de un formulario quedan igual
+		var key = 'modulo2-secciones-cerradas';
+		var sections = Array.prototype.slice.call(panel.querySelectorAll('details.m2-section'));
+		var remember = function() {
+			var closed = sections.filter(function(section) { return !section.open; }).map(function(section) { return section.id; });
+			try { sessionStorage.setItem(key, JSON.stringify(closed)); } catch (e) {}
+		};
+		// En la barra lateral, cada grupo queda abierto si tiene al menos una sección abierta
+		var syncSidebar = function() {
+			['data_type', 'global', 'database'].forEach(function(scope) {
+				var list = document.getElementById('m2-group-' + scope);
+				if (!list) { return; }
+				var open = sections.some(function(section) { return section.open && section.getAttribute('data-m2-scope') === scope; });
+				list.style.display = open ? 'block' : 'none';
+			});
+		};
+		try {
+			(JSON.parse(sessionStorage.getItem(key)) || []).forEach(function(id) {
+				var section = document.getElementById(id);
+				if (section) { section.open = false; }
+			});
+		} catch (e) {}
+		sections.forEach(function(section) {
+			section.addEventListener('toggle', function() { remember(); syncSidebar(); });
+		});
+		// La barra lateral puede armarse después de la página: se sincroniza también cuando ya existe
+		window.m2SyncSidebar = syncSidebar;
+		window.addEventListener('DOMContentLoaded', syncSidebar);
+		syncSidebar();
 		panel.querySelectorAll('[data-m2-open]').forEach(function(link) {
 			link.addEventListener('click', function(event) {
 				event.preventDefault();

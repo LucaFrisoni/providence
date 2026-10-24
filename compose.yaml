@@ -8,6 +8,7 @@ name: ca-extension
 # Providence lo incluye con <<: *db-env. ${VAR:?msg} corta el arranque si VAR falta en .env
 x-db-env: &db-env
   CA_DB_HOST: db
+  TZ: ${TZ:-America/Argentina/Buenos_Aires}
   CA_DB_USER: ${CA_DB_USER:?Falta CA_DB_USER en .env}
   CA_DB_PASSWORD: ${CA_DB_PASSWORD:?Falta CA_DB_PASSWORD en .env}
   CA_DB_DATABASE: ${CA_DB_DATABASE:?Falta CA_DB_DATABASE en .env}
@@ -15,6 +16,7 @@ x-db-env: &db-env
 # Conexión a la base propia de la extensión, que usa el servicio Rust
 x-ext-db-env: &ext-db-env
   EXT_DB_HOST: db
+  TZ: ${TZ:-America/Argentina/Buenos_Aires}
   EXT_DB_DATABASE: ${EXT_DB_DATABASE:?Falta EXT_DB_DATABASE en .env}
   EXT_DB_USER: ${EXT_DB_USER:?Falta EXT_DB_USER en .env}
   EXT_DB_PASSWORD: ${EXT_DB_PASSWORD:?Falta EXT_DB_PASSWORD en .env}
@@ -29,6 +31,8 @@ services:
       # DB_PORT se define en .env (3307 en .env.example, para no chocar con un MySQL local)
       - "127.0.0.1:${DB_PORT:?Falta DB_PORT en .env}:3306"
     environment:
+      # Zona horaria de los equipos: la usan NOW() y CURRENT_TIMESTAMP
+      TZ: ${TZ:-America/Argentina/Buenos_Aires}
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?Falta MYSQL_ROOT_PASSWORD en .env}
       MYSQL_DATABASE: ${CA_DB_DATABASE:?Falta CA_DB_DATABASE en .env}
       MYSQL_USER: ${CA_DB_USER:?Falta CA_DB_USER en .env}
