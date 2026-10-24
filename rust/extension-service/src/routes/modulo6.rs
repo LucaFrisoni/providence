@@ -9,7 +9,9 @@ use super::helpers::segments;
 use crate::constants::{HEALTH_SEGMENT, MODULO6};
 use crate::json::Json;
 use crate::json_object;
+use crate::services::modulo6::{fuentes, multifuente};
 use crate::types::http::{ApiRequest, ApiResponse};
+use crate::types::modulo6::fuente::Consulta;
 
 /// Función principal invocada por el servidor web para atender las peticiones del Módulo 6.
 pub fn routes(request: &ApiRequest) -> ApiResponse {
@@ -31,20 +33,27 @@ pub fn routes(request: &ApiRequest) -> ApiResponse {
 
         // Método para consulta multifuente
         (Method::Get, ["lookup"]) => {
-            let query = request
-                .query_param("q")
-                .map(|v| v.replace('+', " "))
-                .unwrap_or_default();
-            let sources = request
-                .query_param("sources")
-                .map(|v| v.replace('+', " "))
-                .unwrap_or_else(|| "all".to_string());
-            let mode = request
-                .query_param("mode")
-                .map(|v| v.replace('+', " "))
-                .unwrap_or_else(|| "multi".to_string());
+            let texto = request.query_param("q").unwrap_or_default().replace('+', " ");
+            let sources = request.query_param("sources").unwrap_or("all");
+            let limite = request.query_param("limit").and_then(|l| l.parse().ok()).unwrap_or(20);
 
-            obtener_lookup(&query, &sources, &mode)
+            let consulta = Consulta { texto: &texto, limite };
+            let r = multifuente::buscar(&fuentes::elegir(sources), &consulta);
+
+            ApiResponse::ok(json_object! {
+                results: r.candidatos.iter().map(|c| json_object! {
+                    // Providence usa '|' como separador interno
+                    label: c.etiqueta.replace('|', ":"),
+                    url: c.uri.as_str(),
+                    id: c.id.as_str(),
+                    source: c.fuente,
+                    score: c.puntaje
+                }).collect::<Vec<Json>>(),
+                errors: r.errores.iter().map(|(f, m)| json_object! {
+                    source: f.as_str(),
+                    message: m.as_str()
+                }).collect::<Vec<Json>>()
+            })
         }
 
         // Método para información extendida
@@ -61,48 +70,7 @@ pub fn routes(request: &ApiRequest) -> ApiResponse {
     }
 }
 
-/// Procesa la consulta multifuente y genera la respuesta estructurada en JSON.
-fn obtener_lookup(query: &str, sources: &str, mode: &str) -> ApiResponse {
-    if query.trim().is_empty() {
-        return ApiResponse::ok(json_object! {
-            results: Vec::<Json>::new()
-        });
-    }
 
-    let mut resultados: Vec<Json> = Vec::new();
-
-    if mode == "multi" {
-        // Consulta en paralelo o combinada a múltiples fuentes
-        let item1 = json_object! {
-            id: "Q44521",
-            label: format!("{} [Wikidata]", query),
-            url: "https://www.wikidata.org/wiki/Q44521",
-            source: "wikidata"
-        };
-        let item2 = json_object! {
-            id: "500030661",
-            label: format!("{} [Getty AAT]", query),
-            url: "http://vocab.getty.edu/page/aat/500030661",
-            source: "getty"
-        };
-
-        resultados.push(item1);
-        resultados.push(item2);
-    } else {
-        // Consulta a una fuente única
-        let item = json_object! {
-            id: "12345",
-            label: format!("{} [{}]", query, sources),
-            url: format!("https://example.org/item/{}", query),
-            source: sources
-        };
-        resultados.push(item);
-    }
-
-    ApiResponse::ok(json_object! {
-        results: resultados
-    })
-}
 
 /// Procesa la consulta de detalles extendidos de un recurso.
 fn obtener_detalles(url: &str) -> ApiResponse {
