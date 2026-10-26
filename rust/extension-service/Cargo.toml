@@ -11,3 +11,5 @@ tiny_http = "0.12"
 mysql = { version = "28", default-features = false, features = ["minimal-rust"] }
 # SHA-256 del contenido de cada versión de configuración (módulo 2). Ya lo usa mysql: no agrega código nuevo
 sha2 = "0.10"
+# Cliente HTTP síncrono para consultar las fuentes externas (módulo 6). `tls` usa rustls con sus propios certificados raíz
+ureq = { version = "2", default-features = false, features = ["tls"] }

@@ -91,6 +91,12 @@ pub const NAVIGATION_CONF: &str = "navigation.conf";
 pub const ID_NUMBERING_CONF: &str = "multipart_id_numbering.conf";
 pub const TRANSLATIONS_CONF: &str = "translations.conf";
 
+// Módulo 6: limites maximos predefinidos
+/// Límite de candidatos si MultiSource no manda `limit`.
+pub const LIMITE_POR_DEFECTO_MOD6: usize = 20;
+/// Límite máximo, para que un pedido no dispare cientos de resultados por fuente.
+pub const LIMITE_MAXIMO_MOD6: usize = 100;
+
 /// ----------------------------------------------------Pruebas (db): variable con el nombre de la base de Providence, para verificar que el servicio no accede a ella.
 #[cfg(test)]
 pub const PROVIDENCE_DB_ENV_VAR: &str = "CA_DB_DATABASE";

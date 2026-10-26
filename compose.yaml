@@ -23,7 +23,7 @@ x-ext-db-env: &ext-db-env
 
 services:
   db:
-    image: mysql:8.4
+    image: mysql:8.4.11
     # Parámetros de MySQL: utf8mb4 para guardar bien acentos, ñ y cualquier carácter Unicode
     command: ["--character-set-server=utf8mb4", "--collation-server=utf8mb4_unicode_ci"]
     ports:
@@ -108,7 +108,28 @@ services:
     build: ./rust/extension-service
     # Sin "ports": no se publica en la computadora, solo Providence lo alcanza por la red interna
     # Conexión a la base propia de la extensión (no tiene acceso a la base de Providence)
-    environment: *ext-db-env
+    environment: 
+      <<: *ext-db-env
+      
+      # Módulo 6: fuentes externas. Se definen en .env (ver .env.example); vacía = sin configurar.
+      # El servicio sí sale a internet para consultar Wikidata, VIAF, Getty, etc.
+      M6_TIMEOUT_MS: ${M6_TIMEOUT_MS:-2500}
+      M6_NUMISHARE_URL: ${M6_NUMISHARE_URL:-}
+      M6_EOL_CLAVE: ${M6_EOL_CLAVE:-}
+      M6_GLOBALNAMES_FUENTES: ${M6_GLOBALNAMES_FUENTES:-}
+      M6_SPARQL_URL: ${M6_SPARQL_URL:-}
+      M6_SPARQL_CONSULTA: ${M6_SPARQL_CONSULTA:-}
+      M6_SPARQL_VAR_URI: ${M6_SPARQL_VAR_URI:-}
+      M6_SPARQL_VAR_ETIQUETA: ${M6_SPARQL_VAR_ETIQUETA:-}
+      M6_CA_URL: ${M6_CA_URL:-}
+      M6_CA_USUARIO: ${M6_CA_USUARIO:-}
+      M6_CA_CLAVE: ${M6_CA_CLAVE:-}
+      M6_CA_TABLA: ${M6_CA_TABLA:-}
+      M6_CA_PLANTILLA: ${M6_CA_PLANTILLA:-}
+      M6_RS_URL: ${M6_RS_URL:-}
+      M6_RS_USUARIO: ${M6_RS_USUARIO:-}
+      M6_RS_CLAVE: ${M6_RS_CLAVE:-}
+      M6_WORLDCAT_CLAVE: ${M6_WORLDCAT_CLAVE:-}  
     # Arranca cuando la base de la extensión ya está creada
     depends_on:
       extension-db-init:
