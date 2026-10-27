@@ -9,7 +9,7 @@
 - **Rutas del servicio Rust:** `/api/modulo6`
 
 - **Responsable:** Francisco Dómina
-
+	
   
 
 Integrar información de fuentes externas y gestionar identificadores externos (URI) asociados a registros, aprovechando y extendiendo `InformationService` de CollectiveAccess.
@@ -57,5 +57,21 @@ Las rutas dentro del código fuente que se modificaron fueron las siguientes:
 	- `` health``: Común para todos los módulos, muestra que la API funciona.
 - `` rust/extension-service/types/modulo6/fuente.rs ``: Define la estructura de datos que se va a usar en el engranaje de la consulta de fuentes.
 - ``rust/extension-service/services/modulo6/...`` :  Acá se encuentra todo el motor y engranaje principal de la extensión, hay múltiples archivos los cuales están hechos para poder hacer consultas o para poder leer devoluciones de distintos protocolos, por eso se encuentran archivos como ``sparql.rs`` o ``xml.rs``los cuales están hechos para parsear este tipo de consultas y transformarlas a Json. 
-	- ``multifuente.rs``: Es el motor principal, es el que se encarga de realizar todos los hilos, lanzarlos y esperar sus respuestas. 
+	- ``multifuente.rs``: Es el motor principal, es el que se encarga de realizar todos los hilos, lanzarlos y esperar sus respuestas. Se lanza un hilo por fuente y cada pedido corta a los `` M6_TIMEOUT_MS`` que se encuentra en el .env y en el dockercompose.yaml 
 - ``rust/extension-service/services/modulo6/...``: Acá se encuentra la consulta en si a cada fuente, cada una con su respectiva implementación. Por cada archivo se encuentra una implementación del trait ``Fuente``. De esta manera se puedo estandarizar todo
+
+
+### docker
+Con respecto al docker se agregan variables de entorno, hay fuentes que necesitan obligartoriamente un codigo para poder entrar (Como el caso de collectiveaccess). Todo lo relacionado se puede encontrar en el ``.env.example`` y en ``dockercompose.yaml``
+
+### pruebas
+`` tests/extension/test-rust.sh unit modulo6 `` cada fuente prueba como arma la consulta y como lee la respuesta, sin conectarse a internet.
+
+### Recordar para probar
+Para poder probar todo lo hecho tienen que volver a buildear el proyecto con `` docker compose up -d --build `` además si quieren probar como funciona todo el tema tienen que crear un tipo de metadato que sea InformationService y dentro tienen que usar el servicio "MultiSource". Luego, tienen que restringir el metadato para objetos en la parte de abajo y guardar el tipo de metadato. Luego editarlo, al editarlo van a aparecer las opciones para poder elegir que fuentes consultar, para poder elegir muchas hay que apretar ctl+click en cada opción y guardar los cambios. Finalmente tienen que crear un objeto (o el que hayan elegido a la hora de restringir el metadato) y les va a aparecer el nombre que le dieron al metadato, agregan ese tipo y les va a dejar escribir. En ese momento van a poder escribir y se realiza la multiconsulta.
+
+
+
+### Que es lo que falta:
+- Poder agregar dentro del panel de gestion la pestaña "Registros sin URIs", no quise manosear el código de Luca, pero si lo ven necesario me comentan aca en el PR y manoteo sin drama
+- Consultar a la gente de FILO las fuentes externas que les gustarian agregar: Esto se los voy a preguntar mañana. Agregar una fuente como ya se dice antes es agregar un archivo y poco más. Si prefieren esperar a que mañana me contesten y despues de agregarlo aceptar el PULL request hacemos eso, si no, ya el esqueleto y realmente todo el trabajo pesado está realizado. 
