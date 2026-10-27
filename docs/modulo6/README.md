@@ -36,7 +36,7 @@ No se toca ningún archivo del núcleo de CollectiveAccess, pero si se agrega un
 
 ## Integración con otros módulos
 
-  
+Se relaciona con la utilización de identificadores en mappings y perfiles. Los identificadores se guardan de manera nativa en CollectiveAccess.  
 
 Módulos relacionados: [módulo 4](../modulo4/README.md), [módulo 5](../modulo5/README.md).
 

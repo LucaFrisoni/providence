@@ -2,7 +2,7 @@
 //!
 //! Para agregar una fuente: crear su archivo (copiando `wikidata.rs`), declararlo abajo con
 //! `pub mod` y sumarla a `FUENTES`. Nada más: el motor y Providence la ven solas
-//! (ver docs/modulo6/fuentes.md).
+//! 
 
 // Herramientas compartidas por varias fuentes (no son fuentes).
 pub mod getty;
@@ -21,7 +21,6 @@ pub mod iconclass;
 pub mod nomenclature;
 pub mod nomisma;
 pub mod pella;
-pub mod prueba;
 pub mod ptolemaic;
 pub mod resourcespace;
 pub mod seleucid;
@@ -65,8 +64,6 @@ pub static FUENTES: &[&dyn Fuente] = &[
     &collectiveaccess::CollectiveAccess,
     &resourcespace::ResourceSpace,
     &worldcat::WorldCat,
-    // Solo para pruebas
-    &prueba::FuentePrueba,
 ];
 
 /// Valor del setting "sources" que significa "todas las fuentes".
@@ -74,7 +71,7 @@ pub const TODAS: &str = "all";
 
 /// Las fuentes que pidió MultiSource en el setting "sources".
 ///
-/// - `"all"` o vacío: todas las que están listas para usar (configuradas y que no son de prueba).
+/// - `"all"` o vacío: todas las que están listas para usar (configuradas y incluidas en "todas").
 /// - `"wikidata"`: solo esa.
 /// - `"wikidata,viaf,aat"`: esas tres. Una fuente pedida por su nombre se consulta aunque le
 ///   falte configuración, así el error aparece en la respuesta y se sabe qué falta.
@@ -88,7 +85,7 @@ pub fn elegir(pedidas: &str) -> Vec<&'static dyn Fuente> {
         .collect();
    
     if codigos.is_empty() || codigos.iter().any(|c| c == TODAS) {
-        // "Todas": las que no son de prueba y no les falta configuración.
+        // "Todas": las incluidas en "todas" y que no les falta configuración.
         return FUENTES
             .iter()
             .copied()
@@ -131,20 +128,19 @@ mod tests {
         }
     }
 
-    /// "all" y vacío eligen todas las listas para usar, sin la de prueba.
+    /// "all" y vacío eligen todas las listas para usar, sin las no configuradas.
     #[test]
-    fn todas_excluye_prueba_y_no_configuradas() {
+    fn todas_excluye_no_configuradas() {
         let todas = codigos(&elegir("all"));
         assert_eq!(todas, codigos(&elegir("")));
         assert!(todas.contains(&"wikidata"));
-        assert!(!todas.contains(&"prueba"));
         assert!(!todas.contains(&"worldcat") || std::env::var("M6_WORLDCAT_CLAVE").is_ok());
     }
 
     /// Una lista elige esas fuentes, sin distinguir mayúsculas e ignorando las que no existen.
     #[test]
     fn una_lista_elige_esas_fuentes() {
-        assert_eq!(codigos(&elegir("Prueba")), vec!["prueba"]);
+        assert_eq!(codigos(&elegir("WikiData")), vec!["wikidata"]);
         assert_eq!(
             codigos(&elegir(" viaf , wikidata ,inexistente")),
             vec!["wikidata", "viaf"]

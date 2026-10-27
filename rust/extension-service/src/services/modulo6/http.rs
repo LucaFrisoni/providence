@@ -16,7 +16,7 @@ use super::util::variable;
 /// Variable de entorno con el tiempo máximo de cada pedido, en milisegundos.
 pub const TIMEOUT_ENV_VAR: &str = "M6_TIMEOUT_MS";
 
-/// Tiempo máximo por defecto: 2,5 s. MultiSource.php corta a los 5 s, así que cada fuente tiene
+/// Tiempo máximo por defecto: 2,5 s. MultiSource.php corta a los 10 s, así que cada fuente tiene
 /// que contestar bastante antes para que el motor llegue a juntar y ordenar.
 const TIMEOUT_POR_DEFECTO_MS: u64 = 2500;
 

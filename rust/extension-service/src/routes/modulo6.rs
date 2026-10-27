@@ -146,7 +146,7 @@ fn obtener_detalles(request: &ApiRequest) -> ApiResponse {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::constants::{HTTP_NOT_FOUND, HTTP_OK};
+    use crate::constants::HTTP_NOT_FOUND;
 
     /// GET a una ruta del módulo con la query dada.
     fn get(path: &str, query: &str) -> ApiResponse {
@@ -156,19 +156,6 @@ mod tests {
         })
     }
 
-    /// El lookup decodifica la query y responde con los campos que lee MultiSource.php.
-    #[test]
-    fn lookup_responde_en_el_formato_de_multisource() {
-        let respuesta = get("/lookup", "q=Lola%20Mora&sources=prueba&limit=5");
-        assert_eq!(respuesta.status, HTTP_OK);
-        let json = Json::parse(&respuesta.body).unwrap();
-        let primero = &json["results"][0];
-        assert_eq!(primero["label"], "Lola Mora (persona de prueba)");
-        assert_eq!(primero["url"], "https://ejemplo.org/persona/Lola_Mora");
-        assert_eq!(primero["source"], "prueba");
-        assert!(json["errors"].is_empty());
-    }
-
     /// Sin texto, responde una lista vacía sin consultar ninguna fuente.
     #[test]
     fn lookup_sin_texto_responde_vacio() {
@@ -176,27 +163,12 @@ mod tests {
         assert!(json["results"].is_empty());
     }
 
-    /// /details devuelve los datos reales de una URI que la fuente reconoce.
-    #[test]
-    fn details_devuelve_los_datos_de_la_uri() {
-        let respuesta = get(
-            "/details",
-            "url=https%3A%2F%2Fejemplo.org%2Fpersona%2FLola_Mora&sources=prueba",
-        );
-        assert_eq!(respuesta.status, HTTP_OK);
-        let json = Json::parse(&respuesta.body).unwrap();
-        assert_eq!(json["label"], "Lola Mora (persona de prueba)");
-        assert_eq!(json["source"], "prueba");
-        assert!(json["extra"].is_object(), "la fuente de prueba no tiene datos extra: objeto vacío");
-        assert!(json["extra_error"].is_null());
-    }
-
     /// /details sin URI, o con una URI que ninguna fuente reconoce, responde 404 (no inventa datos).
     #[test]
     fn details_sin_datos_responde_404() {
-        assert_eq!(get("/details", "sources=prueba").status, HTTP_NOT_FOUND);
+        assert_eq!(get("/details", "sources=inexistente").status, HTTP_NOT_FOUND);
         assert_eq!(
-            get("/details", "url=http%3A%2F%2Fotra.org%2F1&sources=prueba").status,
+            get("/details", "url=http%3A%2F%2Fotra.org%2F1&sources=inexistente").status,
             HTTP_NOT_FOUND
         );
     }

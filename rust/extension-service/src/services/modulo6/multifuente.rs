@@ -97,7 +97,7 @@ fn uri_comparable(uri: &str) -> &str {
 
 /// Qué tan parecida es la etiqueta a lo buscado, de 0 a 1.
 ///
-/// Versión simple a propósito: después se puede cambiar por Jaro-Winkler sin tocar nada más.
+/// Versión simple. Se puede complejizar
 fn puntaje(consulta: &str, etiqueta: &str) -> f64 {
     let (q, e) = (normalizar(consulta), normalizar(etiqueta));
     if q == e {
@@ -146,11 +146,6 @@ fn sin_tilde(letra: char) -> char {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::services::modulo6::fuentes::prueba::FuentePrueba;
-
-    /// Prueba de rendimiento en cuestión de tiempo.
-
-
 
     /// Fuente que siempre falla, para probar que el motor la tolera.
     struct FuenteRota;
@@ -187,11 +182,47 @@ mod tests {
         }
     }
 
+    /// Prueba de rendimiento en cuestión de tiempo.
+    #[test]
+    #[ignore = "Consulta las fuentes por internet"]
+    fn prueba_tiempo_consulta_menos_10_segundos() {
+        use std::time::{Duration, Instant};
+
+        use crate::services::modulo6::fuentes::elegir;
+
+        let fuentes = elegir("all");
+        let consulta = Consulta {
+            texto: "Lola Mora",
+            limite: 20,
+            idioma: "es",
+        };   
+
+        let inicio = Instant::now(); //Inicia cronometro
+        let r = buscar(&fuentes, &consulta);
+        let tarda = inicio.elapsed(); //Termina cronometro
+
+        println!(
+            "{} fuentes, {} candidatos, {} errores, en {:?}",
+            fuentes.len(),
+            r.candidatos.len(),
+            r.errores.len(),
+            tarda
+        );
+        for (codigo, motivo) in &r.errores {
+            println!("  falló {codigo}: {motivo}");
+        }
+
+        assert!(
+            tarda < Duration::from_secs(10),
+            "la búsqueda tardó {tarda:?} (máximo 10 s)"
+        );
+    }
+
     /// Si una fuente falla, las otras igual devuelven resultados y la falla queda en errores.
     #[test]
     fn una_fuente_rota_no_rompe_las_demas() {
-        let r = buscar(&[&FuentePrueba, &FuenteRota], &consulta(20));
-        assert_eq!(r.candidatos.len(), 1);
+        let r = buscar(&[&FuenteFija, &FuenteRota], &consulta(20));
+        assert_eq!(r.candidatos.len(), 2); // los dos de FuenteFija con URI distinta
         assert_eq!(
             r.errores,
             vec![("rota".to_string(), "no responde".to_string())]

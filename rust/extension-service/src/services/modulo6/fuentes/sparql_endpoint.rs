@@ -12,7 +12,7 @@
 //! | `M6_SPARQL_VAR_ETIQUETA`| Variable del SELECT que tiene la etiqueta                | `itemLabel`              |
 //!
 //! Es la forma más rápida de agregar una fuente nueva si esa fuente tiene un endpoint SPARQL:
-//! basta con cambiar las variables (ver docs/modulo6/fuentes.md).
+//! basta con cambiar las variables.
 
 use crate::services::modulo6::sparql::{self, valor};
 use crate::services::modulo6::util::{escapar_sparql, ultimo_tramo, variable};

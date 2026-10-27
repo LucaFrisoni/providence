@@ -7,7 +7,7 @@
 //! API usada: `wbsearchentities`, el buscador por nombre de Wikidata. No pide clave.
 //! Documentación: https://www.mediawiki.org/wiki/Wikibase/API
 //!
-//! Este archivo es el modelo a copiar para una fuente nueva (ver docs/modulo6/fuentes.md): una
+//! Este archivo es el modelo a copiar para una fuente nueva una
 //! estructura, el `impl Fuente`, una función que arma la URL y otra que lee la respuesta.
 
 use crate::json::{Json, Number};

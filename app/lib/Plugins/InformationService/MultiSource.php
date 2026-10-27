@@ -67,7 +67,7 @@ class WLPlugInformationServiceMultiSource extends BaseInformationServicePlugin i
     const ACLARACION_INICIO = ' ⟨';
     const ACLARACION_FIN = '⟩';
     /** Tiempo máximo de espera al servicio Rust, en segundos. */
-    const TIMEOUT = 5;
+    const TIMEOUT = 10;
     /** Minutos que se guarda en caché la lista de fuentes (para no pedirla en cada pantalla). */
     const CACHE_FUENTES_MINUTOS = 5;
     /** Configuración del módulo 6 (umbrales de la asociación automática). */
@@ -91,7 +91,7 @@ class WLPlugInformationServiceMultiSource extends BaseInformationServicePlugin i
         'seleucid' => 'Seleucid Coins Online (ANS)', 'gbif' => 'GBIF', 'eol' => 'Encyclopedia of Life',
         'globalnames' => 'Global Names Resolver', 'alansl' => 'ALA National Species List',
         'sparql' => 'Endpoint SPARQL configurable', 'collectiveaccess' => 'Otra instalación de CollectiveAccess',
-        'resourcespace' => 'ResourceSpace', 'worldcat' => 'WorldCat (OCLC)', 'prueba' => 'Fuente de prueba (sin internet)'
+        'resourcespace' => 'ResourceSpace', 'worldcat' => 'WorldCat (OCLC)'
     ];
 
     static $s_settings;

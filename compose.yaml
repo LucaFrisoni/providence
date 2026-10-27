@@ -113,7 +113,7 @@ services:
       
       # Módulo 6: fuentes externas. Se definen en .env (ver .env.example); vacía = sin configurar.
       # El servicio sí sale a internet para consultar Wikidata, VIAF, Getty, etc.
-      M6_TIMEOUT_MS: ${M6_TIMEOUT_MS:-2500}
+      M6_TIMEOUT_MS: ${M6_TIMEOUT_MS:-5000}
       M6_NUMISHARE_URL: ${M6_NUMISHARE_URL:-}
       M6_EOL_CLAVE: ${M6_EOL_CLAVE:-}
       M6_GLOBALNAMES_FUENTES: ${M6_GLOBALNAMES_FUENTES:-}
