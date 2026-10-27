@@ -43,7 +43,7 @@ class Modulo2ConfigValues {
 			$loaded[$file] = $loaded[$file] ?? [($this->effective_loader)($file), ($this->distribution_loader)($file)];
 			foreach ($section['settings'] as &$setting) {
 				foreach ($setting['entries'] as &$entry) {
-					$entry += self::valuesFor($entry['key'], $setting['kind'], ...$loaded[$file]);
+					$entry += self::valuesFor(self::keysOf($entry), $setting, ...$loaded[$file]);
 				}
 			}
 		}
@@ -51,13 +51,19 @@ class Modulo2ConfigValues {
 	}
 	# -------------------------------------------------------
 	/**
-	 * Valor actual y de la distribución de una sola clave: ['current' => ..., 'distribution' => ..., 'modified' => ...]
+	 * Valor actual y de la distribución de una sola entrada: $entry tiene file, key, kind y, si corresponde,
+	 * linked (claves vinculadas) y options. Devuelve ['current' => ..., 'distribution' => ..., 'modified' => ...]
 	 *
 	 * @throws Modulo2ConfigException Si el archivo no es válido
 	 */
-	public function entryValues(string $file, string $key, string $kind) : array {
-		$file = self::checkedFile($file);
-		return self::valuesFor($key, $kind, ($this->effective_loader)($file), ($this->distribution_loader)($file));
+	public function entryValues(array $entry) : array {
+		$file = self::checkedFile((string)$entry['file']);
+		return self::valuesFor(self::keysOf($entry), $entry, ($this->effective_loader)($file), ($this->distribution_loader)($file));
+	}
+	# -------------------------------------------------------
+	/** La clave de una entrada y las vinculadas, que Providence exige junto con ella */
+	public static function keysOf(array $entry) : array {
+		return array_merge([$entry['key']], $entry['linked'] ?? []);
 	}
 	# -------------------------------------------------------
 	/**
@@ -100,12 +106,6 @@ class Modulo2ConfigValues {
 		switch ($kind) {
 			case Modulo2Constants::KIND_BOOLEAN: return (bool)(int)$value;
 			case Modulo2Constants::KIND_SUBTYPE_LIST: $list = self::toList($value); sort($list, SORT_STRING); return $list;
-			case Modulo2Constants::KIND_TABLE_LIST: return self::toList($value);
-			case Modulo2Constants::KIND_NUMBER: return is_numeric($value) ? $value + 0 : null;
-			case Modulo2Constants::KIND_COLOR: return strtolower(trim((string)$value));
-			case Modulo2Constants::KIND_STRUCTURED: return is_array($value) ? $value : [];
-			case Modulo2Constants::KIND_KEY_ORDER: return is_array($value) ? array_map('strval', array_keys($value)) : [];
-			case Modulo2Constants::KIND_TEXT:
 			case Modulo2Constants::KIND_CHOICE: return (string)$value;
 		}
 		return $value;
@@ -117,10 +117,25 @@ class Modulo2ConfigValues {
 		return strlen((string)$value) ? [(string)$value] : [];
 	}
 	# -------------------------------------------------------
-	private static function valuesFor(string $key, string $kind, $effective, $distribution) : array {
-		$current = self::normalize(self::lookup($effective, $key), $kind);
-		$original = self::normalize(self::lookup($distribution, $key), $kind);
+	/** $setting: kind y, en las de opciones, options */
+	private static function valuesFor(array $keys, array $setting, $effective, $distribution) : array {
+		$current = self::combined($keys, $setting, $effective);
+		$original = self::combined($keys, $setting, $distribution);
 		return ['current' => $current, 'distribution' => $original, 'modified' => $current !== $original];
+	}
+	# -------------------------------------------------------
+	/** Valor de la clave; con claves vinculadas (sí o no), sí solo si todas están en sí */
+	private static function combined(array $keys, array $setting, $config) {
+		$values = array_map(fn($key) => self::canonical(self::normalize(self::lookup($config, $key), $setting['kind']), $setting['options'] ?? []), $keys);
+		return sizeof($values) > 1 ? !in_array(false, $values, true) : $values[0];
+	}
+	# -------------------------------------------------------
+	/** Un valor que el catálogo muestra como una de sus opciones ("also") pasa a ser esa opción */
+	private static function canonical($value, array $options) {
+		foreach ($options as $option) {
+			if (in_array($value, $option['also'] ?? [], true)) { return (string)$option['value']; }
+		}
+		return $value;
 	}
 	# -------------------------------------------------------
 	private static function checkedFile(string $file) : string {

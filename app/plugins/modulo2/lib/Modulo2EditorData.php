@@ -7,6 +7,7 @@
  */
 require_once(__DIR__.'/Modulo2Constants.php');
 require_once(__DIR__.'/Modulo2ValueFormatter.php');
+require_once(__DIR__.'/Modulo2ConfigValues.php');
 
 class Modulo2EditorData {
 	# -------------------------------------------------------
@@ -32,7 +33,7 @@ class Modulo2EditorData {
 		return !empty($setting['editable']) && in_array($setting['risk'], $allowed_risks, true);
 	}
 	# -------------------------------------------------------
-	/** ['entries' => [id => entrada], 'subtypes' => [tipo de dato => subtipos], 'data_types' => [['code', 'name']]] */
+	/** ['entries' => [id => entrada], 'subtypes' => [tipo de dato => subtipos]] */
 	public function build() : array {
 		$entries = [];
 		$subtypes = [];
@@ -47,7 +48,7 @@ class Modulo2EditorData {
 				}
 			}
 		}
-		return ['entries' => $entries, 'subtypes' => $subtypes, 'data_types' => $this->dataTypes()];
+		return ['entries' => $entries, 'subtypes' => $subtypes];
 	}
 	# -------------------------------------------------------
 	private function entry(array $section, array $setting, array $entry) : array {
@@ -58,15 +59,9 @@ class Modulo2EditorData {
 			'current' => $entry['current'], 'distribution' => $entry['distribution'],
 			'inverted' => !empty($setting['inverted']), 'options' => $setting['options'] ?? [],
 			'data_type' => $entry['data_type'] ?? null,
-			'local' => in_array(explode('/', $entry['key'])[0], ($this->local_keys)($section['file']), true)
+			'excludes' => isset($entry['excludes']) ? self::id($section['file'], $entry['excludes']) : null,
+			'local' => (bool)array_intersect(array_map(fn($key) => explode('/', $key)[0], Modulo2ConfigValues::keysOf($entry)), ($this->local_keys)($section['file']))
 		];
-	}
-	# -------------------------------------------------------
-	/** Tipos de dato que se pueden elegir en una lista de tipos de dato, con su nombre */
-	private function dataTypes() : array {
-		$types = [];
-		foreach ($this->names as $code => $name) { $types[] = ['code' => (string)$code, 'name' => ucfirst((string)$name)]; }
-		return $types;
 	}
 	# -------------------------------------------------------
 }

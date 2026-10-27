@@ -11,22 +11,24 @@ $e = fn($text) => htmlspecialchars((string)$text, ENT_QUOTES, 'UTF-8');
 ?>
 <?= Modulo2Ui::styles(); ?>
 <style>
-	.m2-history { max-height: calc(100vh - 230px); min-height: 240px; overflow: auto; border: 1px solid #e2e2e2; border-radius: 6px; }
-	.m2-history thead th { position: sticky; top: 0; z-index: 1; background: #fff; }
-	.m2-history-status { padding: 10px; text-align: center; color: #666; font-size: 12px; }
+	.m2-history { max-height: calc(100vh - 230px); min-height: 240px; overflow: auto; margin-top: 16px; }
+	.m2-history-status { padding: 12px; text-align: center; color: var(--m2-muted); font-size: 12px; }
+	.m2-history td { font-size: 12.5px; }
+	/* El resultado puede ocupar dos líneas ("Ya había cambiado"): sin esto se metía en la columna de al lado */
+	.m2-history .m2-tag { white-space: normal; max-width: 100%; border-radius: 8px; text-transform: none; letter-spacing: 0; font-size: 11.5px; }
 </style>
 <div class="m2-page">
-<h1><?= Modulo2I18n::t('Change history'); ?></h1>
-<p><?= Modulo2I18n::t('All the setting changes and version restores, from the newest to the oldest.'); ?></p>
+<h1><?= $e($this->getVar('title') ?? Modulo2I18n::t('Change history')); ?></h1>
+<ul class="m2-lead"><li><?= $e($this->getVar('intro') ?? Modulo2I18n::t('All the setting changes and version restores, from the newest to the oldest.')); ?></li></ul>
 <?php if ($error) { ?>
 	<div class="notification-error-box"><?= $e($error); ?></div>
 <?php } elseif ($rows_html === '') { ?>
-	<p><?= Modulo2I18n::t('There are no changes yet.'); ?></p>
+	<p class="m2-empty"><?= Modulo2I18n::t('There are no changes yet.'); ?></p>
 <?php } else { ?>
 <div class="m2-history" id="m2-history">
 	<table class="m2-table">
 		<colgroup>
-			<col style="width:11%"/><col style="width:11%"/><col style="width:20%"/><col style="width:11%"/><col style="width:11%"/><col style="width:12%"/><col style="width:24%"/>
+			<col style="width:10%"/><col style="width:10%"/><col style="width:22%"/><col style="width:11%"/><col style="width:11%"/><col style="width:14%"/><col style="width:22%"/>
 		</colgroup>
 		<thead>
 			<tr>

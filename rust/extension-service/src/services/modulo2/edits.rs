@@ -129,8 +129,10 @@ fn check_state(request: &EditRequest, item: &EditItem) -> Result<(), Rejection> 
     Ok(())
 }
 
-/// Aplica el cambio a las claves del archivo y devuelve el valor nuevo normalizado.
+/// Aplica el cambio a las claves del archivo (la de la configuración y sus vinculadas) y devuelve el
+/// valor nuevo normalizado.
 fn new_value(item: &EditItem, setting: &Setting, local: &mut Json) -> Result<Json, Rejection> {
+    let keys = std::iter::once(item.key.as_str()).chain(setting.linked.iter().copied());
     match &item.action {
         EditAction::SetValue(value) => {
             let validated = values::validate(setting.kind, value)
@@ -141,11 +143,14 @@ fn new_value(item: &EditItem, setting: &Setting, local: &mut Json) -> Result<Jso
                     "the new value is the same as the current one",
                 ));
             }
-            local.insert(&item.key, validated.conf);
+            for key in keys {
+                local.insert(key, validated.conf.clone());
+            }
             Ok(validated.normalized)
         }
         EditAction::Reset => {
-            if local.remove(&item.key).is_none() {
+            let removed = keys.filter(|key| local.remove(key).is_some()).count();
+            if removed == 0 {
                 return Err(Rejection::new(
                     RejectionReason::Invalid,
                     "the setting already uses the default value",
@@ -156,14 +161,20 @@ fn new_value(item: &EditItem, setting: &Setting, local: &mut Json) -> Result<Jso
     }
 }
 
-/// Guarda la versión anterior, registra cada cambio pendiente y devuelve lo que hay que escribir.
+/// Guarda la versión anterior si el usuario lo pidió, registra cada cambio pendiente y devuelve lo
+/// que hay que escribir.
 fn log_pending(
     conn: &mut impl Queryable,
     request: &EditRequest,
     plan: EditPlan,
 ) -> Result<Json, mysql::Error> {
-    let saved = version_service::save(conn, &request.version, true, &request.user, &request.state)?;
-    let before = saved.version();
+    let saved = version_service::previous(
+        conn,
+        request.version.as_ref(),
+        &request.user,
+        &request.state,
+    )?;
+    let before = saved.as_ref().map(Saved::version);
     let mut change_ids = Vec::with_capacity(request.edits.len());
     for (item, value) in request.edits.iter().zip(&plan.values) {
         let change = NewChange {
@@ -171,7 +182,7 @@ fn log_pending(
             key: Some(&item.key),
             old_value: Some(&item.current),
             new_value: Some(value),
-            version_before: Some(before.id),
+            version_before: before.map(|v| v.id),
             ..NewChange::new(&request.user, ChangeAction::Edit, ChangeResult::Pending)
         };
         change_ids.push(change_log::insert(conn, &change)?);
@@ -182,8 +193,8 @@ fn log_pending(
     }
     Ok(json_object! {
         change_ids: change_ids,
-        version_before: to_json::version(before),
-        version_created: matches!(saved, Saved::Created(_)),
+        version_before: before.map(to_json::version),
+        version_created: matches!(saved, Some(Saved::Created(_))),
         files: files,
         values: plan.values,
     })
@@ -305,10 +316,10 @@ mod tests {
             edits: vec![places()],
             local: Json::object(),
             state: state(Json::object()),
-            version: VersionInfo {
+            version: Some(VersionInfo {
                 name: "v".into(),
                 description: None,
-            },
+            }),
         }
     }
 
@@ -382,9 +393,9 @@ mod tests {
         assert_eq!(rejection(request), (RejectionReason::Invalid, Some(1)));
     }
 
-    /// Una clave fuera del catálogo, en otro archivo o que no se edita se rechaza.
+    /// Una clave fuera del catálogo o en otro archivo se rechaza.
     #[test]
-    fn keys_outside_the_catalog_or_not_editable_are_rejected() {
+    fn keys_outside_the_catalog_are_rejected() {
         for (file, key) in [
             ("app.conf", "ca_users_disable"),
             ("navigation.conf", "ca_places_disable"),
@@ -488,6 +499,37 @@ mod tests {
         assert_eq!(app_conf(&plan(&only).unwrap()), None);
     }
 
+    /// La biblioteca escribe también la clave que Providence exige junto con ella, y volver al valor
+    /// por defecto quita las dos.
+    #[test]
+    fn linked_keys_are_written_and_reset_together() {
+        let library = EditItem {
+            key: "enable_library_services".into(),
+            ..places()
+        };
+        let plan_on = plan(&with_item(library.clone())).unwrap();
+        assert_eq!(
+            app_conf(&plan_on),
+            Some(
+                format!("{HEADER}enable_library_services = 1\nenable_object_checkout = 1\n")
+                    .as_str()
+            )
+        );
+        let reset = EditRequest {
+            local: json_object! { "app.conf": json_object! { enable_object_checkout: "1", otra: "x" } },
+            ..with_item(EditItem {
+                action: EditAction::Reset,
+                current: Json::from(true),
+                expected: Json::from(true),
+                ..library
+            })
+        };
+        assert_eq!(
+            app_conf(&plan(&reset).unwrap()),
+            Some(format!("{HEADER}otra = x\n").as_str())
+        );
+    }
+
     /// Volver al valor por defecto una clave que no está en el archivo local se rechaza.
     #[test]
     fn reset_without_local_key_is_rejected() {
@@ -518,7 +560,7 @@ mod tests {
     }
 
     /// Un guardado aceptado registra un cambio pendiente por configuración, todos con la misma
-    /// versión automática del estado anterior; otro guardado desde el mismo estado usa esa versión.
+    /// versión del estado anterior que pidió el usuario; otro guardado desde el mismo estado usa esa versión.
     #[test]
     #[ignore = "requiere el MySQL de Docker"]
     fn accepted_save_logs_each_edit_with_one_previous_version() {
@@ -541,11 +583,43 @@ mod tests {
             );
         }
         let version = versions::find(&mut tx, before.unwrap()).unwrap().unwrap();
-        assert!(version.automatic && version.hash == request.state.hash());
+        assert!(!version.automatic && version.hash == request.state.hash());
 
         let second = accepted(&mut tx, &request);
         assert_eq!(second["version_created"], false);
         assert_eq!(second["version_before"]["id"].as_u32(), before);
+    }
+
+    /// Si el usuario no pidió guardar el estado anterior, no se crea ninguna versión antes del cambio:
+    /// el cambio apunta a la idéntica que ya exista, o a ninguna.
+    #[test]
+    #[ignore = "requiere el MySQL de Docker"]
+    fn without_request_no_previous_version_is_created() {
+        let mut conn = migrated_connection();
+        let mut tx = conn.start_transaction(TxOpts::default()).unwrap();
+        let request = EditRequest {
+            state: unique_state(),
+            version: None,
+            ..valid()
+        };
+
+        let body = accepted(&mut tx, &request);
+        assert!(body["version_before"].is_null() && body["version_created"] == false);
+        assert_eq!(
+            versions::find_by_hash(&mut tx, &request.state.hash()).unwrap(),
+            None
+        );
+        let by_hand = VersionInfo {
+            name: "a mano".into(),
+            description: None,
+        };
+        let saved =
+            version_service::save(&mut tx, &by_hand, false, &user(), &request.state).unwrap();
+        let again = accepted(&mut tx, &request);
+        assert_eq!(
+            again["version_before"]["id"].as_u32(),
+            Some(saved.version().id)
+        );
     }
 
     /// Un rechazo registra el cambio rechazado con su motivo y no guarda ninguna versión.

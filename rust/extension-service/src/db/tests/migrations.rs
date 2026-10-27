@@ -135,6 +135,7 @@ fn id_matches_file_name() {
         MIGRATIONS[6].id(),
         "modulo2/0007_numeracion_sin_saltos_modulo2"
     );
+    assert_eq!(MIGRATIONS[7].id(), "modulo2/0008_preferencias_modulo2");
     assert_eq!(numbered("m", 12, "").id(), "m/0012_prueba");
 }
 

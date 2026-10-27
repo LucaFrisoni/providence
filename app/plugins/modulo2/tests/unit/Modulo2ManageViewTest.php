@@ -6,6 +6,7 @@
  */
 require_once(__CA_APP_DIR__.'/plugins/modulo2/lib/Modulo2Constants.php');
 require_once(__CA_APP_DIR__.'/plugins/modulo2/lib/Modulo2ManageMap.php');
+require_once(__CA_APP_DIR__.'/plugins/modulo2/lib/Modulo2Ui.php');
 
 use PHPUnit\Framework\Attributes\TestDox;
 use PHPUnit\Framework\TestCase;
@@ -13,13 +14,13 @@ use PHPUnit\Framework\TestCase;
 #[TestDox('Módulo 2 · vista del panel de gestión')]
 final class Modulo2ManageViewTest extends TestCase {
 	# -------------------------------------------------------
-	// Cada tarjeta lleva a la sección y a sus páginas, y dice si es del módulo o de Providence
+	// Cada tarjeta lleva a la sección y a sus páginas; solo las mejoras previstas llevan etiqueta
 	#[TestDox('Muestra cada sección con su enlace, su estado y sus páginas')]
 	public function testSectionCardWithStatusAndLinks() : void {
 		$html = $this->render();
 
 		$this->assertStringContainsString('<h3><a href="/index.php/administrate/access/Users/ListUsers">Access control</a></h3>', $html);
-		$this->assertStringContainsString('m2-manage-status-native">'._t('Providence screen').'</span>', $html);
+		$this->assertStringNotContainsString('m2-manage-status-native', $html, 'Las secciones no se marcan como de Providence');
 		$this->assertStringContainsString('<li><a href="/index.php/administrate/access/Roles/ListRoles">Access roles</a></li>', $html);
 	}
 	# -------------------------------------------------------
@@ -39,7 +40,7 @@ final class Modulo2ManageViewTest extends TestCase {
 	public function testOwnerNote() : void {
 		$html = $this->render();
 
-		$this->assertStringContainsString(_t('Completed by %1. For now it links to the Providence screen.', 'Módulo 3 (prueba)'), $html);
+		$this->assertStringContainsString(_t('It will be improved by %1.', 'Módulo 3 (prueba)'), $html);
 		$this->assertSame(1, substr_count($html, 'class="m2-manage-owner"'));
 	}
 	# -------------------------------------------------------

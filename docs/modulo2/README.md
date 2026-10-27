@@ -74,36 +74,37 @@ cambios de Providence (`ca_change_log`).
 
 ## Cómo trabaja el módulo
 
-- **Todo centralizado en el Panel de gestión.** Se decidió que el módulo no sea solo un lugar para
-  configuraciones nuevas, sino una versión mejorada de Manage. Para los usuarios con el permiso del
-  módulo, el menú **Management** del módulo ocupa el lugar de Manage en la barra principal y abre el
-  **Management panel** (Gestión → Panel de gestión en castellano):
-    - **Panel de gestión:** todas las secciones de Manage, agrupadas por tema,
-      con buscador, una descripción de cada una y enlaces a sus páginas. Las que todavía no se
-      mejoraron enlazan a su pantalla de Providence; las que completa otro módulo del proyecto lo
-      indican con una nota.
-    - Desde el panel se abren también las pantallas del módulo: **New settings** (las del
-      [catálogo](#catálogo-de-configuraciones), que Providence solo permite cambiar editando
-      archivos), **Configuration versions** y **Change history**. Se ven como las demás secciones,
-      sin etiqueta ni color propio.
+- **Todo centralizado en el Panel de gestión.** El módulo no es solo un lugar para configuraciones
+  nuevas, sino una versión mejorada de Manage. Para los usuarios con el permiso del módulo, el menú
+  **Management** (Gestión) ocupa el lugar de Manage en la barra principal y abre el **Management
+  panel**: todas las secciones de Manage agrupadas por tema, con buscador, una descripción de cada
+  una y enlaces a sus páginas. Las que completa otro módulo del proyecto lo indican con una nota.
+- **Tres niveles de mejora**, según lo que necesita cada sección:
+    - **Interfaz modernizada y funcionamiento ampliado:** _My preferences_ conserva los grupos y las
+      reglas de Providence, pero cada preferencia muestra su valor, los cambios quedan pendientes hasta
+      guardarlos juntos y cada usuario tiene versiones de sus preferencias
+      ([My preferences](#my-preferences)).
+    - **Funcionamiento nuevo:** _New settings_ permite cambiar desde la interfaz configuraciones que
+      Providence solo deja cambiar editando archivos, con validación, registro y versiones
+      ([catálogo](#catálogo-de-configuraciones)). _Configuration versions_ y _Change history_ completan
+      el versionado. Las tres pantallas comparten la barra lateral, con sus tres partes:
+      configuraciones, versiones e historial (fuera de _New settings_, cada sección lleva a esa página).
+    - **Pantalla de Providence:** el resto de las secciones funcionan tal cual en Providence; el panel
+      las ordena, las describe y las enlaza.
 - **Interfaz en el idioma del usuario:** los textos se escriben en inglés (el idioma por defecto de
-  Providence) con `Modulo2I18n::t()` y se muestran en el idioma que el usuario elige en My
-  preferences. Providence solo busca traducciones en `app/locale` y en el tema, así que el módulo trae
-  las suyas en `app/plugins/modulo2/locale/<idioma>.php` (por ahora `es.php`, para todos los
-  `es_*`); un idioma sin archivo se ve en inglés. Orden: los reemplazos de la institución
-  (`translations.conf`), la tabla del módulo y las traducciones de Providence. También se traducen el
-  catálogo y los mensajes del servicio (que los escribe en inglés). `Modulo2I18nTest` falla si un
-  texto de las pantallas no tiene traducción, y `Modulo2CatalogIntegrationTest`, si le falta a una
-  configuración del catálogo. Para sumar un idioma alcanza con copiar `es.php` y traducirlo. Los
-  comentarios del código y la documentación siguen en castellano.
-- **Trabaja con una lista blanca.** Solo muestra y modifica las configuraciones del catálogo.
-- **Escribe solo en `app/conf/local/`.** Es el lugar que Providence prevé para los cambios propios de
-  cada instalación: lo que se define ahí reemplaza al valor de `app/conf/`. Los archivos de
-  `app/conf/` quedan como vienen con Providence, así que volver al valor original es sacar la
-  configuración de `app/conf/local/`. En Docker, esa carpeta es el volumen `conf_local`.
-- **La configuración que está en la base de Providence** (listas, elementos de metadatos, interfaces
-  de edición...) se sigue editando con las pantallas de Providence. El módulo la incluye en las
-  versiones, la resume en New settings y la enlaza desde el panel.
+  Providence) con `Modulo2I18n::t()` y se muestran en el idioma que el usuario elige en My preferences.
+  Providence solo busca traducciones en `app/locale` y en el tema, así que el módulo trae las suyas en
+  `app/plugins/modulo2/locale/<idioma>.php` (por ahora `es.php`, para todos los `es_*`); un idioma sin
+  archivo se ve en inglés. También se traducen el catálogo y los mensajes del servicio. Las pruebas
+  fallan si a un texto le falta su traducción. Para sumar un idioma alcanza con copiar `es.php` y
+  traducirlo.
+- **Trabaja con una lista blanca:** solo muestra y modifica las configuraciones del catálogo.
+- **Escribe solo en `app/conf/local/`:** es el lugar que Providence prevé para los cambios de cada
+  instalación. Los archivos de `app/conf/` quedan como vienen, así que volver al valor original es sacar
+  la configuración de `app/conf/local/`. En Docker, esa carpeta es el volumen `conf_local`.
+- **La configuración en la base de Providence** (listas, elementos de metadatos, interfaces de
+  edición...) se sigue editando con las pantallas de Providence. El módulo la incluye en las versiones,
+  la enlaza desde el panel (sobre todo en Administration).
 
 ## Catálogo de configuraciones
 
@@ -118,39 +119,42 @@ alcanza con agregar su entrada en `rust/extension-service/src/models/modulo2/cat
 
 ### Vocabulario
 
-| Término           | Qué es                                                                                                                                                                   | Ejemplo                                                                                   |
-| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------- |
-| **Tipo de dato**  | Lo que se crea desde el menú "Nuevo". En Providence es una tabla                                                                                                         | Objetos (`ca_objects`), lugares (`ca_places`), préstamos (`ca_loans`)                     |
-| **Subtipo**       | Clasificación dentro de un tipo de dato, definida en las listas de Providence (Providence los llama _types_)                                                             | Un objeto puede ser "obra de arte" (`artwork`) o "libro" (`book`)                         |
-| **Configuración** | Una opción de Providence. Si se aplica a varios tipos de dato, su clave combina el tipo de dato y el id (`<tipo>_<id>` o `<id>_<tipo>`); si es global, la clave es el id | `disable_delete` aplicada a lugares es `ca_places_disable_delete`; `menu_color` es global |
-| **Sección**       | Grupo de configuraciones relacionadas de un mismo archivo. Es por tipo de dato (una tabla) o de toda la instalación (una lista)                                          | "Menú Nuevo", "Identidad visual"                                                          |
+| Término           | Qué es                                                                                                                                                                   | Ejemplo                                                                                              |
+| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------- |
+| **Tipo de dato**  | Lo que se crea desde el menú "Nuevo". En Providence es una tabla                                                                                                         | Objetos (`ca_objects`), lugares (`ca_places`), préstamos (`ca_loans`)                                |
+| **Subtipo**       | Clasificación dentro de un tipo de dato, definida en las listas de Providence (Providence los llama _types_)                                                             | Un objeto puede ser "obra de arte" (`artwork`) o "libro" (`book`)                                    |
+| **Configuración** | Una opción de Providence. Si se aplica a varios tipos de dato, su clave combina el tipo de dato y el id (`<tipo>_<id>` o `<id>_<tipo>`); si es global, la clave es el id | `disable_delete` aplicada a lugares es `ca_places_disable_delete`; `report_header_enabled` es global |
+| **Sección**       | Grupo de configuraciones relacionadas de un mismo archivo. Es por tipo de dato (una tabla) o de toda la instalación (una lista)                                          | "Menú Nuevo", "Informes"                                                                             |
 
 ### Configuraciones del catálogo
 
-En las claves, `*` reemplaza el tipo de dato. Las de riesgo medio o crítico se marcan en la
-interfaz.
+Todas están en `app.conf`. En las claves, `*` reemplaza el tipo de dato. Las de riesgo medio o crítico
+se marcan en la interfaz.
 
-| #   | Configuración                                   | Claves                                                                                                                                                                               | Archivo                       |
-| --- | ----------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------- |
-| 1   | Activar o desactivar tipos de dato              | `*_disable`                                                                                                                                                                          | `app.conf`                    |
-| 2   | Activar o desactivar funciones por tipo de dato | `*_disable_quickadd`, `*_disable_delete`, `*_disable_duplication_of_items`, `*_disable_browse`, `*_disable_basic_search`, `*_disable_advanced_search`, `*_disable_search_builder`    | `app.conf`                    |
-| 3   | Menú "Nuevo"                                    | `*_dont_show_in_new_menu`, `*_navigation_new_menu_limit_types_to`, `*_navigation_new_menu_exclude_types`, `*_navigation_new_menu_shows_top_level_types_only`                         | `app.conf`                    |
-| 4   | Menú "Buscar"                                   | `*_dont_show_in_find_menu`, `*_breakout_find_by_type_in_menu`, `*_breakout_find_by_type_in_submenu`, `*_navigation_find_menu_limit_types_to`, `*_navigation_find_menu_exclude_types` | `app.conf`                    |
-| 5   | Orden de los menús                              | Orden de los ítems de "Nuevo" y "Buscar" (el de los ítems de una lista se edita en el editor de listas)                                                                              | `navigation.conf`             |
-| 6   | Automatización de identificadores               | `formats` (por tipo de dato y subtipo: `CONSTANT`, `YEAR`, `SERIAL`, `LIST`...)                                                                                                      | `multipart_id_numbering.conf` |
-| 7   | Reglas de identificadores                       | `require_valid_id_number_for_*`, `allow_duplicate_id_number_for_*`                                                                                                                   | `app.conf`                    |
-| 8   | Textos y traducciones                           | `strings`, `replacements`, `fields`                                                                                                                                                  | `translations.conf`           |
-| 9   | Inspector                                       | `*_show_related_counts_in_inspector_for`, `*_inspector_display_idno_sequence_navigation`                                                                                             | `app.conf`                    |
-| 10  | Resultados                                      | `*_results_thumbnail_caption_template`, `quicksearch_default_results`, `quicksearch_breakout_by_type`                                                                                | `app.conf`                    |
-| 11  | Identidad visual                                | `menu_color`, `footer_color`, `report_*`                                                                                                                                             | `app.conf`                    |
-| 12  | Reglas de nombres                               | `require_preferred_label_for_*`, `allow_duplicate_labels_for_*`, `*_warn_when_preferred_label_exists`                                                                                | `app.conf`                    |
-| 13  | Jerarquías                                      | `*_enforce_strict_type_hierarchy`, `*_hierarchy_browser_hide_root`, `*_show_add_child_control_in_inspector`, `*_x_collections_hierarchy_enabled`                                     | `app.conf`                    |
-| 14  | Visibilidad en resultados                       | `*_children_display_mode_in_results`, `*_deaccession_display_mode_in_results`                                                                                                        | `app.conf`                    |
-| 15  | Bajas                                           | `deaccession_force_access_private`, `deaccession_dont_allow_editing`                                                                                                                 | `app.conf`                    |
-| 16  | Módulos opcionales                              | `enable_library_services`, `enable_object_checkout`, `enable_user_generated_content`, `enable_dependent_field_visibility`                                                            | `app.conf`                    |
-| 17  | Autocompletado                                  | `autocomplete_minimum_search_length`                                                                                                                                                 | `app.conf`                    |
-| 21  | Configuración en la base                        | Resumen de idiomas, listas, elementos, interfaces, tipos de relación, displays, formularios, roles y diccionario, con enlace a su pantalla                                           | Base de Providence            |
-| 23  | Control de acceso (riesgo crítico)              | `perform_*_access_checking`, `default_*_access_level`                                                                                                                                | `app.conf`                    |
+| #   | Sección                     | Claves                                                                                                                                                                               |
+| --- | --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| 1   | Tipos de dato               | `*_disable`                                                                                                                                                                          |
+| 2   | Funciones por tipo de dato  | `*_disable_quickadd`, `*_disable_delete`, `*_disable_duplication_of_items`, `*_disable_browse`, `*_disable_basic_search`, `*_disable_advanced_search`, `*_disable_search_builder`    |
+| 3   | Menú "Nuevo"                | `*_dont_show_in_new_menu`, `*_no_new_submenu`, `*_navigation_new_menu_limit_types_to`, `*_navigation_new_menu_exclude_types`, `*_navigation_new_menu_shows_top_level_types_only`     |
+| 4   | Menú "Buscar"               | `*_dont_show_in_find_menu`, `*_breakout_find_by_type_in_menu`, `*_breakout_find_by_type_in_submenu`, `*_navigation_find_menu_limit_types_to`, `*_navigation_find_menu_exclude_types` |
+| 5   | Identificadores             | `require_valid_id_number_for_*`, `allow_duplicate_id_number_for_*`                                                                                                                   |
+| 6   | Nombres                     | `require_preferred_label_for_*`, `allow_duplicate_labels_for_*`, `ca_entities_warn_when_preferred_label_exists`                                                                      |
+| 7   | Jerarquías                  | `*_enforce_strict_type_hierarchy`, `*_hierarchy_browser_hide_root`, `ca_objects_x_collections_hierarchy_enabled`                                                                     |
+| 8   | Resultados                  | `ca_objects_children_display_mode_in_results`, `*_deaccession_display_mode_in_results` (objetos, lotes y colecciones; solo "Mostrar" y "Ocultar")                                    |
+| 9   | Descargas                   | `excel_report_show_search_term` + `excel_report_header_enabled` (una sola), `excel_report_footer_enabled`, `report_include_labels_in_docx_output`                                    |
+| 10  | Bajas                       | `deaccession_dont_allow_editing`; además, el campo de baja en las pantallas de edición (configuración de la base, ver abajo)                                                         |
+| 11  | Módulos opcionales          | `enable_library_services` + `enable_object_checkout` (una sola: "Biblioteca"), `enable_user_generated_content`                                                                       |
+| 12  | Control de acceso (crítico) | `perform_*_access_checking`, `default_*_access_level`                                                                                                                                |
+
+**Quitadas del catálogo** (se pueden volver a evaluar más adelante): el formato de los identificadores
+(`multipart_id_numbering.conf`, sin un formato de edición simple), el orden de los menús
+(`navigation.conf`: cambiarlo obliga a copiar todo el bloque de navegación en `app/conf/local/`, y la
+instalación dejaría de recibir los cambios de menú de Providence), los textos y traducciones
+(`translations.conf`), los colores, la plantilla del texto de las miniaturas, la búsqueda rápida, el
+autocompletado, el inspector (el panel lateral del editor de un registro), "privado al dar de baja"
+(`deaccession_force_access_private`, que Providence no aplica: ver abajo), el pie de los PDF
+(`report_header_enabled`: la descarga de PDF tiene sus propias opciones) y las etapas de los recorridos (la
+pantalla de recorridos de Providence no permite crearlas). Eran difíciles de entender o de editar sin conocer Providence.
 
 **Etiquetas en positivo:** muchas claves de Providence son negativas (`ca_places_disable`,
 `*_dont_show_in_new_menu`, `*_hierarchy_browser_hide_root`). El catálogo las marca como invertidas
@@ -175,8 +179,8 @@ ninguna** y guarda el resultado como una versión nueva.
    usuario tenga permiso para su nivel de riesgo, que el valor sea válido y que no se repita. Si el
    valor actual ya no es el que se veía al abrir la pantalla, es un **conflicto**. Si un cambio se
    rechaza, no se aplica ninguno y se informa cuál fue.
-3. El servicio guarda una versión automática del estado anterior (o usa la idéntica que ya exista),
-   registra cada cambio como **pendiente** y devuelve el contenido nuevo de cada archivo, en forma canónica.
+3. Si el usuario lo pidió, el servicio guarda el estado anterior como versión (o usa la idéntica que
+   ya exista; si no lo pidió, el cambio apunta a la idéntica, si hay). Registra cada cambio como **pendiente** y devuelve el contenido nuevo de cada archivo, en forma canónica.
 4. El plugin escribe los archivos de `app/conf/local/` sin dejarlos a medio escribir (archivo temporal
    y luego renombrado) y limpia las cachés de configuración.
 5. El plugin verifica que Providence tomó todos los cambios: que cada archivo quedó como se escribió,
@@ -208,10 +212,14 @@ de sus claves. El archivo empieza con un aviso de que lo escribe el módulo. Con
       con el exportador de perfiles de Providence (`ConfigurationExporter`), sin los usuarios. En la
       instalación de desarrollo ocupa unos 500 KB, tarda un segundo y medio y es siempre igual para la
       misma configuración.
-    - **Datos de la versión:** número, nombre, autor, fecha, descripción, si es automática y la
-      versión anterior (la última creada). Las que se guardan al guardar cambios o a mano proponen un
-      nombre con la fecha ("Version of 17/10/2026 14:32"), que se puede editar; las automáticas se
-      llaman como su motivo ("Before the changes of ...").
+    - **Datos de la versión:** número, nombre, autor, fecha, descripción y la versión anterior (la
+      última creada). Proponen un nombre con la fecha ("Version of 17/10/2026 14:32" o "Before the
+      changes of ..."), que se puede editar.
+- **Solo versiones manuales:** ninguna versión se guarda sin que el usuario lo pida. Al guardar
+  cambios se guarda el resultado con el nombre que eligió y, si la configuración de antes no está en
+  ninguna versión, la pantalla ofrece (marcado) guardarla también; lo mismo al restaurar. Antes se
+  guardaba sola una versión antes de cada cambio y de cada restauración: llenaba la lista y hacía
+  difícil saber cuál era la actual. Las viejas siguen marcadas como "automatic".
 - **Número sin saltos:** se guarda al crearla (el más alto + 1). Al borrar una versión, las
   siguientes bajan un número (migración `numeracion_sin_saltos_modulo2`, que también corrigió los
   saltos de los borrados anteriores).
@@ -244,7 +252,8 @@ de sus claves. El archivo empieza con un aviso de que lo escribe el módulo. Con
        mostró.
     2. Al confirmar, se verifica que nadie haya cambiado la configuración desde entonces (el hash
        coincide). Si cambió, se registra el conflicto y no se aplica nada.
-    3. Se guarda una versión automática del estado actual, para poder deshacer la restauración.
+    3. Si el usuario lo pidió (la pantalla lo ofrece si la configuración actual no está guardada), se
+       guarda el estado actual como versión, para poder deshacer la restauración.
     4. **Archivos:** se reemplazan los `.conf` de `app/conf/local/` por los de la versión elegida y se
        verifica que Providence pueda leer cada uno; si no, se dejan como estaban.
     5. El servicio compara los archivos que quedaron con los de la versión antes de darla por aplicada.
@@ -263,10 +272,10 @@ de sus claves. El archivo empieza con un aviso de que lo escribe el módulo. Con
 [base de la extensión](../../README.md#base-de-datos-de-la-extensión). Las configuraciones en sí
 siguen en los `.conf` de Providence, y el catálogo es código.
 
-| Tabla              | Qué guarda                                                                                                                                                                 |
-| ------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `m2_versions`      | Cada versión: número, nombre, descripción, si se creó sola antes de un cambio, versión anterior, hash, usuario y fecha                                                    |
-| `m2_version_files` | El contenido de cada archivo de `app/conf/local/` en esa versión y, como `database_profile.xml`, la exportación de la base                                               |
+| Tabla              | Qué guarda                                                                                                                                                                                                                                                |
+| ------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `m2_versions`      | Cada versión: número, nombre, descripción, si se creó sola antes de un cambio, versión anterior, hash, usuario y fecha                                                                                                                                    |
+| `m2_version_files` | El contenido de cada archivo de `app/conf/local/` en esa versión y, como `database_profile.xml`, la exportación de la base                                                                                                                                |
 | `m2_change_log`    | Cada cambio: usuario, fecha, acción (editar o restaurar), configuración, valor anterior y nuevo, versiones (anterior y nueva, o restaurada) y resultado (pendiente, aplicado, rechazado, falló o conflicto). Si se borra una versión, queda sin el enlace |
 
 Los usuarios son los de Providence, que están en otra base: se guarda su id y su nombre.
@@ -275,60 +284,70 @@ Los usuarios son los de Providence, que están en otra base: se guarda su id y s
 Todas las validaciones y controles de permisos se hacen en el servidor (en el plugin y, para el
 riesgo, también en el servicio), no solo en la pantalla.
 
-| Acción de rol                  | Qué permite                                                            |
-| ------------------------------ | ---------------------------------------------------------------------- |
+| Acción de rol                  | Qué permite                                                                      |
+| ------------------------------ | -------------------------------------------------------------------------------- |
 | `can_use_modulo2`              | Ver el menú Manage del módulo, las configuraciones, las versiones y el historial |
-| `can_edit_modulo2_low_risk`    | Editar configuraciones de riesgo bajo                                  |
-| `can_edit_modulo2_medium_risk` | Editar configuraciones de riesgo medio                                 |
-| `can_edit_modulo2_high_risk`   | Editar configuraciones de riesgo crítico (control de acceso)           |
-| `can_create_modulo2_versions`  | Guardar una versión a mano                                             |
-| `can_restore_modulo2_versions` | Restaurar los archivos de una versión                                  |
+| `can_edit_modulo2_low_risk`    | Editar configuraciones de riesgo bajo                                            |
+| `can_edit_modulo2_medium_risk` | Editar configuraciones de riesgo medio                                           |
+| `can_edit_modulo2_high_risk`   | Editar configuraciones de riesgo crítico (control de acceso)                     |
+| `can_create_modulo2_versions`  | Guardar una versión a mano                                                       |
+| `can_restore_modulo2_versions` | Restaurar los archivos de una versión                                            |
 
 Providence guarda en caché, por 30 días, las acciones de rol de los plugins
 (`ApplicationPluginManager::getPluginRoleActions`): después de instalar o actualizar el plugin hay
 que limpiar la caché para que aparezcan (`support/bin/caUtils clear-caches`; en Docker,
 `docker compose exec -u www-data providence php support/bin/caUtils clear-caches`).
 
+## My preferences
+
+**Qué ve el usuario:** _Management panel → My preferences_ tiene los mismos grupos que Providence
+(General, Editing, Batch editing, Search/browse, Quick add, Units of measurement, Duplication, User
+profile, Developer). Cada preferencia muestra su valor y se cambia como en _New settings_: un clic abre
+un diálogo con el campo de Providence, el cambio queda pendiente y "Save changes" los guarda juntos con
+una versión nueva. La barra lateral lista los grupos y lleva a _My preference versions_. Quick search y Search builder tienen editores propios de Providence (listas que se
+arrastran): se abren en Providence y sus cambios entran igual en las versiones.
+
+**Cada usuario ve solo lo suyo:** Providence guarda las preferencias en `ca_users`
+(`_user_preferences`). Cada usuario tiene sus versiones, con su numeración, y el servicio filtra cada
+consulta por usuario.
+
+**El valor lo guarda Providence:** la pantalla envía el formulario con los mismos campos que la de
+Providence y el plugin ejecuta `system/PreferencesController::Save`, así el módulo no reimplementa las
+reglas de cada preferencia. Antes, el servicio verifica que las preferencias no cambiaron desde que se
+abrió la pantalla (por hash); después, el plugin relee la base y, si algo no quedó guardado, deja todo
+como estaba. Restaurar una versión reemplaza las preferencias y conserva las demás variables del usuario.
+
+**Sin historial:** las preferencias tienen versiones, pero no una pantalla de historial. El servicio
+guarda un registro interno de cada guardado y restauración, que usa para confirmar que se aplicaron.
+
+**Cambios hechos desde las pantallas de Providence:** la pantalla de versiones dice que las
+preferencias actuales no están guardadas y permite guardarlas.
+
 ## Plan de trabajo
 
-| Fase                            | Qué se hace                                                                | Estado    |
-| ------------------------------- | -------------------------------------------------------------------------- | --------- |
-| 0. Infraestructura              | Plugin, servicio Rust, base de la extensión y pruebas                      | Hecha     |
-| 1. Catálogo y lectura           | Definir el catálogo y mostrar los valores actuales, sin modificar nada     | Hecha     |
-| Panel de gestión                | Manage mejorado y centralizado                                             | En curso  |
-| 2. Edición del catálogo         | Modificar configuraciones, con validación y registro de cambios            | Hecha     |
-| 3. Versionado                   | Crear versiones, ver sus cambios y restaurarlas                            | Hecha (*) |
-| 4. Cierre de cada configuración | Validación, interfaz, pruebas y documentación de cada entrada del catálogo | Pendiente |
+| Fase                            | Qué se hace                                                            | Estado     |
+| ------------------------------- | ---------------------------------------------------------------------- | ---------- |
+| 0. Infraestructura              | Plugin, servicio Rust, base de la extensión y pruebas                  | Hecha      |
+| 1. Catálogo y lectura           | Definir el catálogo y mostrar los valores actuales                     | Hecha      |
+| 2. Edición                      | Modificar configuraciones, con validación y registro de cambios        | Hecha      |
+| 3. Versionado                   | Crear versiones, ver sus cambios y restaurarlas                        | Hecha (\*) |
+| 4. Cierre de cada configuración | Probar cada sección del catálogo en Providence y documentarla          | En curso   |
+| 5. Panel de gestión             | Manage mejorado y centralizado: My preferences, Administration y demás | En curso   |
 
-(*) Salvo la restauración de la configuración en base, que queda como
+(\*) Salvo la restauración de la configuración en base, que queda como
 [decisión pendiente](#versionado-registro-y-permisos).
 
-Orden acordado para lo que sigue: My preferences mejorado, Administration mejorado y el resto de las
-secciones del panel (las Fases 2 y 3 se adelantaron).
+Lo próximo: seguir mejorando My preferences y cerrar las secciones del catálogo que faltan.
 
 ## Implementación
 
 ### Fase 0: infraestructura
 
-- **Plugin `modulo2`:** agrega el menú **Management** y el permiso `can_use_modulo2`, que se asigna
-  desde los roles de Providence.
-- **Servicio Rust:** el plugin se comunica con él por HTTP. La ruta `/api/modulo2/health` sigue
-  disponible para verificar el servicio, aunque la interfaz no la usa.
-- **Base de la extensión:** las tablas del módulo 2 se crean solas cuando arranca el servicio.
-- **Pruebas** en Rust y PHP, incluida la verificación de que cada base es inaccesible para el
-  usuario de la otra.
+El plugin `modulo2` agrega el menú y el permiso `can_use_modulo2`. Se comunica por HTTP con el servicio
+Rust, que guarda la historia en la base de la extensión (sus tablas se crean solas al arrancar). Hay
+pruebas en Rust y PHP, incluida la de que cada base es inaccesible para el usuario de la otra.
 
 ### Fase 1: catálogo y lectura
-
-**Qué ve el usuario:** **Manage → New settings** muestra el catálogo agrupado por sección,
-con las secciones plegadas al cargar. Una sección por tipo de dato es una tabla con una fila por
-tipo de dato y una columna por configuración; una de toda la instalación es una lista con valor y
-descripción. Cada valor es el efectivo (✓ verde o ✗ rojo para sí o no) y se resalta si es distinto
-del valor por defecto. La barra lateral, con el estilo del menú lateral de Providence, tiene un
-buscador y el índice de secciones, con la cantidad de modificadas. Arriba hay un filtro para ver
-solo las modificadas. Es de solo lectura.
-
-**Cómo funciona:**
 
 ```
 Providence (plugin modulo2)                          Servicio Rust
@@ -337,310 +356,246 @@ New settings ────────── pide el catálogo ──────
             └── lee el valor efectivo y el por defecto de cada una en Providence
 ```
 
-- **El catálogo lo define el servicio Rust:** los tipos y sus métodos (claves, qué se
-  edita) en `types/modulo2/catalog.rs`, las secciones en `models/modulo2/catalog.rs` y la búsqueda
-  por clave en `services/modulo2/catalog.rs`.
-- **Los valores los lee el plugin**, porque Providence es quien sabe qué valor está usando. Los
-  nombres de los tipos de dato también los da Providence, en el idioma de la interfaz.
-- El servicio entrega el catálogo en `GET /api/modulo2/catalog`:
-
-```json
-{
-    "sections": [
-        {
-            "id": "features",
-            "name": "Funciones por tipo de dato",
-            "description": "...",
-            "file": "app.conf",
-            "scope": "data_type",
-            "settings": [
-                {
-                    "id": "disable_delete",
-                    "label": "Borrado",
-                    "description": "...",
-                    "kind": "boolean",
-                    "options": [],
-                    "risk": "low",
-                    "inverted": true,
-                    "entries": [{ "data_type": "ca_objects", "key": "ca_objects_disable_delete" }]
-                }
-            ]
-        }
-    ]
-}
-```
-
-- `file`: archivo de `app/conf` de la sección. El plugin solo acepta nombres de archivo de esa carpeta.
-- `scope`: `data_type` (una entrada por tipo de dato) o `global` (una sola entrada, sin tipo de
-  dato). En la interfaz se llaman "Por tipo de dato" y "De toda la instalación", para no
-  confundirlas con las configuraciones de un usuario o de un grupo.
-- `key`: la clave en el archivo. Con `/` es una clave anidada: `formats/ca_objects` es el bloque
-  `ca_objects` dentro de `formats`.
-- `kind`: `boolean`, `subtype_list` (el orden no importa), `table_list` (el orden importa),
-  `number`, `text`, `color` (seis dígitos, sin `#`), `choice` (uno de los valores de `options`),
-  `structured` (un bloque anidado, solo se muestra) o `key_order` (el orden de un bloque).
-- `risk`: `low`, `medium` o `high`. `inverted`: la clave es negativa (ver arriba).
-- `editable`: si el módulo puede editarla (desde la Fase 2): los valores simples de primer nivel.
-
-### Panel de gestión
-
-- **Menú:** `modulo2Plugin::hookRenderMenuBar` reemplaza el "Manage" de Providence por el del módulo en la barra
-  principal, en el mismo lugar. Solo cambia la barra: las pantallas de Manage siguen con su menú
-  lateral, y un usuario sin `can_use_modulo2` sigue viendo Manage.
-- **Contenido:** los nombres, enlaces y permisos de cada sección se leen del menú Manage de
-  `navigation.conf`, así que el panel sigue a Providence si cambia su menú y cada usuario ve solo lo
-  que puede usar (`Modulo2NavRequirements` evalúa los requisitos como Providence). Lo que Providence
-  no sabe (grupos, descripciones, estado y módulo dueño) está en `Modulo2ManageMap`.
-- **Estado de cada sección:** "Del módulo" (pantalla propia), "Mejora prevista" o "Pantalla de
-  Providence" (enlace).
+- **El catálogo lo define el servicio** (`GET /api/modulo2/catalog`): secciones en
+  `models/modulo2/catalog.rs`, tipos en `types/modulo2/catalog.rs`.
+- **Los valores los lee el plugin**, porque Providence es quien sabe qué valor usa. Los nombres de los
+  tipos de dato también los da Providence, en el idioma de la interfaz.
+- Cada configuración del JSON trae `kind` (`boolean`, `subtype_list` sin orden, `table_list` con orden
+  o `choice`, uno de sus `options`), `risk` (`low`, `medium`, `high`), `inverted` y una entrada por tipo
+  de dato con su `key`.
+- **Pantalla:** cada sección por tipo de dato es una tabla (una fila por tipo de dato, una columna por
+  configuración); una global, una lista. Los valores distintos del de Providence se resaltan. La barra
+  lateral tiene buscador e índice con la cantidad de modificadas.
 
 ### Fase 2: edición
 
-**Qué ve el usuario:** en **New settings**, una explicación breve en viñetas y, en cada sección,
-los valores; los que el usuario puede cambiar (configuración editable y permiso para su riesgo) se
-cambian **en el lugar**:
-
-- Un sí o no cambia con un clic. Los demás abren un diálogo con el nombre de la configuración, su
-  descripción, el valor actual y el de Providence, y un campo según el tipo de valor: número, texto,
-  color, opciones, casillas con los subtipos o una lista ordenable de tipos de dato. "Use the
-  Providence default" vuelve al valor original.
-- Cada cambio queda **pendiente** (la celda se marca en azul) y una barra abajo dice cuántos hay, con
-  "Discard" y "Review and save changes". Los pendientes se recuerdan en la pestaña del navegador
-  (`sessionStorage`) hasta guardarlos; al volver a la página se descartan los de valores que
-  cambiaron mientras tanto (por ejemplo, porque ya se guardaron).
-- "Review and save changes" muestra cada cambio con su valor actual y el nuevo (se puede deshacer
-  uno), pide el nombre de la versión nueva y una nota, y envía todo junto.
-- "Expand all" y "Collapse all" son botones debajo de la barra de herramientas.
-
-No se muestran claves ni archivos de Providence.
-
-Por ahora se editan los valores simples de primer nivel. Las configuraciones con estructura
-(`formats`, `strings`, `replacements`, `fields`) y los órdenes de los menús se siguen mostrando sin
-editar: se completan en la Fase 4.
-
-**Cómo funciona:**
+En _New settings_, un sí o no cambia con un clic; los demás abren un diálogo con la descripción, el
+valor actual, el de Providence y un campo (opciones, casillas de subtipos o lista ordenable de tipos de
+dato). Los cambios quedan pendientes y "Review and save changes" los envía todos juntos con el nombre
+de la versión nueva. No se muestran claves ni archivos de Providence.
 
 ```
 Providence (plugin modulo2)                               Servicio Rust
 ConfigurationsController::Save (JSON con todos los cambios)
   Modulo2Editor (con app/conf/local bloqueada)
-    lee los valores efectivos, las claves locales y el estado
     ── POST /edits ─────────────────────────────────────►  valida cada cambio (todos o ninguno)
-                                                           guarda la versión anterior
                                                            registra cada cambio como pendiente
-    ◄── contenido de cada archivo y valores esperados ──   arma los archivos canónicos (conf_writer.rs)
-    escribe los archivos de app/conf/local
-    verifica con Providence; si falla, los deja como estaban
+    ◄── contenido de cada archivo y valores esperados ──   arma los archivos canónicos
+    escribe app/conf/local y verifica con Providence; si falla, los deja como estaban
     ── POST /edits/result (con el estado nuevo) ────────►  guarda la versión nueva y cierra los cambios
 ```
 
-- `Modulo2EditorData` arma lo que la página necesita para editar (las entradas que el usuario puede
-  cambiar, los subtipos y los tipos de dato); la edición en el lugar está en
-  `configurations_editor_html.php`.
-
-- **Validación en el servidor:** el servicio valida el formato de cada tipo de valor
-  (`services/modulo2/values.rs`); el plugin valida lo que solo Providence sabe: que los subtipos y los
-  tipos de dato de una lista existan.
-- **Formato canónico compartido:** `tests/fixtures/canonical.json` y `canonical.conf` son el contrato
-  entre los dos lados. La prueba de Rust verifica que el servicio escribe exactamente ese archivo, y la
-  de PHP que Providence lo lee con las mismas claves.
-- **Menú actualizado al instante:** Providence guarda la barra de menú en la sesión durante 10
-  minutos (`do_menu_bar_caching`), y la página que aplica el cambio todavía la arma con la
-  configuración anterior. Por eso, después de un cambio el plugin pide rearmarla en la página
-  siguiente (`Modulo2Controller::refreshMenuOnNextPage`). Para los demás usuarios conectados, el
-  cambio se ve cuando vence su caché (hasta 10 minutos) o al volver a iniciar sesión.
+- **Validación en el servidor:** el servicio valida el formato de cada valor
+  (`services/modulo2/values.rs`); el plugin, lo que solo Providence sabe (que los subtipos y tipos de
+  dato existan).
+- **Formato canónico compartido:** `tests/fixtures/canonical.json` y `canonical.conf` son el contrato:
+  la prueba de Rust verifica que el servicio escribe ese archivo, y la de PHP que Providence lo lee con
+  las mismas claves.
+- **Menú actualizado al instante:** Providence guarda la barra de menú en la sesión por 10 minutos;
+  después de un cambio el plugin pide rearmarla (`Modulo2Controller::refreshMenuOnNextPage`). Los
+  demás usuarios ven el cambio cuando vence su caché o al volver a entrar.
 
 ### Fase 3: versionado
 
-**Qué ve el usuario:** **Configuration versions** explica en viñetas qué es una versión, dice
-si la configuración actual ya está guardada y, si no, permite guardarla con un nombre propuesto
-("Version of 21/10/2026 14:32") y una nota. La lista muestra cada versión con su número
-correlativo (1, 2, 3...), su nombre (las automáticas se llaman como su motivo, por ejemplo "Antes de
-cambiar «Activo · Lugares»"), quién y cuándo (en formato amable: "Hoy, 14:32", "21 de octubre,
-10:00"), y dos acciones:
+_Configuration versions_ dice si la configuración actual ya está guardada y permite guardarla. Cada
+versión muestra su número, nombre, autor y fecha ("Hoy, 14:32"), con botones para ver sus cambios,
+restaurarla, renombrarla y borrarla (las dos últimas, solo quien la creó). La lista y _Change history_
+cargan de a 50 al llegar al final, con consultas por índice (`WHERE id < ? ORDER BY id DESC LIMIT ?`)
+que cuestan lo mismo con 100 o con 100.000 registros. Las diferencias por configuración las calcula el
+plugin (`Modulo2SettingsDiff`) leyendo con Providence los `.conf` de cada versión.
 
-- **View changes:** qué configuraciones cambiaron respecto de la versión anterior, con su valor antes
-  y después.
-- **Restore:** muestra qué configuraciones cambian al volver a esa versión y pide confirmación.
+**API del servicio** (bajo `/api/modulo2`; los cuerpos son JSON):
 
-En ningún caso se muestran archivos, hashes ni ids internos. Si la configuración en base también
-cambió, se avisa que eso no se restaura. Quien creó una versión la puede renombrar o borrar (con
-confirmación). La lista carga 50 versiones y las siguientes al llegar al final, y el buscador busca
-por nombre en el servidor, así funciona igual con muchas versiones. **Change history** lista cada
-cambio y restauración con quién, cuándo, el nombre de la configuración, el valor antes y después y
-el resultado. Las acciones de cada versión son botones con ícono (Font Awesome, como Providence):
-ver cambios, restaurar, renombrar y borrar; el nombre se ve al pasar el mouse. Las confirmaciones
-(borrar una versión, descartar los cambios pendientes) son avisos abajo a la derecha
-(`Modulo2Ui::toastScript`), no alertas del navegador.
+| Ruta                                | Cuerpo                                                                                                                | Respuesta                                                                                              |
+| ----------------------------------- | --------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
+| `POST /state`                       | `{state}`                                                                                                             | `{hash, version}` (la idéntica o null)                                                                 |
+| `GET /versions?limit&before&search` |                                                                                                                       | `{versions, next_before}`                                                                              |
+| `POST /versions`                    | `{user, version: {name, description}, state}`                                                                         | 201 `{version}`; 409 si ya existe                                                                      |
+| `POST /versions/{id}/name`          | `{user, name}`                                                                                                        | `{version}`; 403 si no la creó                                                                         |
+| `POST /versions/{id}/delete`        | `{user, state}`                                                                                                       | `{version}`; 403 si no la creó, 409 si es la actual                                                    |
+| `GET /versions/{id}`                |                                                                                                                       | `{version, files, database_hash}`                                                                      |
+| `POST /versions/{id}/restore`       | `{user, expected_hash, state, version}`                                                                               | `{change_id, version_before, version, files, database_differs}`; 409 si cambió                         |
+| `POST /edits`                       | `{user, allowed_risks, edits: [{file, key, value \| reset, current, expected, distribution}], local, state, version}` | `{change_ids, version_before, version_created, files, values}`; 403, 409 o 422 con el cambio rechazado |
+| `POST /edits/result`                | `{change_ids, user, result: applied \| failed, message, state, version}`                                              | `{changes, version}`                                                                                   |
+| `GET /changes?limit&before`         |                                                                                                                       | `{changes, next_before}`                                                                               |
+| `POST /changes/{id}/result`         | `{result, message, state}`                                                                                            | `{change}`                                                                                             |
 
-**Diferencias por configuración:** las calcula el plugin (`Modulo2SettingsDiff`): lee con
-Providence los `.conf` de cada estado, superpuestos a los valores de `app/conf`, y compara el valor de
-cada entrada del catálogo. Así se muestra lo que cambia para el usuario y no el texto de los archivos.
+`state` es `{"files": {"app.conf": "..."}, "database": "<profile>...</profile>" | null}` y `user`,
+`{"id": 1, "name": "administrator"}`. Un error responde `{"error": "motivo"}` con 400, 403, 404, 409,
+422, 500 o 503.
 
-**Número de versión:** el id de la tabla puede tener saltos (por ejemplo, las pruebas usan ids en
-transacciones que se deshacen), así que cada versión guarda también `version_number`, el que ve el
-usuario (migración `versiones_borrables_modulo2`). Al borrar una versión, las siguientes bajan un número.
-
-**API del servicio** (todas bajo `/api/modulo2`; los cuerpos son JSON):
-
-| Ruta                          | Cuerpo                                                                                             | Respuesta                                                                                   |
-| ----------------------------- | -------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------- |
-| `POST /state`                 | `{state}`                                                                                          | `{hash, version}` (la idéntica o null)                                                      |
-| `GET /versions?limit&before&search` |                                                                                              | `{versions: [...], next_before}`: hasta `limit` (50, máx. 200) con id menor que `before` y `search` en el nombre |
-| `POST /versions`              | `{user, version: {name, description}, state}`                                                      | 201 `{version}`; 409 `{error, version}` si ya existe                                        |
-| `POST /versions/{id}/name`    | `{user, name}`                                                                                     | `{version}`; 403 si el usuario no la creó, 404 si no existe                                 |
-| `POST /versions/{id}/delete`  | `{user}`                                                                                           | `{version}` (la borrada); 403 si el usuario no la creó, 404 si no existe                    |
-| `GET /versions/{id}`          |                                                                                                    | `{version, files: {nombre: contenido}, database_hash}`                                      |
-| `POST /versions/{id}/restore` | `{user, expected_hash, state, version}`                                                            | `{change_id, version_before, version, files, database_differs}`; 409 si el hash no coincide |
-| `POST /edits`                 | `{user, allowed_risks, edits: [{file, key, value \| reset, current, expected, distribution}], local: {archivo: claves}, state, version}` | `{change_ids, version_before, version_created, files: {archivo: contenido \| null}, values}`; 403, 409 o 422 con `item` (el cambio rechazado) |
-| `POST /edits/result`          | `{change_ids, user, result: applied \| failed, message, state, version}`                           | `{changes, version}`: si se aplicó, la versión nueva con `state`; 409 si ya no estaban pendientes |
-| `GET /changes?limit&before`   |                                                                                                    | `{changes: [...], next_before}`: hasta `limit` (50, máx. 200) cambios con id menor que `before`; `next_before` es null si no hay más |
-| `POST /changes/{id}/result`   | `{result: applied \| failed, message, state}`                                                      | `{change}`; 409 si ya no estaba pendiente                                                   |
-
-- `version`: `{id, number, name, description, automatic, parent_id, hash, created_by, created_at}`.
-- `state`: `{"files": {"app.conf": "..."}, "database": "<profile>...</profile>" | null}`.
-- `user`: `{"id": 1, "name": "administrator"}`, el usuario de Providence de la sesión.
-- `allowed_risks`: los niveles que el usuario puede editar según sus acciones de rol.
-- `local`: las claves de cada archivo local tal como las lee Providence.
-- Un archivo `null` en `files` de `/edits` queda sin claves y se borra.
-- Cada cambio del historial trae también `version_before_number` y `version_after_number` (null si la
-  versión se borró).
-- Un error responde `{"error": "motivo"}` con su código: 400 (petición inválida), 403 (sin permiso),
-  404 (no existe), 409 (conflicto o repetida), 422 (valor no válido), 500 (base) o 503 (sin base).
-
-**Organización del servicio** (la general está en el README principal, "Arquitectura" >
-"Organización del servicio Rust"):
-
-- `routes/modulo2.rs`: la tabla de endpoints del módulo y las funciones que los atienden.
-- `services/modulo2/`: la lógica (catálogo, validación, escritura canónica, edición, restauración,
-  cierre de cambios, lectura de pedidos y JSON de salida).
-- `types/modulo2/`: los tipos con sus métodos (`impl`).
-- `db/dao/modulo2/`: el DAO, solo las consultas SQL, siempre con parámetros `?` (los valores del
-  usuario nunca se pegan en el texto SQL).
-
-**Historial con carga progresiva:** la pantalla pide 50 cambios y, al llegar al final del scroll de la
-tabla, los 50 siguientes (`before` = último id mostrado). La consulta usa el índice por id
-(`WHERE change_id < ? ORDER BY change_id DESC LIMIT ?`), así que cuesta lo mismo con 100 cambios o
-con 100.000, a diferencia de cargar todo o paginar con `OFFSET`.
-
-**Nombre y búsqueda de versiones:** quien creó una versión puede cambiarle el nombre; la lista tiene
-un buscador por nombre. Las fechas se muestran como "Hoy, 14:05", "Ayer, 14:05" o "22/10/2026, 14:05".
-
-**Cambio compartido con los demás módulos:** `routes/mod.rs` recibe cada petición HTTP, lee el
-cuerpo y le pasa a cada módulo una `ApiRequest` (método, ruta, consulta, cuerpo y base de datos); antes solo
-pasaba el método y la ruta, porque ninguna ruta tenía cuerpo ni usaba la base. Las rutas de cada
-módulo pasaron de `modules/moduloN.rs` a `routes/moduloN.rs`, con la función `routes`.
-
-## Tareas por fase
-
-Convenciones: `[x]` hecho, `[ ]` pendiente. Los números `#N` refieren al
-[catálogo](#configuraciones-del-catálogo).
-
-### Fase 0: infraestructura
-
-- [x] Plugin base, menú y permiso `can_use_modulo2`
-- [x] Volumen `conf_local` para `app/conf/local`
-- [x] Base propia de la extensión (`ca_extension`), conexión del servicio Rust y migraciones del
-      módulo 2 (`creando_tablas_modulo2`, `creando_indices_modulo2`, `optimizando_indices_modulo2` y
-      `versiones_borrables_modulo2`)
-- [x] Estructura de pruebas (Rust y PHP) y pruebas de aislamiento entre las bases
-
-### Fase 1: catálogo y lectura
-
-- [x] Formato del catálogo: claves por tipo de dato, globales y anidadas; tipos de valor; riesgo;
-      etiquetas en positivo
-- [x] Catálogo con las configuraciones en archivo (ver [Configuraciones del catálogo](#configuraciones-del-catálogo))
-      y resumen de la configuración en base (#21)
-- [x] Lectura en PHP del valor efectivo y del valor por defecto
-- [x] Vista con índice y buscador en la barra lateral, secciones plegables y filtro de modificadas
-- [x] Pruebas de Rust (base y rutas) y de PHP
-
-### Panel de gestión
-
-- [x] Relevamiento de Manage: secciones, permisos y qué módulo completa cada una
-- [x] Menú **Management** en el lugar de Manage, con el panel y las nuevas configuraciones
-- [x] Panel con todas las secciones de Manage enlazadas, agrupadas por tema, con buscador, estado de
-      cada sección y nota de las que completa otro módulo (1, 3 o 5)
-- [ ] My preferences mejorado: una sola página con buscador y tablas tipo de dato × preferencia
-      (guarda con `ca_users::setPreference`)
-- [ ] Administration mejorado: resultados del chequeo de configuración y avisos de mantenimiento
-- [ ] Revisar el resto de las secciones y decidir cuáles se mejoran
-
-### Fase 2: edición del catálogo
-
-- [x] Validar en el servidor contra el catálogo: clave, tipo de valor, riesgo y conflicto (servicio)
-      y existencia de subtipos y tipos de dato (plugin)
-- [x] Generar el contenido `.conf` para `app/conf/local`, con las claves en orden alfabético
-- [x] Escritura atómica, limpieza de caché y verificación posterior del valor efectivo, con vuelta
-      atrás si Providence no toma el cambio
-- [x] Registro de cambios: usuario, fecha, clave, valor anterior y nuevo, versión anterior, resultado
-- [x] Permisos por nivel de riesgo: una acción de rol para editar configuraciones de riesgo bajo,
-      medio o crítico (el plugin las declara en `getRoleActionList()` y las consulta con
-      `canDoAction()`), verificada en el servidor antes de cada cambio
-- [x] Pruebas: valores inválidos, usuario sin permiso (sin `can_use_modulo2` no se ve el menú ni se
-      abren las páginas; sin el permiso del nivel de riesgo no se edita), falla de escritura y
-      verificación fallida
-- [ ] Edición de las configuraciones con estructura y de los órdenes de los menús (Fase 4: #5, #6, #8)
-
-### Fase 3: versionado
-
-- [x] Crear una versión con nombre autocompletado (fecha, hora y usuario) y editable
-- [x] Guardar varios cambios juntos (todos o ninguno), con una sola versión nueva por guardado
-- [x] Borrar una versión (solo quien la creó), con número estable y el historial conservado
-- [x] Lista de versiones con carga progresiva y búsqueda por nombre en el servidor
-- [x] Versión automática antes de cada cambio y de cada restauración
-- [x] Hash de la versión completa y sin versiones repetidas (avisar cuál es la idéntica)
-- [x] Lista de versiones y cambios de cada una respecto de la anterior, por configuración
-- [x] Restauración de los archivos con detección de conflictos (por hash) y verificación posterior
-- [x] Exportación XML de la configuración en base en cada versión (sin usuarios), incluida en el hash;
-      se avisa si cambió
-- [ ] Restauración de la configuración en base con el instalador en modo actualización, con aviso y
-      bloqueo de borrados en uso (#22): **decisión pendiente** (ver
-      [Versionado](#versionado-registro-y-permisos))
-- [x] Pruebas: crear, comparar, restaurar y resolver conflictos
+**Organización del servicio:** `routes/modulo2.rs` (endpoints), `services/modulo2/` (lógica),
+`types/modulo2/` (tipos) y `db/dao/modulo2/` (solo SQL, siempre con parámetros `?`).
 
 ### Fase 4: cierre de cada configuración
 
-Cada configuración se cierra cuando tiene validación, interfaz de edición, pruebas unitarias y de
-integración, y documentación.
+Una sección se cierra cuando se probó en la interfaz y hay pruebas de lo que hace Providence con ella.
+Las pruebas escriben la configuración en `app/conf/local`, crean registros y miran el resultado con el
+código de Providence (la barra de menú, el buscador, el guardado del editor). Las que se aplican a varios
+tipos de dato recorren todas las claves del catálogo real: una clave mal escrita, que Providence ignoraría
+sin avisar, hace fallar la prueba. Comparten `tests/support/Modulo2BehaviorTestCase.php`, que crea un
+registro de cualquier tipo de dato y simula el guardado del editor, y dejan todo como estaba aunque la
+prueba se corte.
 
-**Qué hace Providence con cada configuración.** `Modulo2ProvidenceBehaviorIntegrationTest` escribe
-la configuración en `app/conf/local` y mira el resultado con el código de Providence (la barra de
-menú real, el buscador de los campos de relación, `isDeletable`, `caTableIsActive`):
+| Prueba                                     | Secciones                                           |
+| ------------------------------------------ | --------------------------------------------------- |
+| `Modulo2ProvidenceBehaviorIntegrationTest` | Tipos de dato, funciones, menús, módulos opcionales |
+| `Modulo2IdentifierRulesIntegrationTest`    | Identificadores                                     |
+| `Modulo2NameRulesIntegrationTest`          | Nombres                                             |
+| `Modulo2ResultsDeaccessionIntegrationTest` | Resultados y bajas                                  |
+| `Modulo2ReportsIntegrationTest`            | Descargas                                           |
+| `Modulo2DeaccessionFieldIntegrationTest`   | Bajas: campo de baja en el editor                   |
 
-| #  | Configuración                       | Dónde se ve (verificado en Providence 2.0.12)                                                                                                    |
-| -- | ----------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
-| 1  | Enabled                             | Menús New y Find, búsqueda rápida y campos de relación de los editores (`caTableIsActive`). Los registros no se borran                           |
-| 2  | Quick add                           | Al escribir en un campo de relación un nombre que no existe, la opción "... does not exist. Create?" (`BaseLookupController`). El botón de alta rápida del campo depende del permiso `can_quickadd_*` del rol |
-| 2  | Delete                              | El botón "Delete" del editor (`isDeletable`). **No impide** borrar por la URL: la restricción real es el permiso `can_delete_*` del rol          |
-| 2  | Basic/advanced search, builder, browse | Las opciones del tipo de dato en el menú Find (y la pantalla, si se entra por la URL)                                                       |
-| 2  | Duplicate items                     | Solo existe para sets: duplicar los elementos de un set (`SetEditorController`)                                                                  |
-| 3  | Shown in the menu                   | El tipo de dato en el menú New (sigue en Find)                                                                                                   |
-| 3  | Top-level types only                | Saca del menú New los subtipos que dependen de otro                                                                                              |
-| 3  | Only these / Except these types     | Filtran los subtipos del menú New. **Limitación de Providence** (`BaseEditorController::_getSubTypes`): "Only these" oculta los subtipos anidados aunque estén elegidos y "Except these" no saca los anidados |
-| 4  | Types in the menu / in a submenu    | Find muestra una entrada por subtipo en lugar del tipo de dato, o el tipo de dato con un submenú                                                 |
-| 4  | Only these / Except these types     | Filtran los subtipos de Find solo cuando el menú los muestra (con una de las dos anteriores)                                                    |
+**Lo que se verificó de Providence:**
 
-**Datos de ejemplo:** `make seed-demo` carga en el Providence de desarrollo unos 80 registros (objetos de
-cada subtipo, entidades, lugares, colecciones, ocurrencias, lotes, ubicaciones, préstamos y
-movimientos) y subtipos anidados de objetos (Oil painting y Watercolor debajo de Painting; Letter y
-Manuscript debajo de Document), para probar a mano. Se puede correr varias veces.
+- **Menú "Nuevo".** Lugares y ubicaciones no muestran subtipos en "Nuevo": abren su jerarquía y el
+  subtipo se elige ahí. Por eso el catálogo les ofrece solo "Visible en el menú". De fábrica, Providence
+  muestra los subtipos de los hechos (_occurrences_) sueltos; la instalación los agrupa en un submenú
+  como los demás (`docker/providence/initial-app.conf`, que el entrypoint copia a `app/conf/local` al
+  instalar). En "Buscar", con "Subtipos en el menú" (encendido de fábrica) aparecen sus subtipos en
+  lugar de "Hechos". El perfil trae los nombres de esos subtipos solo en inglés y francés:
+  `repair-installation.php` les agrega el nombre en castellano.
+- **Menú "Buscar".** Con "Subtipos en un submenú", Providence arma mal el submenú de las
+  representaciones (escribe `ca_object_representationd`) y todas las páginas dan un error fatal. El
+  catálogo no ofrece esa opción para las representaciones.
+- **Identificadores.** Las dos reglas son por tipo de dato: Providence no tiene reglas por subtipo, y un
+  complemento no puede impedir un guardado (sus avisos previos no cancelan nada). Lo que sí es por
+  subtipo es el formato (`multipart_id_numbering.conf`), y "identificador válido" exige el formato del
+  subtipo del registro. Con el formato de la distribución (texto libre sin largo mínimo) cualquier
+  identificador es válido, incluso vacío. Los repetidos se buscan en todo el tipo de dato: un subtipo no
+  puede repetir el identificador de otro. Activar una regla no revisa los registros que ya existen: uno
+  anterior inválido no se puede volver a guardar hasta corregirlo; los repetidos anteriores se
+  conservan.
+- **Nombres.** Sin nombre obligatorio, el editor guarda el registro con el nombre "[BLANK]". Los ítems
+  de lista nunca se guardan sin nombre (el plural es obligatorio), así que esa regla no los incluye.
+  Entidades, colecciones y hechos no permiten nombres repetidos de fábrica. El aviso de nombre
+  repetido existe solo para entidades: aparece mientras se escribe y no impide guardar.
+- **Resultados (pendiente: hay que modificar Providence).** Providence tiene cuatro valores: "Siempre
+  mostrar" y "Siempre ocultar" se aplican siempre; "Mostrar" y "Ocultar" son solo el valor inicial, el
+  usuario elige en los resultados y Providence recuerda su elección. El catálogo ofrece solo los dos que
+  se aplican siempre y muestra los otros como estos (opciones equivalentes, `also` en el JSON). Los dados
+  de baja se pueden ocultar en objetos, lotes y colecciones. Funciona en la búsqueda y la exploración de
+  cada tipo de dato, pero:
+    - **La búsqueda rápida no lo aplica.** `QuickSearchController::_doSearch` arma los filtros con
+      `hide_children` y `hide_deaccession` de la vista, que solo calcula `BaseFindController` y la
+      búsqueda rápida nunca asigna. Para corregirlo hay que modificar Providence (calcular esos valores
+      en la búsqueda rápida con la configuración de cada tipo de dato), o pedirlo a CollectiveAccess.
+    - **La exploración lista en sus filtros los nombres de los registros ocultos**, aunque al elegirlos
+      no aparecen.
+- **Descargas.** Los Excel que se descargan de los resultados pueden llevar la búsqueda arriba y un pie
+  (tipo de dato, página y fecha), que se ven al imprimir la hoja. Providence solo pone la búsqueda si
+  también está el encabezado (`excel_report_header_enabled`), así que el catálogo las une en una sola
+  configuración; el logo del encabezado solo lo agrega una plantilla que la descarga actual no usa. Los
+  Word de los resultados y del resumen de un registro pueden llevar el nombre de cada campo. Los PDF
+  tienen sus propias opciones al descargarlos y los CSV no tienen opciones.
+- **Menú "Buscar".** "Subtipos en el menú" y "Subtipos en un submenú" no pueden estar activas a la vez
+  (el menú queda mal armado). Cada una excluye a la otra (`excludes` en el catálogo): al activar una, la
+  pantalla deja pendiente apagar la otra, y el plugin no guarda las dos activas.
+- **Traducciones.** Providence tiene algunas traducciones al castellano marcadas como dudosas, que no
+  usa (por ejemplo "Storage location" en el menú "Nuevo"). `app/locale/user/es_ES/messages.po` (y su
+  `.mo`, compilado con `msgfmt`) las completa: es el lugar que Providence prevé para las traducciones
+  propias de la instalación.
+- **Bajas.** Sin edición de registros dados de baja, el editor solo guarda el campo de baja (se puede
+  deshacer la baja). "Privado al dar de baja" no funciona: el guardado lee el acceso en lugar de
+  cambiarlo (`$this->get('access', 0)`), por eso se quitó del catálogo; una prueba avisa si lo corrigen.
+  Providence tiene un campo para dar de baja objetos, lotes y colecciones ("Deaccession status"), pero el
+  perfil no lo pone en ninguna pantalla: "Dar de baja desde el editor" (`Modulo2DeaccessionField`) lo
+  agrega a la primera pantalla de cada interfaz de edición del tipo de dato, o lo quita. Providence lo
+  muestra solo en registros ya guardados. Es configuración de la base: se aplica al instante, Providence
+  registra el cambio en su historial y restaurar una versión no lo deshace.
+  **Tiempo de respuesta:** cambiar el campo tardaba unos 3,5 s; ahora, cerca de 1,3 s. No vacía las
+  cachés de Providence (sus pantallas de interfaces tampoco lo hacen: las ubicaciones no se guardan en
+  caché) y _New settings_ ya no exporta la configuración en base al abrirse: saber si la configuración
+  actual está en una versión, para ofrecer guardarla antes, se consulta al primer cambio
+  (`Configurations/CurrentSaved`). Esa exportación tarda un par de segundos cada vez que cambia la base.
+- **Biblioteca.** Providence exige dos claves (`enable_library_services` y `enable_object_checkout`)
+  para el menú "Biblioteca" y sus pantallas; con una sola no hace nada. Por eso el catálogo las une en
+  una configuración: una **clave vinculada** se escribe siempre con el mismo valor que la principal, y
+  la configuración se ve activa solo si las dos lo están. Además, cada usuario necesita el permiso de
+  prestar o devolver de su rol.
 
-- [ ] #1 Tipos de dato
-- [ ] #2 Funciones por tipo de dato
-- [ ] #3 Menú "Nuevo"
-- [ ] #4 Menú "Buscar"
-- [ ] #5 Orden de los menús
-- [ ] #6 Automatización de identificadores
-- [ ] #7 Reglas de identificadores
-- [ ] #8 Textos y traducciones
-- [ ] #9 Inspector
-- [ ] #10 Resultados
-- [ ] #11 Identidad visual
-- [ ] #12 Reglas de nombres
-- [ ] #13 Jerarquías
-- [ ] #14 Visibilidad en resultados
-- [ ] #15 Bajas
-- [ ] #16 Módulos opcionales
-- [ ] #17 Autocompletado
-- [ ] #23 Control de acceso
+**Datos de ejemplo:** `make seed-demo` carga en el Providence de desarrollo unos 80 registros de cada
+tipo de dato, subtipos anidados de objetos, para "Resultados" un objeto con dos hijos y uno dado de baja
+(se encuentran buscando "Resultados"), y un lote y una colección dados de baja (se encuentran buscando
+"Baja"). Se puede correr varias veces.
+
+### Fase 5: panel de gestión
+
+- **Menú:** `modulo2Plugin::hookRenderMenuBar` reemplaza Manage por Management en el mismo lugar de la
+  barra. Un usuario sin `can_use_modulo2` sigue viendo Manage.
+- **Contenido:** los nombres, enlaces y permisos de cada sección se leen del menú Manage de
+  `navigation.conf`, así el panel sigue a Providence y cada usuario ve solo lo que puede usar
+  (`Modulo2NavRequirements` evalúa los requisitos como Providence). Grupos, descripciones y módulo
+  dueño están en `Modulo2ManageMap`.
+- **My preferences:** `Modulo2PreferenceEditor` (guardado), `Modulo2PreferenceRestorer`
+  (restauración) y `Modulo2PreferenceValues` (texto de cada valor). API bajo
+  `/api/modulo2/preferences`, con las mismas rutas que las versiones de configuración más el usuario
+  (`?user=` o en el cuerpo); tablas `m2_preference_versions` y `m2_preference_changes` (registro interno). La prueba de
+  integración usa dos usuarios de prueba fijos e inactivos, porque Providence no borra usuarios.
+- **Interfaz modernizada:** las pantallas del módulo comparten los estilos de `Modulo2Ui` (colores,
+  letra, botones, tarjetas, tablas, diálogos y listas desplegables). Las de Administration de
+  Providence toman el mismo aspecto con
+  [themes/default/css/administration.css](../../themes/default/css/administration.css), que importa
+  `local.css`: solo cambia estilos, sin tocar su HTML ni su funcionamiento, y se aplica únicamente en las
+  páginas cuya barra lateral (o formulario) lleva a `/administrate/` (selector `:has`). Las listas
+  desplegables usan `appearance: base-select` para que la lista abierta tenga el mismo estilo; un
+  navegador que no lo soporta (Chrome y Edge sí, desde la versión 135) muestra la lista de siempre.
+
+## Tareas por fase
+
+`[x]` hecho, `[ ]` pendiente. Los números `#N` refieren al [catálogo](#configuraciones-del-catálogo).
+
+**Fases 0 a 3**
+
+- [x] Plugin, menú, permiso, volumen `conf_local`, base de la extensión y migraciones
+- [x] Catálogo, lectura del valor efectivo y del de Providence, vista con índice y buscador
+- [x] Edición validada en el servidor (catálogo, valor, riesgo, conflicto), escritura atómica y
+      verificación con vuelta atrás, registro de cambios y permisos por nivel de riesgo
+- [x] Versiones manuales, sin repetidas (por hash), con número sin saltos, renombrar y borrar
+- [x] Ver los cambios de una versión y restaurarla con detección de conflictos
+- [x] Exportación de la configuración en base en cada versión
+- [ ] Restaurar la configuración en base: **decisión pendiente** (ver
+      [Versionado](#versionado-registro-y-permisos))
+
+**Fase 4: cierre de cada sección**
+
+- [x] #1 Tipos de dato
+- [x] #2 Funciones por tipo de dato
+- [x] #3 Menú "Nuevo"
+- [x] #4 Menú "Buscar"
+- [x] #5 Identificadores
+- [x] #6 Nombres
+- [ ] #7 Jerarquías
+- [ ] #8 Resultados: pendiente; la búsqueda rápida no aplica la configuración y para eso hay que
+      modificar Providence (ver arriba)
+- [x] #9 Descargas
+- [x] #10 Bajas
+- [x] #11 Módulos opcionales
+- [ ] #12 Control de acceso: pendiente hasta que esté la lógica del módulo 3
+- [ ] Configuración en la base: se quitó de _New settings_; está en el panel de gestión (sobre todo en
+      Administration). Queda ver más adelante si se mejora o simplifica la interfaz de esas secciones
+
+**Fase 5: panel de gestión**
+
+- [x] Menú Management en el lugar de Manage y panel con todas las secciones
+- [x] My preferences: una pantalla por grupo, cambios pendientes, versiones por usuario
+- [ ] My preferences: ver y probar cada grupo, como las secciones del catálogo en la fase 4, y
+      marcarlo cuando quede aceptado
+    - [ ] General
+    - [ ] Editing (Edición)
+    - [ ] Batch editing (Edición en masa)
+    - [ ] Search/browse (Búsqueda y exploración)
+    - [ ] Quick add (Al vuelo)
+    - [ ] Units of measurement (Unidades de medida)
+    - [ ] Duplication (Herramientas de duplicación)
+    - [ ] Quick search y Search builder (Búsqueda rápida y Constructor de búsquedas): se editan en
+          Providence; revisar que sus cambios entren en las versiones
+    - [ ] User profile (Perfil de usuario)
+    - [ ] Developer (Desarrollo)
+- [ ] Interfaz modernizada, sin cambiar el funcionamiento: las pantallas del módulo (panel, _New
+      settings_, versiones, historial y My preferences) y las de Administration de Providence.
+      **Pendiente de revisión**
+- [ ] Administration mejorado: resultados del chequeo de configuración y avisos de mantenimiento
+- [ ] (Opcional) Administration: analizar si sus pantallas actuales (interfaces de usuario, elementos
+      de metadatos, tipos de relación, idiomas, mantenimiento...) se pueden simplificar u optimizar
+- [ ] Revisar el resto de las secciones y decidir cuáles se mejoran

@@ -85,13 +85,13 @@ pub struct Version {
 
 /// Resultado de guardar un estado: versión nueva o la que ya tenía ese hash.
 #[derive(Debug, PartialEq, Eq)]
-pub enum Saved {
-    Created(Version),
-    Existing(Version),
+pub enum Saved<V = Version> {
+    Created(V),
+    Existing(V),
 }
 
-impl Saved {
-    pub fn version(&self) -> &Version {
+impl<V> Saved<V> {
+    pub fn version(&self) -> &V {
         match self {
             Saved::Created(version) | Saved::Existing(version) => version,
         }
@@ -200,11 +200,15 @@ pub enum Closed {
 
 /// Resultado de renombrar o borrar una versión.
 #[derive(Debug, PartialEq)]
-pub enum Owned {
-    Done(Version),
+pub enum Owned<V = Version> {
+    Done(V),
+    /// El nombre nuevo es el mismo: no se guarda nada.
+    Unchanged(V),
     NotFound,
     /// Solo puede hacerlo quien la creó.
     NotOwner,
+    /// Es la versión de la configuración actual: no se puede borrar.
+    Current,
 }
 
 #[cfg(test)]

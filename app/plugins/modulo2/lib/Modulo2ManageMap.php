@@ -51,7 +51,10 @@ final class Modulo2ManageMap {
 			'changes' => self::internal(['Changes', 'Index'], Modulo2I18n::t('Change history'),
 				Modulo2I18n::t('Who changed each setting, when, and its value before and after.')),
 			'system_config' => self::native(['system_config'], Modulo2I18n::t('User interfaces, metadata elements, relationship types, locales, data dictionary, configuration check and maintenance (reindexing, exporting the configuration).'), self::STATUS_PLANNED),
-			'preferences' => self::native(['preferences'], Modulo2I18n::t('How each user works in Providence: interface language and theme, editor screens by data type, search, quick add, what is copied when duplicating a record and units of measurement.'), self::STATUS_PLANNED)
+			'preferences' => self::internal(['MyPreferences', 'EditUIPrefs'], Modulo2I18n::t('My preferences'),
+				Modulo2I18n::t('How you work in Providence: interface language and theme, editor screens by data type, search, quick add, what is copied when duplicating a record and units of measurement.')),
+			'preference_versions' => self::internal(['PreferenceVersions', 'Index'], Modulo2I18n::t('My preference versions'),
+				Modulo2I18n::t('Copies of your preferences saved at different times: see what changed and go back to an earlier one.'))
 		];
 	}
 	# -------------------------------------------------------

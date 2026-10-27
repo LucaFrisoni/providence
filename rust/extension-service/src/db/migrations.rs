@@ -66,6 +66,12 @@ pub const MIGRATIONS: &[Migration] = &[
         name: "numeracion_sin_saltos_modulo2",
         sql: include_str!("migrations/modulo2/0007_numeracion_sin_saltos_modulo2.sql"),
     },
+    Migration {
+        module: MODULO2,
+        version: 8,
+        name: "preferencias_modulo2",
+        sql: include_str!("migrations/modulo2/0008_preferencias_modulo2.sql"),
+    },
 ];
 
 /// Aplica las migraciones que faltan y devuelve los identificadores de las aplicadas.

@@ -89,7 +89,7 @@ pub fn list(
 }
 
 /// El texto con `\`, `%` y `_` escapados, para buscarlo tal cual con LIKE.
-fn like_escaped(text: &str) -> String {
+pub fn like_escaped(text: &str) -> String {
     text.chars()
         .flat_map(|c| match c {
             '\\' | '%' | '_' => vec!['\\', c],

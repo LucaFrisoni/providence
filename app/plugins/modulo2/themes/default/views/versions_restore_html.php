@@ -23,12 +23,20 @@ $e = fn($text) => htmlspecialchars((string)$text, ENT_QUOTES, 'UTF-8');
 <p><?= Modulo2I18n::t('When it is restored, these settings go back to how they were in that version:'); ?></p>
 <?= Modulo2Ui::settingChanges($changes, $this->getVar('data_type_names') ?? [], $this->getVar('database_differs')); ?>
 
-<form method="post" action="<?= $e($this->getVar('form_url')); ?>" class="m2-actions">
+<form method="post" action="<?= $e($this->getVar('form_url')); ?>">
 	<input type="hidden" name="csrfToken" value="<?= $e($this->getVar('csrf_token')); ?>"/>
 	<input type="hidden" name="id" value="<?= (int)$version['id']; ?>"/>
 	<input type="hidden" name="expected_hash" value="<?= $e($this->getVar('expected_hash')); ?>"/>
-	<button type="submit" class="m2-btn m2-btn-primary"><?= Modulo2I18n::t('Restore version %1', (int)$version['number']); ?></button>
-	<a class="m2-btn" href="<?= $e($this->getVar('index_url')); ?>"><?= Modulo2I18n::t('Cancel'); ?></a>
-	<span class="m2-muted"><?= Modulo2I18n::t('The current configuration is saved first, so you can go back to it.'); ?></span>
+<?php if (!$this->getVar('current_saved')) { ?>
+	<div class="m2-card m2-card-highlight">
+		<label><input type="checkbox" name="save_previous" value="1" checked/> <strong><?= Modulo2I18n::t('Save the current configuration as a version before restoring'); ?></strong></label>
+		<p class="m2-muted"><?= Modulo2I18n::t('The current configuration is not saved in any version. Saving it lets you go back to it later.'); ?></p>
+		<input type="text" name="previous_name" maxlength="255" style="width:100%;max-width:480px;box-sizing:border-box" value="<?= $e($this->getVar('suggested_previous_name')); ?>" aria-label="<?= $e(Modulo2I18n::t('Name of that version')); ?>"/>
+	</div>
+<?php } ?>
+	<div class="m2-actions">
+		<button type="submit" class="m2-btn m2-btn-primary"><?= Modulo2I18n::t('Restore version %1', (int)$version['number']); ?></button>
+		<a class="m2-btn" href="<?= $e($this->getVar('index_url')); ?>"><?= Modulo2I18n::t('Cancel'); ?></a>
+	</div>
 </form>
 </div>

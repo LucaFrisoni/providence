@@ -23,7 +23,6 @@ final class Modulo2VersioningViewsTest extends TestCase {
 		$this->assertSame(['app.conf|ca_places_x'], array_keys($data['entries']));
 		$entry = $data['entries']['app.conf|ca_places_x'];
 		$this->assertSame(['Enabled · Places', 'boolean', false, true, true], [$entry['label'], $entry['kind'], $entry['current'], $entry['inverted'], $entry['local']]);
-		$this->assertSame([['code' => 'ca_places', 'name' => 'Places']], $data['data_types']);
 	}
 	# -------------------------------------------------------
 	// El servidor vuelve a verificar, pero la pantalla no ofrece lo que el usuario no puede hacer
@@ -56,6 +55,16 @@ final class Modulo2VersioningViewsTest extends TestCase {
 		$this->assertStringContainsString('value="Version of 21/10/2026 10:00"', $html);
 		$this->assertStringContainsString('data-next="10" data-url="/page" data-current="0"', $html);
 		$this->assertStringContainsString('id="m2-version-search"', $html);
+	}
+	# -------------------------------------------------------
+	// Las palabras clave se marcan con ** en el texto (y en su traducción): no deben verse los asteriscos
+	#[TestDox('La explicación de las versiones resalta sus palabras clave sin mostrar las marcas')]
+	public function testVersionsIntroHighlightsKeywords() : void {
+		$html = $this->render('versions_index_html.php', $this->versionVars(null));
+
+		$this->assertStringContainsString(Modulo2Ui::emphasis(_t('A **version** is a copy of how Providence was configured at a given time.')), $html);
+		$this->assertMatchesRegularExpression('!<ul class="m2-lead">.*<strong>.+</strong>!s', $html);
+		$this->assertStringNotContainsString('**', $html);
 	}
 	# -------------------------------------------------------
 	#[TestDox('Si la configuración actual es una versión, lo dice y no ofrece guardar otra')]
@@ -96,11 +105,44 @@ final class Modulo2VersioningViewsTest extends TestCase {
 
 		$html = Modulo2Ui::versionRows($versions, $this->rowContext());
 
-		$this->assertSame(1, substr_count($html, 'data-m2-rename class'));
+		$this->assertSame(1, substr_count($html, 'data-m2-rename data-id="10" data-number="1" data-name="Initial version"'));
 		$this->assertSame(1, substr_count($html, 'class="m2-delete"'));
 		$this->assertStringContainsString('action="/delete" data-m2-confirm="'._t('Delete version %1? This cannot be undone.', 1).'"', $html);
 		$this->assertStringContainsString('<input type="hidden" name="id" value="10"/>', $html);
 		$this->assertStringNotContainsString('<input type="hidden" name="id" value="20"/>', $html);
+	}
+	# -------------------------------------------------------
+	// Borrar la versión actual dejaría la configuración sin versión que la represente
+	#[TestDox('La versión actual no ofrece borrarse, aunque sea del usuario')]
+	public function testCurrentVersionCannotBeDeleted() : void {
+		$html = Modulo2Ui::versionRows($this->versions(), $this->rowContext(['current_id' => 20]));
+
+		$this->assertSame(1, substr_count($html, 'class="m2-delete"'));
+		$this->assertStringNotContainsString('data-m2-confirm="'._t('Delete version %1? This cannot be undone.', 2).'"', $html);
+	}
+	# -------------------------------------------------------
+	// Cambiar el nombre es un diálogo de la página, no un formulario por fila
+	#[TestDox('La página de versiones tiene un solo diálogo para cambiar el nombre, con su token')]
+	public function testRenameIsADialog() : void {
+		$html = $this->render('versions_index_html.php', $this->versionVars(null) + ['rename_url' => '/rename']);
+
+		$this->assertSame(1, substr_count($html, '<dialog class="m2-rename-dialog"'));
+		$this->assertStringContainsString('<form method="post" action="/rename">', $html);
+		$this->assertStringNotContainsString('class="m2-rename"', $html);
+	}
+	# -------------------------------------------------------
+	// Nada se guarda solo: si la configuración actual no está en una versión, el usuario decide
+	#[TestDox('Restaurar ofrece guardar antes la configuración actual solo si no está guardada')]
+	public function testRestoreOffersToSaveTheCurrentConfiguration() : void {
+		$vars = ['version' => $this->version(10, 1, 'v1'), 'changes' => [], 'expected_hash' => 'abc', 'csrf_token' => 't', 'form_url' => '/do',
+			'suggested_previous_name' => 'Before the changes of 22/10/2026 10:00'];
+
+		$unsaved = $this->render('versions_restore_html.php', $vars + ['current_saved' => false]);
+		$saved = $this->render('versions_restore_html.php', $vars + ['current_saved' => true]);
+
+		$this->assertStringContainsString('name="save_previous" value="1" checked', $unsaved);
+		$this->assertStringContainsString('value="Before the changes of 22/10/2026 10:00"', $unsaved);
+		$this->assertStringNotContainsString('save_previous', $saved);
 	}
 	# -------------------------------------------------------
 	#[TestDox('Los nombres y las notas de las versiones se escapan')]
@@ -128,7 +170,7 @@ final class Modulo2VersioningViewsTest extends TestCase {
 		$this->assertMatchesRegularExpression('!<strong>Enabled · Places</strong>.*<span class="m2-change-value">'._t('Yes').'</span></td><td><span class="m2-change-value">'._t('No').'</span>!s', $html);
 		$this->assertStringContainsString(_t('Restore version %1', 1), $html);
 		$this->assertStringContainsString('name="expected_hash" value="abc"', $html);
-		$this->assertStringContainsString(_t('Lists, fields or other options edited in the Providence screens (Manage and Administrate) also change. Those are not restored from here.'), $html, 'Aviso de la configuración en base');
+		$this->assertStringContainsString(_t('Between these versions, the configuration stored in the database also changed (lists, metadata elements, user interfaces and other options edited from the Management panel). Restoring only brings back the settings listed above: the database configuration stays as it is now.'), $html, 'Aviso de la configuración en base');
 	}
 	# -------------------------------------------------------
 	#[TestDox('Sin configuraciones que cambien, lo dice')]

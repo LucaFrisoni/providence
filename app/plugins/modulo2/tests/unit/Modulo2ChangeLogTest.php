@@ -31,10 +31,12 @@ final class Modulo2ChangeLogTest extends TestCase {
 	// Un valor rechazado puede tener cualquier tipo: no puede romper la página
 	#[TestDox('Un valor rechazado que no tiene el tipo de la configuración se muestra tal cual')]
 	public function testRejectedValueOfAnotherTypeIsShownAsIs() : void {
-		$catalog = $this->catalog('table_list');
+		$catalog = $this->catalog('subtype_list');
 		$row = (new Modulo2ChangeLog($catalog, []))->rows([$this->change(['key' => 'ca_places_disable', 'new_value' => 'no es lista'])])[0];
 
 		$this->assertSame('"no es lista"', $row['after']);
+		$choice = (new Modulo2ChangeLog($this->catalog('choice'), []))->rows([$this->change(['key' => 'ca_places_disable', 'new_value' => ['a']])])[0];
+		$this->assertSame('["a"]', $choice['after']);
 	}
 	# -------------------------------------------------------
 	#[TestDox('Una clave que ya no está en el catálogo se muestra con su nombre técnico')]

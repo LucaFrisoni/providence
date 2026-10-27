@@ -2,7 +2,8 @@
 /* ----------------------------------------------------------------------
  * app/plugins/modulo2/themes/default/views/configurations_editor_html.php :
  * Edición en el lugar de la página de configuraciones (la incluye configurations_index_html.php).
- * Cada cambio queda pendiente en el navegador; "Save changes" los envía todos juntos a Save.
+ * Cada cambio queda pendiente en la página; "Save changes" los envía todos juntos a Save. Si se sale
+ * de la página sin guardar, los pendientes se descartan (no quedan cambios a medio guardar).
  * ----------------------------------------------------------------------
  */
 $json = fn($value) => json_encode($value, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_UNESCAPED_UNICODE);
@@ -10,39 +11,12 @@ $texts = [
 	'yes' => Modulo2I18n::t('Yes'), 'no' => Modulo2I18n::t('No'), 'none' => '—',
 	'pendingOne' => Modulo2I18n::t('1 unsaved change'), 'pendingMany' => Modulo2I18n::t('%1 unsaved changes'),
 	'before' => Modulo2I18n::t('Before: %1'), 'allWhenNone' => Modulo2I18n::t('None selected: all of them are shown.'),
-	'noSubtypes' => Modulo2I18n::t('This data type has no types.'), 'up' => Modulo2I18n::t('Move up'), 'down' => Modulo2I18n::t('Move down'),
-	'confirmDiscard' => Modulo2I18n::t('Discard all the unsaved changes?'), 'discard' => Modulo2I18n::t('Discard')
+	'noSubtypes' => Modulo2I18n::t('This data type has no types.'),
+	'confirmDiscard' => Modulo2I18n::t('Discard all the unsaved changes?'), 'discard' => Modulo2I18n::t('Discard'),
+	'leave' => Modulo2I18n::t('There are %1 unsaved changes. If you leave the page they are discarded.'), 'leaveButton' => Modulo2I18n::t('Leave the page')
 ];
 ?>
-<style>
-	.m2-pending-bar { position: sticky; bottom: 0; z-index: 20; display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin: 16px 0 0 0;
-		padding: 10px 14px; border: 1px solid #5b8ec9; border-radius: 6px; background: #eef4fb; box-shadow: 0 -2px 8px rgba(0, 0, 0, .08); }
-	.m2-pending-bar[hidden] { display: none; }
-	.m2-pending-bar strong { margin-right: auto; color: #23466e; }
-	dialog.m2-dialog { width: min(680px, 92vw); padding: 0; border: none; border-radius: 8px; box-shadow: 0 8px 30px rgba(0, 0, 0, .25); }
-	dialog.m2-dialog::backdrop { background: rgba(0, 0, 0, .35); }
-	.m2-dialog-body { padding: 16px 20px; max-height: 70vh; overflow: auto; }
-	.m2-dialog h2 { margin: 0 0 2px 0; font-size: 17px; }
-	.m2-dialog .m2-muted { color: #666; font-size: 12px; }
-	.m2-dialog-values { display: grid; grid-template-columns: max-content 1fr; gap: 4px 14px; margin: 12px 0; padding: 10px 12px; background: #f7f7f7; border-radius: 4px; }
-	.m2-dialog-values dt { color: #666; }
-	.m2-dialog-values dd { margin: 0; font-weight: bold; }
-	.m2-dialog-field { margin: 12px 0 4px 0; }
-	.m2-dialog-field input[type=text], .m2-dialog-field input[type=number], .m2-dialog-field select, .m2-dialog textarea, .m2-dialog input.m2-wide {
-		width: 100%; box-sizing: border-box; padding: 6px 8px; border: 1px solid #ccc; border-radius: 3px; }
-	.m2-dialog-field .m2-choices { columns: 3 180px; }
-	.m2-dialog-field label { display: block; margin: 3px 0; }
-	.m2-dialog-field ol { margin: 0; padding: 0; list-style: none; }
-	.m2-dialog-field ol li { display: flex; align-items: center; gap: 6px; padding: 3px 0; border-bottom: 1px solid #f0f0f0; }
-	.m2-dialog-field ol li label { flex: 1; margin: 0; }
-	.m2-dialog-actions { display: flex; flex-wrap: wrap; gap: 10px; justify-content: flex-end; padding: 12px 20px; border-top: 1px solid #eee; background: #fafafa; border-radius: 0 0 8px 8px; }
-	.m2-dialog-actions .m2-left { margin-right: auto; }
-	.m2-review { width: 100%; border-collapse: collapse; margin: 8px 0 14px 0; }
-	.m2-review th, .m2-review td { padding: 6px 8px; border-bottom: 1px solid #eee; text-align: left; vertical-align: top; }
-	.m2-review th { color: #555; font-weight: normal; border-bottom: 2px solid #ddd; }
-	.m2-review .m2-arrow { color: #999; }
-	.m2-dialog form label { display: block; margin: 8px 0 3px 0; color: #444; }
-</style>
+<?= Modulo2Ui::editorStyles(); ?>
 
 <?= Modulo2Ui::toastScript(); ?>
 <div class="m2-pending-bar" id="m2-pending-bar" hidden>
@@ -78,6 +52,12 @@ $texts = [
 				<thead><tr><th><?= Modulo2I18n::t('Setting'); ?></th><th><?= Modulo2I18n::t('Now'); ?></th><th><?= Modulo2I18n::t('New value'); ?></th><th></th></tr></thead>
 				<tbody id="m2-review-rows"></tbody>
 			</table>
+			<?php /* Oculta hasta saber si la configuración actual está en una versión (ver checkState) */ ?>
+			<div class="m2-previous" id="m2-previous" hidden data-m2-url="<?= $e($this->getVar('state_url')); ?>">
+				<label><input type="checkbox" name="save_previous" value="1" checked disabled data-m2-toggles="m2-previous-name"/> <?= Modulo2I18n::t('Also save the configuration before these changes as a version'); ?></label>
+				<p class="m2-muted"><?= Modulo2I18n::t('The current configuration is not saved in any version. Saving it lets you go back to it later.'); ?></p>
+				<input type="text" class="m2-wide" id="m2-previous-name" name="previous_name" maxlength="255" disabled value="<?= $e($this->getVar('suggested_previous_name')); ?>" aria-label="<?= $e(Modulo2I18n::t('Name of that version')); ?>"/>
+			</div>
 			<label for="m2-version-name"><?= Modulo2I18n::t('Name of the new version'); ?></label>
 			<input type="text" class="m2-wide" id="m2-version-name" name="version_name" maxlength="255" value="<?= $e($this->getVar('suggested_version_name')); ?>"/>
 			<label for="m2-version-note"><?= Modulo2I18n::t('Note (optional)'); ?></label>
@@ -87,7 +67,7 @@ $texts = [
 		</div>
 		<div class="m2-dialog-actions">
 			<button type="button" class="m2-btn" data-m2-close><?= Modulo2I18n::t('Keep editing'); ?></button>
-			<button type="submit" class="m2-btn m2-btn-primary"><?= Modulo2I18n::t('Save changes'); ?></button>
+			<button type="submit" class="m2-btn m2-btn-primary" id="m2-save"><?= Modulo2I18n::t('Save changes'); ?></button>
 		</div>
 	</form>
 </dialog>
@@ -98,7 +78,6 @@ $texts = [
 	(function() {
 		var data = JSON.parse(document.getElementById('m2-editor-data').textContent);
 		var texts = JSON.parse(document.getElementById('m2-editor-texts').textContent);
-		var STORE = 'modulo2-cambios-pendientes';
 		var panel = document.getElementById('m2-panel');
 		var editDialog = document.getElementById('m2-edit-dialog');
 		var reviewDialog = document.getElementById('m2-review-dialog');
@@ -112,18 +91,8 @@ $texts = [
 			return node;
 		};
 
-		// Cambios pendientes: {id: {value | reset, expected}}. Se descartan los de valores que cambiaron desde
-		// que se pidieron (por ejemplo, porque ya se guardaron)
-		var pending = (function() {
-			var stored = {};
-			try { stored = JSON.parse(sessionStorage.getItem(STORE)) || {}; } catch (e) {}
-			var kept = {};
-			Object.keys(stored).forEach(function(id) {
-				if (data.entries[id] && same(stored[id].expected, data.entries[id].current)) { kept[id] = stored[id]; }
-			});
-			return kept;
-		})();
-		var store = function() { try { sessionStorage.setItem(STORE, JSON.stringify(pending)); } catch (e) {} };
+		// Cambios pendientes: {id: {value | reset, expected}}. Solo viven en la página
+		var pending = {};
 		var ids = function() { return Object.keys(pending); };
 		var valueOf = function(id) {
 			var change = pending[id], entry = data.entries[id];
@@ -142,29 +111,17 @@ $texts = [
 				case 'choice':
 					var option = entry.options.filter(function(o) { return String(o.value) === String(value); })[0];
 					return option ? option.label : (String(value) || texts.none);
-				case 'color': return value ? '#' + value : texts.none;
 				case 'subtype_list':
 					return value.length ? value.map(function(code) { return nameOf(data.subtypes[entry.data_type], code, 'idno'); }).join(', ') : texts.none;
-				case 'table_list':
-					return value.length ? value.map(function(code) { return nameOf(data.data_types, code, 'code'); }).join(', ') : texts.none;
 			}
 			return (value === null || value === '') ? texts.none : String(value);
 		};
-		// Valor como se ve en la tabla: ✓/✗ para sí o no y una muestra para los colores
+		// Valor como se ve en la tabla: ✓/✗ para sí o no; los demás, su texto
 		var valueNode = function(entry, value) {
 			var label = text(entry, value);
-			if (entry.kind === 'boolean') {
-				var on = entry.inverted ? !value : !!value;
-				return el('span', 'm2-bool ' + (on ? 'm2-on' : 'm2-off'), (on ? '✓ ' : '✗ ') + label);
-			}
-			var node = el(entry.kind === 'text' ? 'code' : 'span', entry.kind === 'text' ? 'm2-text' : '');
-			if (entry.kind === 'color' && value) {
-				var swatch = el('span', 'm2-swatch');
-				swatch.style.background = '#' + value;
-				node.appendChild(swatch);
-			}
-			node.appendChild(document.createTextNode(label));
-			return node;
+			if (entry.kind !== 'boolean') { return el('span', '', label); }
+			var on = entry.inverted ? !value : !!value;
+			return el('span', 'm2-bool ' + (on ? 'm2-on' : 'm2-off'), (on ? '✓ ' : '✗ ') + label);
 		};
 
 		// ---------------------------------------------------------------- Tabla y barra de pendientes
@@ -182,6 +139,24 @@ $texts = [
 			document.getElementById('m2-pending-bar').hidden = count === 0;
 			document.getElementById('m2-pending-count').textContent = count === 1 ? texts.pendingOne : texts.pendingMany.replace('%1', count);
 		};
+		// Si la configuración actual no está en ninguna versión, el guardado ofrece conservarla antes. Se consulta
+		// al primer cambio y no al abrir la página: después de cambiar la configuración en base tarda unos segundos
+		var previous = document.getElementById('m2-previous'), stateCheck = null;
+		var checkState = function() {
+			if (!stateCheck) {
+				stateCheck = fetch(previous.getAttribute('data-m2-url'), { headers: { 'X-Requested-With': 'XMLHttpRequest' }, credentials: 'same-origin' })
+					.then(function(response) { return response.json(); })
+					.then(function(state) { return !state.saved; }, function() { return true; })
+					.then(function(offer) {
+						var box = previous.querySelector('input[type=checkbox]');
+						previous.hidden = !offer;
+						box.disabled = !offer;
+						document.getElementById('m2-previous-name').disabled = !offer || !box.checked;
+					});
+			}
+			return stateCheck;
+		};
+
 		// Deja pendiente el valor nuevo; si es el actual, ya no hay cambio. Volver al valor de Providence
 		// quita la configuración del archivo local, si está ahí
 		var stage = function(id, value) {
@@ -193,9 +168,17 @@ $texts = [
 			} else {
 				pending[id] = { value: value, expected: entry.current };
 			}
-			store();
 			refreshCell(id);
 			refreshBar();
+			checkState();
+		};
+
+		// Un sí o no cambia con un clic. Si se activa una configuración que excluye a otra (por ejemplo, las
+		// dos formas de mostrar los subtipos en "Encontrar"), la otra queda pendiente de apagarse
+		var toggle = function(id) {
+			var entry = data.entries[id], on = !valueOf(id);
+			stage(id, on);
+			if (on && entry.excludes && data.entries[entry.excludes] && valueOf(entry.excludes)) { stage(entry.excludes, false); }
 		};
 
 		// ---------------------------------------------------------------- Campos del diálogo
@@ -208,28 +191,6 @@ $texts = [
 			wrapper.appendChild(document.createTextNode(' ' + label));
 			return wrapper;
 		};
-		var moveButton = function(label, symbol, move) {
-			var button = el('button', 'm2-btn m2-btn-small', symbol);
-			button.type = 'button';
-			button.title = label;
-			button.setAttribute('aria-label', label);
-			button.addEventListener('click', function() { move(button.closest('li')); });
-			return button;
-		};
-		// Lista ordenable de tipos de dato: primero los elegidos, en su orden
-		var tableListField = function(value) {
-			var list = el('ol');
-			var chosen = value.map(function(code) { return { code: code, name: nameOf(data.data_types, code, 'code') }; });
-			var others = data.data_types.filter(function(type) { return value.indexOf(type.code) === -1; });
-			chosen.concat(others).forEach(function(type) {
-				var item = el('li');
-				item.appendChild(checkbox(type.code, type.name, value.indexOf(type.code) !== -1));
-				item.appendChild(moveButton(texts.up, '↑', function(li) { if (li.previousElementSibling) { li.parentNode.insertBefore(li, li.previousElementSibling); } }));
-				item.appendChild(moveButton(texts.down, '↓', function(li) { if (li.nextElementSibling) { li.parentNode.insertBefore(li.nextElementSibling, li); } }));
-				list.appendChild(item);
-			});
-			return list;
-		};
 		var subtypeField = function(entry, value) {
 			var subtypes = data.subtypes[entry.data_type] || [];
 			if (!subtypes.length) { return el('p', 'm2-muted', texts.noSubtypes); }
@@ -238,14 +199,6 @@ $texts = [
 			wrapper.appendChild(boxes);
 			wrapper.appendChild(el('p', 'm2-muted', texts.allWhenNone));
 			return wrapper;
-		};
-		var inputField = function(type, value) {
-			var input = el('input');
-			input.type = type;
-			if (type === 'number') { input.min = 0; input.step = 1; }
-			if (type === 'text') { input.maxLength = 2000; }
-			input.value = type === 'color' ? '#' + (value || '000000') : (value === null ? '' : value);
-			return input;
 		};
 		var selectField = function(entry, value) {
 			var select = el('select');
@@ -260,12 +213,8 @@ $texts = [
 		var field = function(entry, value) {
 			switch (entry.kind) {
 				case 'subtype_list': return subtypeField(entry, value);
-				case 'table_list': return tableListField(value);
-				case 'choice': return selectField(entry, value);
-				case 'number': return inputField('number', value);
-				case 'color': return inputField('color', value);
 			}
-			return inputField('text', value);
+			return selectField(entry, value);
 		};
 		// Valor del campo, con el tipo de la configuración; lo que no tiene formato válido lo rechaza el servidor
 		var fieldValue = function(entry, container) {
@@ -275,9 +224,6 @@ $texts = [
 			var input = container.querySelector('input, select');
 			switch (entry.kind) {
 				case 'subtype_list': return checked().sort();
-				case 'table_list': return checked();
-				case 'number': return /^\d+$/.test(input.value) ? parseInt(input.value, 10) : input.value;
-				case 'color': return input.value.replace('#', '').toLowerCase();
 			}
 			return input.value;
 		};
@@ -309,7 +255,7 @@ $texts = [
 			var button = event.target.closest('button.m2-edit');
 			if (!button) { return; }
 			var id = button.closest('td').getAttribute('data-m2-entry');
-			if (data.entries[id].kind === 'boolean') { stage(id, !valueOf(id)); } else { openEditor(id); }
+			if (data.entries[id].kind === 'boolean') { toggle(id); } else { openEditor(id); }
 		});
 
 		// ---------------------------------------------------------------- Revisar y guardar
@@ -336,7 +282,14 @@ $texts = [
 			ids().forEach(function(id) { rows.appendChild(reviewRow(id)); });
 			if (!ids().length) { reviewDialog.close(); }
 		};
-		document.getElementById('m2-review').addEventListener('click', function() { fillReview(); reviewDialog.showModal(); });
+		// Hasta saber si se ofrece guardar la configuración anterior, no se puede guardar
+		document.getElementById('m2-review').addEventListener('click', function() {
+			var save = document.getElementById('m2-save');
+			fillReview();
+			save.disabled = true;
+			checkState().then(function() { save.disabled = false; });
+			reviewDialog.showModal();
+		});
 		document.getElementById('m2-save-form').addEventListener('submit', function() {
 			var changes = ids().map(function(id) {
 				var entry = data.entries[id], change = pending[id];
@@ -351,10 +304,23 @@ $texts = [
 				if (!yes) { return; }
 				var discarded = ids();
 				pending = {};
-				store();
 				discarded.forEach(refreshCell);
 				refreshBar();
 			});
+		});
+		// Al ir a otra página con cambios sin guardar, se avisa que se descartan
+		document.addEventListener('click', function(event) {
+			var link = event.target.closest('a[href]');
+			var href = link ? link.getAttribute('href') : '';
+			if (!ids().length || !href || href.charAt(0) === '#' || href.indexOf('javascript:') === 0 || link.target === '_blank') { return; }
+			event.preventDefault();
+			m2Toast.confirm(texts.leave.replace('%1', ids().length), texts.leaveButton, { danger: true }).then(function(yes) {
+				if (yes) { window.location.href = link.href; }
+			});
+		});
+		// La casilla de guardar la configuración anterior habilita su nombre
+		document.querySelectorAll('[data-m2-toggles]').forEach(function(box) {
+			box.addEventListener('change', function() { document.getElementById(box.getAttribute('data-m2-toggles')).disabled = !box.checked; });
 		});
 		document.querySelectorAll('.m2-dialog [data-m2-close]').forEach(function(button) {
 			button.addEventListener('click', function() { button.closest('dialog').close(); });

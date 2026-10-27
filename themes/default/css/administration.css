@@ -1,0 +1,352 @@
+/* ----------------------------------------------------------------------
+ * themes/default/css/administration.css : aspecto moderno de las pantallas de Administración de
+ * Providence (interfaces de usuario, elementos de metadatos, tipos de relación, idiomas, chequeo de
+ * configuración, diccionario de datos y mantenimiento), igual al del módulo 2. Solo cambia la apariencia.
+ * Lo carga local.css.
+ * ----------------------------------------------------------------------
+ */
+
+/* Solo en Administración: su barra lateral (o el formulario que edita) lleva a /administrate/ */
+#providenceApp:has(#leftNav a[href*="/administrate/"], #mainContent form[action*="/administrate/"]) {
+    --adm-accent: #138290;
+    --adm-accent-dark: #0e6b75;
+    --adm-accent-soft: #e8f5f6;
+    --adm-ring: rgba(19, 130, 144, .22);
+    --adm-text: #1d2b33;
+    --adm-muted: #66757e;
+    --adm-border: #e2e8eb;
+    --adm-soft: #f5f8f9;
+    --adm-danger: #b42318;
+    --adm-shadow: 0 1px 2px rgba(16, 24, 40, .05), 0 1px 3px rgba(16, 24, 40, .07);
+    --adm-shadow-lg: 0 12px 32px rgba(16, 24, 40, .18);
+    --adm-font: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+
+    & #mainContent {
+        font-family: var(--adm-font);
+        color: var(--adm-text);
+    }
+
+    /* --- Barra lateral --- */
+    & #leftNav {
+        font-family: var(--adm-font);
+    }
+
+    & #leftNav h3, & #leftNav h4 {
+        font-family: var(--adm-font);
+        color: var(--adm-text);
+    }
+
+    & #leftNav h2 a {
+        margin: 1px 8px;
+        padding: 8px 12px;
+        border-right: none;
+        border-radius: 6px;
+        font: 500 13px/1.3 var(--adm-font);
+        text-transform: none;
+        color: #44525a;
+        transition: background .15s, color .15s;
+    }
+
+    & #leftNav h2 a:hover {
+        background: var(--adm-soft);
+        color: var(--adm-accent-dark);
+    }
+
+    & #leftNav h2 a.sf-menu-selected {
+        background: var(--adm-accent-soft);
+        color: var(--adm-accent-dark);
+        font-weight: 600;
+        box-shadow: inset 3px 0 0 var(--adm-accent);
+    }
+
+    & #leftNav ul.arrow li a {
+        margin: 1px 8px;
+        padding: 7px 10px 6px 24px;
+        border-radius: 6px;
+        font-family: var(--adm-font);
+        text-transform: none;
+    }
+
+    & #leftNav ul.arrow li a:hover {
+        background: var(--adm-soft);
+    }
+
+    /* --- Barra de acciones (filtro, nuevo, guardar, cancelar, borrar) --- */
+    & div.control-box {
+        display: flow-root;
+        float: none;
+        box-sizing: border-box;
+        width: auto;
+        margin-bottom: 14px;
+        padding: 8px 12px;
+        border: 1px solid var(--adm-border);
+        border-radius: 10px !important;
+        background: #fff;
+        box-shadow: var(--adm-shadow);
+    }
+
+    & div.control-box-middle-content {
+        font: 600 13px var(--adm-font);
+    }
+
+    & div.control-box-right-content {
+        font-family: var(--adm-font);
+        font-size: 12px;
+    }
+
+    & div.list-filter, & div.simple-search-box {
+        font-size: 12px;
+        color: var(--adm-muted);
+    }
+
+    /* --- Botones --- */
+    & a.form-button {
+        height: auto;
+        margin: 2px 8px 2px 0;
+        padding: 0;
+        line-height: normal;
+    }
+
+    & a.form-button span.form-button {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        height: auto;
+        margin: 0;
+        padding: 7px 14px 7px 10px;
+        border: 1px solid #cfd8dc;
+        border-radius: 8px;
+        background: #fff;
+        box-shadow: 0 1px 2px rgba(16, 24, 40, .05);
+        color: var(--adm-text);
+        font: 600 13px/1.2 var(--adm-font) !important;
+        transition: background .15s, border-color .15s, color .15s;
+    }
+
+    & a.form-button:hover span.form-button {
+        background: var(--adm-soft);
+        border-color: #b8c4ca;
+    }
+
+    & a.form-button span.form-button i.caIcon {
+        float: none;
+        margin: 0 !important;
+        padding: 0 !important;
+        font-size: 16px !important;
+        color: var(--adm-accent);
+    }
+
+    /* Guardar es el botón principal; Borrar, el peligroso */
+    & a.form-button:has(.fa-check-circle) span.form-button {
+        border-color: var(--adm-accent);
+        background: var(--adm-accent);
+        color: #fff;
+    }
+
+    & a.form-button:has(.fa-check-circle) span.form-button i.caIcon {
+        color: #fff;
+    }
+
+    & a.form-button:has(.fa-check-circle):hover span.form-button {
+        border-color: var(--adm-accent-dark);
+        background: var(--adm-accent-dark);
+    }
+
+    & a.form-button:has(.deleteIcon) span.form-button {
+        border-color: #f0c4bf;
+        color: var(--adm-danger);
+    }
+
+    & a.form-button:has(.deleteIcon) span.form-button i.caIcon {
+        color: var(--adm-danger);
+    }
+
+    & div.form-header-button {
+        padding: 4px 6px;
+        border: 1px solid var(--adm-border);
+        border-radius: 8px;
+        background: #fff;
+    }
+
+    /* --- Listas --- */
+    & table.listtable {
+        border-collapse: separate;
+        border-spacing: 0;
+        margin: 12px 0 18px 0;
+        overflow: hidden;
+        border: 1px solid var(--adm-border);
+        border-radius: 10px;
+        background: #fff;
+        box-shadow: var(--adm-shadow);
+        font: 12.5px/1.45 var(--adm-font);
+    }
+
+    & table.listtable tr, & table.listtable tr td, & table.listtable tr th {
+        border: none;
+    }
+
+    & table.listtable thead tr th {
+        padding: 11px 24px 11px 12px;
+        border-bottom: 1px solid var(--adm-border);
+        background-color: var(--adm-soft);
+        color: var(--adm-muted);
+        font: 600 11px var(--adm-font) !important;
+        letter-spacing: .04em;
+        text-transform: uppercase;
+        white-space: nowrap;
+    }
+
+    & table.listtable tbody td {
+        padding: 9px 12px;
+        border-bottom: 1px solid var(--adm-border);
+        background-color: #fff;
+        color: var(--adm-text);
+    }
+
+    & table.listtable tbody tr:last-child td {
+        border-bottom: none;
+    }
+
+    & table.listtable tbody tr:hover td {
+        background-color: #f6fafb;
+    }
+
+    & table.listtable tbody td .caIcon.fa-2x {
+        font-size: 16px;
+        color: var(--adm-accent);
+    }
+
+    & table.listtable tbody td .caIcon.deleteIcon {
+        color: var(--adm-danger);
+    }
+
+    /* --- Formularios de edición: cada campo es una tarjeta --- */
+    & .bundleLabel {
+        margin-bottom: 14px;
+        padding-top: 0;
+        border: 1px solid var(--adm-border);
+        border-radius: 10px;
+        background: #fff;
+        box-shadow: var(--adm-shadow);
+        font-family: var(--adm-font);
+    }
+
+    & .bundleLabel > .formLabelText {
+        padding: 12px 14px 10px 14px;
+        font: 600 14px var(--adm-font);
+        color: var(--adm-text);
+    }
+
+    & .bundleLabel .iconButton {
+        top: 10px;
+        margin-right: 12px;
+        color: var(--adm-muted);
+    }
+
+    & .bundleLabel .bundleContainer {
+        border-top: 1px solid var(--adm-border);
+        border-radius: 0 0 10px 10px;
+    }
+
+    & .bundleContainer, & .labelInfo, & .bundleSubLabel {
+        background-color: #fff;
+    }
+
+    & .labelInfo {
+        padding: 10px 14px;
+        border-bottom: 1px solid var(--adm-border);
+    }
+
+    & .formLabel {
+        font: 600 12px var(--adm-font);
+        color: var(--adm-text);
+    }
+
+    & div.formSettings {
+        padding: 12px 14px;
+        border: 1px solid var(--adm-border);
+        border-radius: 10px;
+        background: var(--adm-soft);
+    }
+
+    & .caAddItemButton a, & .caAddLabelButton a {
+        color: var(--adm-accent-dark);
+        font: 600 12px var(--adm-font);
+        text-decoration: none;
+    }
+
+    /* --- Campos --- */
+    & #mainContent :is(input[type="text"], input[type="password"], textarea, select) {
+        padding: 6px 9px;
+        border: 1px solid #cfd8dc;
+        border-radius: 8px;
+        background-color: #fff;
+        background-image: none;
+        box-shadow: none;
+        font: 13px var(--adm-font);
+        color: var(--adm-text);
+        transition: border-color .15s, box-shadow .15s;
+    }
+
+    & #mainContent :is(input[type="text"], input[type="password"], textarea, select):focus {
+        outline: none;
+        border-color: var(--adm-accent);
+        box-shadow: 0 0 0 3px var(--adm-ring);
+    }
+
+    & #mainContent input[type="checkbox"], & #mainContent input[type="radio"] {
+        accent-color: var(--adm-accent);
+    }
+}
+
+/* Listas desplegables con el mismo estilo abiertas que cerradas. Las reglas con ::picker van aparte: un
+   navegador que no las conoce descarta solo esas y muestra la lista de siempre */
+#providenceApp:has(#leftNav a[href*="/administrate/"], #mainContent form[action*="/administrate/"]) #mainContent select:not([multiple]):not([size]) {
+    appearance: base-select;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+}
+
+#providenceApp:has(#leftNav a[href*="/administrate/"], #mainContent form[action*="/administrate/"]) #mainContent select:not([multiple]):not([size])::picker(select) {
+    appearance: base-select;
+    margin-top: 4px;
+    padding: 4px;
+    max-height: 320px;
+    border: 1px solid #e2e8eb;
+    border-radius: 10px;
+    background: #fff;
+    box-shadow: 0 12px 32px rgba(16, 24, 40, .18);
+}
+
+#providenceApp:has(#leftNav a[href*="/administrate/"], #mainContent form[action*="/administrate/"]) #mainContent select::picker-icon {
+    color: #66757e;
+    transition: rotate .2s;
+}
+
+#providenceApp:has(#leftNav a[href*="/administrate/"], #mainContent form[action*="/administrate/"]) #mainContent select:open::picker-icon {
+    rotate: 180deg;
+}
+
+#providenceApp:has(#leftNav a[href*="/administrate/"], #mainContent form[action*="/administrate/"]) #mainContent select option {
+    padding: 7px 10px;
+    border-radius: 6px;
+    font: 13px system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    color: #1d2b33;
+}
+
+#providenceApp:has(#leftNav a[href*="/administrate/"], #mainContent form[action*="/administrate/"]) #mainContent select option:is(:hover, :focus-visible) {
+    background: #f5f8f9;
+    outline: none;
+}
+
+#providenceApp:has(#leftNav a[href*="/administrate/"], #mainContent form[action*="/administrate/"]) #mainContent select option:checked {
+    background: #e8f5f6;
+    color: #0e6b75;
+    font-weight: 600;
+}
+
+#providenceApp:has(#leftNav a[href*="/administrate/"], #mainContent form[action*="/administrate/"]) #mainContent select option::checkmark {
+    color: #138290;
+}

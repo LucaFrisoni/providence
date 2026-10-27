@@ -114,7 +114,7 @@ fn insert_change(
 
 // ---------------------------------------------------------------- Estructura
 
-/// Las tres tablas usan InnoDB y utf8mb4_general_ci, como Providence.
+/// Las tablas del módulo usan InnoDB y utf8mb4_general_ci, como Providence.
 #[test]
 #[ignore = "requiere el MySQL de Docker"]
 fn tables_use_innodb_and_providence_collation() {

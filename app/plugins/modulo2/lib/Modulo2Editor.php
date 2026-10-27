@@ -21,46 +21,71 @@ class Modulo2Editor {
 	) {}
 	# -------------------------------------------------------
 	/**
-	 * Aplica los cambios. Cada uno: file, key, kind, expected (valor que se veía al abrir la pantalla) y
+	 * Aplica los cambios. Cada uno: file, key, linked (claves vinculadas) y options (opcionales), kind, expected (valor que se veía al abrir la pantalla) y
 	 * value, o reset = true para volver al valor por defecto. $version: nombre y nota de la versión que
-	 * se guarda si se aplica. Devuelve ['applied', 'message', 'changes', 'version_before', 'version']
+	 * se guarda si se aplica; $previous: la del estado anterior, solo si el usuario pidió guardarlo.
+	 * Devuelve ['applied', 'message', 'changes', 'version_before', 'version']
 	 *
 	 * @throws Modulo2ServiceException Si el servicio rechaza el guardado o no responde
 	 * @throws Modulo2ConfigException Si no se puede leer o bloquear app/conf/local
 	 */
-	public function apply(array $edits, Modulo2Operator $operator, array $version) : array {
-		return $this->local->withLock(fn() => $this->applyLocked($edits, $operator, $version));
+	public function apply(array $edits, Modulo2Operator $operator, array $version, ?array $previous = null) : array {
+		return $this->local->withLock(fn() => $this->applyLocked($edits, $operator, $version, $previous));
 	}
 	# -------------------------------------------------------
-	private function applyLocked(array $edits, Modulo2Operator $operator, array $version) : array {
+	private function applyLocked(array $edits, Modulo2Operator $operator, array $version, ?array $previous) : array {
 		Modulo2ConfigValues::clearCaches();
+		$this->checkExclusions($edits);
 		$files = array_values(array_unique(array_column($edits, 'file')));
 		$before = array_combine($files, array_map([$this->local, 'entries'], $files));
-		$previous = array_combine($files, array_map([$this->local, 'read'], $files));
-		$plan = $this->client->prepareEdits($this->request($edits, $operator, $before));
+		$contents = array_combine($files, array_map([$this->local, 'read'], $files));
+		$plan = $this->client->prepareEdits($this->request($edits, $operator, $before, $previous));
 
 		$failure = $this->writeAndVerify($edits, $plan, $before);
-		if ($failure !== null) { $failure .= $this->rollback($previous); }
+		if ($failure !== null) { $failure .= $this->rollback($contents); }
 		$state = $failure === null ? $this->state->current() : null;
 		$finished = $this->client->finishEdits($plan['change_ids'], $operator->user(), $failure === null ? 'applied' : 'failed', $failure, $state, $version);
 		return ['applied' => $failure === null, 'message' => $failure, 'changes' => $finished['changes'] ?? [],
 			'version_before' => $plan['version_before'], 'version' => $finished['version'] ?? null];
 	}
 	# -------------------------------------------------------
+	/**
+	 * Una configuración que queda activa no puede convivir con la que excluye (catálogo: "excludes"), que
+	 * tiene que quedar apagada con este mismo guardado o ya estarlo
+	 *
+	 * @throws Modulo2ConfigException Si las dos quedarían activas
+	 */
+	private function checkExclusions(array $edits) : void {
+		$after = [];
+		foreach ($edits as $edit) { $after[$edit['file'].'|'.$edit['key']] = $this->valueAfter($edit); }
+		foreach ($edits as $edit) {
+			if (empty($edit['excludes']) || $after[$edit['file'].'|'.$edit['key']] !== true) { continue; }
+			$other = ['file' => $edit['file'], 'key' => $edit['excludes'], 'kind' => Modulo2Constants::KIND_BOOLEAN];
+			if (($after[$edit['file'].'|'.$edit['excludes']] ?? $this->values->entryValues($other)['current']) === true) {
+				throw new Modulo2ConfigException(Modulo2I18n::t('«%1» cannot be on together with the other way of showing it: turn that one off in the same save.', $edit['label'] ?? $edit['key']));
+			}
+		}
+	}
+	# -------------------------------------------------------
+	/** Valor que queda con el cambio: el pedido o, si vuelve al valor por defecto, el de Providence */
+	private function valueAfter(array $edit) {
+		return empty($edit['reset']) ? $edit['value'] : $this->values->entryValues($edit)['distribution'];
+	}
+	# -------------------------------------------------------
 	/** Pedido al servicio: los cambios con sus valores actuales, las claves de cada archivo y el estado */
-	private function request(array $edits, Modulo2Operator $operator, array $before) : array {
+	private function request(array $edits, Modulo2Operator $operator, array $before, ?array $previous) : array {
 		return [
 			'user' => $operator->user(),
 			'allowed_risks' => $operator->allowedRisks(),
 			'edits' => array_map([$this, 'requestItem'], $edits),
 			'local' => $before,
 			'state' => $this->state->current(),
-			'version' => $operator->automaticVersion(Modulo2I18n::t('Before the changes of %1', date('d/m/Y H:i')))
+			'version' => $previous
 		];
 	}
 	# -------------------------------------------------------
 	private function requestItem(array $edit) : array {
-		$values = $this->values->entryValues($edit['file'], $edit['key'], $edit['kind']);
+		$values = $this->values->entryValues($edit);
 		$change = !empty($edit['reset']) ? ['reset' => true] : ['value' => $edit['value']];
 		return $change + ['file' => $edit['file'], 'key' => $edit['key'], 'current' => $values['current'],
 			'expected' => $edit['expected'], 'distribution' => $values['distribution']];
@@ -86,7 +111,8 @@ class Modulo2Editor {
 		if ($this->local->read($file) !== $content) {
 			return Modulo2I18n::t('The file app/conf/local/%1 was not left as it was written.', $file);
 		}
-		$edited = array_fill_keys(array_column(array_filter($edits, fn($edit) => $edit['file'] === $file), 'key'), true);
+		$keys = array_map(fn($edit) => array_merge([$edit['key']], $edit['linked'] ?? []), array_filter($edits, fn($edit) => $edit['file'] === $file));
+		$edited = array_fill_keys(array_merge([], ...array_values($keys)), true);
 		$others = fn(array $entries) => array_diff_key($entries, $edited);
 		if ($others($this->local->entries($file)) !== $others($before)) {
 			return Modulo2I18n::t('Providence reads the other keys of app/conf/local/%1 differently than before: the file had something the module cannot rewrite.', $file);
@@ -97,7 +123,7 @@ class Modulo2Editor {
 	/** El valor que usa Providence es el pedido en cada cambio */
 	private function verifyValues(array $edits, array $expected) : ?string {
 		foreach (array_values($edits) as $index => $edit) {
-			$effective = $this->values->entryValues($edit['file'], $edit['key'], $edit['kind'])['current'];
+			$effective = $this->values->entryValues($edit)['current'];
 			if ($effective !== ($expected[$index] ?? null)) {
 				$json = fn($value) => json_encode($value, JSON_UNESCAPED_UNICODE);
 				return Modulo2I18n::t('Providence did not take the new value of «%1»: it reads %2 instead of %3.', $edit['label'] ?? $edit['key'], $json($effective), $json($expected[$index] ?? null));

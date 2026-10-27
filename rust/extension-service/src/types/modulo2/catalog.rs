@@ -7,18 +7,8 @@ pub enum Kind {
     Boolean,
     /// Códigos de subtipos; el orden no importa.
     SubtypeList,
-    /// Tipos de dato (`ca_objects`...); el orden importa.
-    TableList,
-    Number,
-    Text,
-    /// Color de seis dígitos, sin `#`.
-    Color,
     /// Uno de los valores de la lista.
     Choice(&'static [ChoiceOption]),
-    /// Bloque anidado de Providence. Por ahora solo se muestra.
-    Structured,
-    /// Orden de las claves de un bloque. Por ahora solo se muestra.
-    KeyOrder,
 }
 
 impl Kind {
@@ -35,6 +25,23 @@ impl Kind {
 pub struct ChoiceOption {
     pub value: &'static str,
     pub label: &'static str,
+    /// Otros valores de Providence que se muestran como esta opción (por ejemplo, el valor por defecto
+    /// de la distribución cuando no es una de las opciones). No se pueden elegir.
+    pub also: &'static [&'static str],
+}
+
+impl ChoiceOption {
+    pub const fn new(value: &'static str, label: &'static str) -> Self {
+        Self {
+            value,
+            label,
+            also: &[],
+        }
+    }
+
+    pub const fn also(self, also: &'static [&'static str]) -> Self {
+        Self { also, ..self }
+    }
 }
 
 /// Riesgo de modificar la configuración: decide qué permiso hace falta para editarla.
@@ -52,8 +59,6 @@ pub enum KeyFormat {
     TypeFirst,
     /// `require_valid_id_number_for_ca_places`
     TypeLast,
-    /// `formats/ca_objects`: el tipo de dato dentro de un bloque.
-    Nested,
 }
 
 /// Si una sección es por tipo de dato o de toda la instalación.
@@ -75,6 +80,11 @@ pub struct Setting {
     pub data_types: &'static [&'static str],
     /// La clave es negativa (`disable`) y la etiqueta positiva ("Activo"): se muestra al revés.
     pub inverted: bool,
+    /// Otras claves que Providence exige junto con esta: se escriben siempre con el mismo valor
+    /// (solo en configuraciones globales de sí o no).
+    pub linked: &'static [&'static str],
+    /// Otra configuración del mismo tipo de dato que no puede estar activa a la vez que esta (su id).
+    pub excludes: Option<&'static str>,
 }
 
 /// Constructores que usa el catálogo de `models/modulo2/catalog.rs`.
@@ -96,6 +106,8 @@ impl Setting {
             key_format: KeyFormat::TypeFirst,
             data_types,
             inverted: false,
+            linked: &[],
+            excludes: None,
         }
     }
 
@@ -120,9 +132,13 @@ impl Setting {
         }
     }
 
-    pub const fn nested(self) -> Self {
+    pub const fn linked(self, linked: &'static [&'static str]) -> Self {
+        Self { linked, ..self }
+    }
+
+    pub const fn excludes(self, id: &'static str) -> Self {
         Self {
-            key_format: KeyFormat::Nested,
+            excludes: Some(id),
             ..self
         }
     }
@@ -141,8 +157,13 @@ impl Setting {
         match self.key_format {
             KeyFormat::TypeFirst => format!("{data_type}_{}", self.id),
             KeyFormat::TypeLast => format!("{}_{data_type}", self.id),
-            KeyFormat::Nested => format!("{}/{data_type}", self.id),
         }
+    }
+
+    /// Clave de la configuración que esta excluye, para un tipo de dato.
+    pub fn excluded_key_for(&self, data_type: &str) -> Option<String> {
+        self.excludes
+            .map(|id| Setting { id, ..*self }.key_for(data_type))
     }
 
     /// Una clave por tipo de dato o, si es global, el id.
@@ -156,11 +177,9 @@ impl Setting {
             .collect()
     }
 
-    /// Por ahora se editan solo los valores simples de primer nivel.
+    /// Se editan solo las claves de primer nivel: una anidada reemplazaría todo su bloque.
     pub fn is_editable(&self) -> bool {
-        let simple_kind = !matches!(self.kind, Kind::Structured | Kind::KeyOrder);
-        let top_level = !matches!(self.key_format, KeyFormat::Nested) && !self.id.contains('/');
-        simple_kind && top_level
+        !self.id.contains('/')
     }
 }
 
@@ -184,13 +203,7 @@ impl Code for Kind {
         match self {
             Kind::Boolean => "boolean",
             Kind::SubtypeList => "subtype_list",
-            Kind::TableList => "table_list",
-            Kind::Number => "number",
-            Kind::Text => "text",
-            Kind::Color => "color",
             Kind::Choice(_) => "choice",
-            Kind::Structured => "structured",
-            Kind::KeyOrder => "key_order",
         }
     }
 }
@@ -227,9 +240,8 @@ mod tests {
             setting.type_last().key_for("ca_places"),
             "disable_ca_places"
         );
-        assert_eq!(setting.nested().key_for("ca_places"), "disable/ca_places");
         assert_eq!(
-            Setting::global("menu_color", "x", "x", Kind::Color).keys(),
+            Setting::global("menu_color", "x", "x", Kind::Boolean).keys(),
             ["menu_color"]
         );
     }

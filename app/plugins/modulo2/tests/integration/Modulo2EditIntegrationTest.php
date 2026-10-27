@@ -116,7 +116,7 @@ final class Modulo2EditIntegrationTest extends TestCase {
 	/** Valor que usa Providence ahora, normalizado como booleano */
 	private function effective(string $key) : bool {
 		Modulo2ConfigValues::clearCaches();
-		return (new Modulo2ConfigValues())->entryValues('app.conf', $key, Modulo2Constants::KIND_BOOLEAN)['current'];
+		return (new Modulo2ConfigValues())->entryValues(['file' => 'app.conf', 'key' => $key, 'kind' => Modulo2Constants::KIND_BOOLEAN])['current'];
 	}
 	# -------------------------------------------------------
 }

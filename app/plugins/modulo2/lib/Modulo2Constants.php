@@ -28,6 +28,8 @@ final class Modulo2Constants {
 	const NATIVE_MANAGE_MENU = 'manage';
 	/** Clave del índice de secciones en la barra lateral (widgets de navigation.conf) */
 	const CONFIGURATIONS_WIDGET = 'modulo2ConfigurationsInfo';
+	/** Prefijo de las barras laterales de My preferences y sus versiones */
+	const PREFERENCES_WIDGET = 'modulo2PreferencesInfo';
 	/** Archivo de Providence con el árbol de menús, del que el panel de gestión lee Manage */
 	const NAVIGATION_CONF = 'navigation.conf';
 	# -------------------------------------------------------
@@ -51,6 +53,7 @@ final class Modulo2Constants {
 	const EDITS_PATH = self::API_PATH.'/edits';
 	const EDITS_RESULT_PATH = self::EDITS_PATH.'/result';
 	const CHANGES_PATH = self::API_PATH.'/changes';
+	const PREFERENCES_PATH = self::API_PATH.'/preferences';
 	/** Cambios por página del historial y versiones por página de su lista (se cargan más al llegar al final) */
 	const CHANGES_PAGE_SIZE = 50;
 	const VERSIONS_PAGE_SIZE = 50;
@@ -78,13 +81,7 @@ final class Modulo2Constants {
 	/** Catálogo: tipos de valor de una configuración ("kind" en el JSON del catálogo, Kind en catalog.rs) */
 	const KIND_BOOLEAN = 'boolean';
 	const KIND_SUBTYPE_LIST = 'subtype_list';
-	const KIND_TABLE_LIST = 'table_list';
-	const KIND_NUMBER = 'number';
-	const KIND_TEXT = 'text';
-	const KIND_COLOR = 'color';
 	const KIND_CHOICE = 'choice';
-	const KIND_STRUCTURED = 'structured';
-	const KIND_KEY_ORDER = 'key_order';
 	/** Catálogo: alcance de una sección ("scope"): una tabla por tipo de dato o una lista global */
 	const SCOPE_DATA_TYPE = 'data_type';
 	const SCOPE_GLOBAL = 'global';

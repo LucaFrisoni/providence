@@ -10,6 +10,8 @@ REQUIRED_VARS=(CA_DB_HOST CA_DB_USER CA_DB_PASSWORD CA_DB_DATABASE
 ADMIN_USERNAME_PATTERN='^[A-Za-z0-9._-]+$'
 ADMIN_USERNAME_MAX_LENGTH=255
 CONFIGURE_ADMIN_SCRIPT=/usr/local/lib/providence/configure-admin.php
+REPAIR_SCRIPT=/usr/local/lib/providence/repair-installation.php
+INITIAL_APP_CONF=/usr/local/lib/providence/initial-app.conf
 # Espera máxima a que la base acepte conexiones: intentos × segundos entre intentos
 DB_WAIT_ATTEMPTS=30
 DB_WAIT_SECONDS=2
@@ -105,7 +107,21 @@ install_providence() {
         error "Corregir .env y reiniciar desde cero: docker compose down -v && docker compose up"
         exit 1
     fi
+    write_initial_config
     echo ">> Providence instalado. Usuario: $CA_ADMIN_USERNAME (contraseña: CA_ADMIN_PASSWORD de .env)"
+}
+
+# Configuración inicial de la instalación (ver initial-app.conf); no pisa una configuración que ya exista
+write_initial_config() {
+    if [ ! -e app/conf/local/app.conf ]; then
+        install -o www-data -g www-data -m 644 "$INITIAL_APP_CONF" app/conf/local/app.conf
+    fi
+}
+
+# Corrige errores conocidos de los perfiles de Providence (ver repair-installation.php). Corre en cada
+# arranque para arreglar también las bases instaladas antes; si no hay nada para corregir no cambia nada
+repair_installation() {
+    as_www_data php "$REPAIR_SCRIPT" || exit 1
 }
 
 check_required_vars
@@ -114,4 +130,5 @@ check_admin_credentials
 prepare_writable_dirs
 wait_for_db
 install_providence
+repair_installation
 exec docker-php-entrypoint "$@"

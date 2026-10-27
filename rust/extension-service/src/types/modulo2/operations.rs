@@ -42,8 +42,8 @@ pub struct EditRequest {
     /// Claves de cada archivo local, leídas por Providence: {"app.conf": {...}}.
     pub local: Json,
     pub state: State,
-    /// Versión automática del estado anterior.
-    pub version: VersionInfo,
+    /// Si el usuario pidió guardar el estado anterior como versión, su nombre y nota.
+    pub version: Option<VersionInfo>,
 }
 
 /// Guardado aceptado: valor nuevo de cada cambio, en orden, y contenido de cada archivo (None: se borra).
@@ -126,7 +126,14 @@ pub struct RestoreRequest {
     /// Hash del estado cuando se abrió la pantalla.
     pub expected_hash: String,
     pub state: State,
-    pub version: VersionInfo,
+    /// Si el usuario pidió guardar el estado actual como versión antes de restaurar.
+    pub version: Option<VersionInfo>,
+}
+
+/// Borrado de una versión; con el estado actual, para no borrar la versión actual.
+pub struct DeleteRequest {
+    pub user: User,
+    pub state: State,
 }
 
 /// Versión guardada a mano.

@@ -12,8 +12,8 @@ use crate::json::Json;
 use crate::types::modulo2::catalog::Code;
 use crate::types::modulo2::catalog::Risk;
 use crate::types::modulo2::operations::{
-    ChangePage, CloseRequest, CreateVersionRequest, EditAction, EditItem, EditRequest,
-    FinishEditsRequest, RenameRequest, RestoreRequest, VersionPage,
+    ChangePage, CloseRequest, CreateVersionRequest, DeleteRequest, EditAction, EditItem,
+    EditRequest, FinishEditsRequest, RenameRequest, RestoreRequest, VersionPage,
 };
 use crate::types::modulo2::versions::{ChangeResult, State, User, VersionInfo};
 
@@ -94,8 +94,16 @@ pub fn edit(body: &Json) -> Result<EditRequest, String> {
             .collect::<Result<_, _>>()?,
         local: body["local"].clone(),
         state: state(&body["state"])?,
-        version: version_info(&body["version"])?,
+        version: optional_version_info(&body["version"])?,
     })
+}
+
+/// Versión opcional: null o ausente si el usuario no pidió guardarla.
+pub fn optional_version_info(value: &Json) -> Result<Option<VersionInfo>, String> {
+    if value.is_null() {
+        return Ok(None);
+    }
+    version_info(value).map(Some)
 }
 
 /// Un cambio del guardado: el valor pedido, o vuelve al valor por defecto si trae `reset: true`.
@@ -149,7 +157,7 @@ pub fn restore(body: &Json) -> Result<RestoreRequest, String> {
         user: user(&body["user"])?,
         expected_hash: expected_hash.to_string(),
         state: state(&body["state"])?,
-        version: version_info(&body["version"])?,
+        version: optional_version_info(&body["version"])?,
     })
 }
 
@@ -161,9 +169,12 @@ pub fn create_version(body: &Json) -> Result<CreateVersionRequest, String> {
     })
 }
 
-/// `{"user": ...}`: quien borra una versión.
-pub fn delete(body: &Json) -> Result<User, String> {
-    user(&body["user"])
+/// `{"user": ..., "state": ...}`: quien borra una versión y el estado actual.
+pub fn delete(body: &Json) -> Result<DeleteRequest, String> {
+    Ok(DeleteRequest {
+        user: user(&body["user"])?,
+        state: state(&body["state"])?,
+    })
 }
 
 /// `{"user": ..., "name": "..."}`
@@ -268,7 +279,7 @@ fn url_decoded(text: &str) -> Result<String, String> {
 }
 
 /// Entero mayor que 0 escrito solo con dígitos.
-fn positive(text: &str) -> Option<u64> {
+pub fn positive(text: &str) -> Option<u64> {
     Some(text)
         .filter(|t| !t.is_empty() && t.bytes().all(|b| b.is_ascii_digit()))?
         .parse()
@@ -451,22 +462,22 @@ mod tests {
         );
     }
 
-    /// Un guardado sin archivo local, cambios, permisos, estado, versión o usuario se rechaza, igual
+    /// Un guardado sin archivo local, cambios, permisos, estado o usuario se rechaza (la versión es opcional), igual
     /// que un cambio sin clave.
     #[test]
     fn edit_requires_its_context() {
-        for field in [
-            "local",
-            "edits",
-            "allowed_risks",
-            "state",
-            "version",
-            "user",
-        ] {
+        for field in ["local", "edits", "allowed_risks", "state", "user"] {
             let mut body = edit_body();
             body.remove(field);
             assert!(edit(&body).is_err(), "sin {field}");
         }
+        let mut without_version = edit_body();
+        without_version.remove("version");
+        assert_eq!(
+            edit(&without_version).unwrap().version,
+            None,
+            "la versión es opcional"
+        );
         let mut without_key = color_item();
         without_key.remove("key");
         assert!(edit(&edit_body_with(without_key)).is_err());

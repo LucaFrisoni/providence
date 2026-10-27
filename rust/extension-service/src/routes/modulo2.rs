@@ -12,7 +12,7 @@ use super::helpers::{in_transaction, segments, with_body, with_id};
 use crate::constants::{
     CATALOG_SEGMENT, CHANGES_SEGMENT, DELETE_SEGMENT, EDITS_SEGMENT, HEALTH_SEGMENT,
     HTTP_BAD_REQUEST, HTTP_CONFLICT, HTTP_FORBIDDEN, HTTP_UNPROCESSABLE, MODULO2, NAME_SEGMENT,
-    RESTORE_SEGMENT, RESULT_SEGMENT, STATE_SEGMENT, VERSIONS_SEGMENT,
+    PREFERENCES_SEGMENT, RESTORE_SEGMENT, RESULT_SEGMENT, STATE_SEGMENT, VERSIONS_SEGMENT,
 };
 use crate::json_object;
 use crate::services::modulo2::{changes, edits, requests, restores, to_json, versions};
@@ -24,6 +24,7 @@ use crate::types::modulo2::versions::{Closed, Owned, Saved};
 pub fn routes(request: &ApiRequest) -> ApiResponse {
     match (request.method, segments(request.path).as_slice()) {
         (Method::Get, [HEALTH_SEGMENT]) => health(MODULO2),
+        (_, [PREFERENCES_SEGMENT, path @ ..]) => preferences::routes(request, path),
         (Method::Get, [CATALOG_SEGMENT]) => ApiResponse::ok(to_json::catalog()),
         (Method::Post, [STATE_SEGMENT]) => post_state(request),
         (Method::Get, [VERSIONS_SEGMENT]) => get_versions(request),
@@ -106,8 +107,8 @@ fn post_version_name(request: &ApiRequest, id: u32) -> ApiResponse {
 
 /// POST /versions/{id}/delete `{user}`: borra la versión; solo quien la creó (403 si no).
 fn post_version_delete(request: &ApiRequest, id: u32) -> ApiResponse {
-    with_body(request, requests::delete, |tx, user| {
-        owned_response(versions::delete(tx, id, &user)?, ONLY_CREATOR_DELETES)
+    with_body(request, requests::delete, |tx, delete| {
+        owned_response(versions::delete(tx, id, &delete)?, ONLY_CREATOR_DELETES)
     })
 }
 
@@ -186,7 +187,14 @@ const ONLY_CREATOR_DELETES: &str = "only the user who created the version can de
 fn owned_response(owned: Owned, not_owner: &str) -> Result<ApiResponse, RouteError> {
     match owned {
         Owned::Done(version) => Ok(ApiResponse::ok(
-            json_object! { version: to_json::version(&version) },
+            json_object! { version: to_json::version(&version), changed: true },
+        )),
+        Owned::Unchanged(version) => Ok(ApiResponse::ok(
+            json_object! { version: to_json::version(&version), changed: false },
+        )),
+        Owned::Current => Ok(ApiResponse::error(
+            HTTP_CONFLICT,
+            "the current configuration is this version: it cannot be deleted",
         )),
         Owned::NotOwner => Ok(ApiResponse::error(HTTP_FORBIDDEN, not_owner)),
         Owned::NotFound => Err(RouteError::NotFound(VERSION_NOT_FOUND)),
@@ -485,7 +493,8 @@ mod tests {
         );
 
         let delete_path = format!("/versions/{id}/delete");
-        let by = |id: u32| json_object! { user: user_json(&user, id) };
+        let by =
+            |id: u32| json_object! { user: user_json(&user, id), state: state_json(&user, "otra") };
         assert_eq!(post(&delete_path, by(2)).0, HTTP_FORBIDDEN);
         assert_eq!(post(&delete_path, by(1)).0, HTTP_OK);
         assert_eq!(get(&format!("/versions/{id}")).0, HTTP_NOT_FOUND);
@@ -614,5 +623,252 @@ mod tests {
             status == HTTP_UNPROCESSABLE && same["change_id"].is_null(),
             "{same}"
         );
+    }
+}
+
+// ---------------------------------------------------------------- Preferencias
+
+mod preferences {
+    //! Módulo 2: rutas de las versiones de preferencias, bajo `/api/modulo2/preferences`. Cada pedido
+    //! lleva el usuario (en el cuerpo o en `?user=`) y solo accede a sus versiones y cambios.
+
+    use tiny_http::Method;
+
+    use super::prepared_response;
+    use crate::constants::{
+        CHANGES_SEGMENT, DELETE_SEGMENT, EDITS_SEGMENT, HTTP_BAD_REQUEST, HTTP_CONFLICT,
+        NAME_SEGMENT, RESTORE_SEGMENT, RESULT_SEGMENT, STATE_SEGMENT, VERSIONS_SEGMENT,
+    };
+    use crate::json_object;
+    use crate::routes::helpers::{in_transaction, with_body, with_id};
+    use crate::services::modulo2::{preference_requests, preferences, requests, to_json};
+    use crate::types::http::{ApiRequest, ApiResponse, RouteError};
+    use crate::types::modulo2::preferences::{PreferenceFinished, PreferenceVersion};
+    use crate::types::modulo2::versions::{Owned, Saved};
+
+    const VERSION_NOT_FOUND: &str = "the version does not exist";
+
+    /// Endpoints de las preferencias; `path` es lo que sigue a `/preferences`.
+    pub fn routes(request: &ApiRequest, path: &[&str]) -> ApiResponse {
+        match (request.method, path) {
+            (Method::Post, [STATE_SEGMENT]) => post_state(request),
+            (Method::Get, [VERSIONS_SEGMENT]) => get_versions(request),
+            (Method::Post, [VERSIONS_SEGMENT]) => post_version(request),
+            (Method::Get, [VERSIONS_SEGMENT, id]) => with_id(id, |id| get_version(request, id)),
+            (Method::Post, [VERSIONS_SEGMENT, id, NAME_SEGMENT]) => {
+                with_id(id, |id| post_name(request, id))
+            }
+            (Method::Post, [VERSIONS_SEGMENT, id, DELETE_SEGMENT]) => {
+                with_id(id, |id| post_delete(request, id))
+            }
+            (Method::Post, [VERSIONS_SEGMENT, id, RESTORE_SEGMENT]) => {
+                with_id(id, |id| post_restore(request, id))
+            }
+            (Method::Post, [EDITS_SEGMENT]) => post_edit(request),
+            (Method::Post, [CHANGES_SEGMENT, id, RESULT_SEGMENT]) => {
+                with_id(id, |id| post_result(request, u64::from(id)))
+            }
+            _ => ApiResponse::not_found("route not found"),
+        }
+    }
+
+    /// POST /state `{user, state}`: hash de las preferencias y la versión idéntica del usuario.
+    fn post_state(request: &ApiRequest) -> ApiResponse {
+        with_body(
+            request,
+            |body| {
+                Ok((
+                    requests::user(&body["user"])?,
+                    preference_requests::state(&body["state"])?,
+                ))
+            },
+            |tx, (user, state)| {
+                Ok(ApiResponse::ok(preferences::state_info(
+                    tx, user.id, &state,
+                )?))
+            },
+        )
+    }
+
+    /// GET /versions?user=7&limit&before&search: una página de las versiones del usuario.
+    fn get_versions(request: &ApiRequest) -> ApiResponse {
+        let read = preference_requests::owner(request.query_param("user")).and_then(|user| {
+            let page = requests::version_page(
+                request.query_param("limit"),
+                request.query_param("before"),
+                request.query_param("search"),
+            )?;
+            Ok((user, page))
+        });
+        match read {
+            Ok((user, page)) => in_transaction(request, |tx| {
+                Ok(ApiResponse::ok(preferences::list(tx, user, &page)?))
+            }),
+            Err(message) => ApiResponse::error(HTTP_BAD_REQUEST, &message),
+        }
+    }
+
+    /// POST /versions `{user, version, state}`: 201 con la nueva o 409 con la idéntica.
+    fn post_version(request: &ApiRequest) -> ApiResponse {
+        with_body(request, preference_requests::create, |tx, create| {
+            Ok(
+                match preferences::save(tx, &create.user, &create.info, &create.state)? {
+                    Saved::Created(version) => ApiResponse::created(
+                        json_object! { version: to_json::preference_version(&version) },
+                    ),
+                    Saved::Existing(version) => ApiResponse::with_status(
+                        HTTP_CONFLICT,
+                        json_object! { error: format!("Already saved as version {}", version.number), version: to_json::preference_version(&version) },
+                    ),
+                },
+            )
+        })
+    }
+
+    /// GET /versions/{id}?user=7: la versión con sus preferencias (404 si no es del usuario).
+    fn get_version(request: &ApiRequest, id: u32) -> ApiResponse {
+        match preference_requests::owner(request.query_param("user")) {
+            Ok(user) => in_transaction(request, |tx| {
+                let detail = preferences::detail(tx, user, id)?
+                    .ok_or(RouteError::NotFound(VERSION_NOT_FOUND))?;
+                Ok(ApiResponse::ok(detail))
+            }),
+            Err(message) => ApiResponse::error(HTTP_BAD_REQUEST, &message),
+        }
+    }
+
+    /// POST /versions/{id}/name `{user, name}`: con el mismo nombre no guarda nada.
+    fn post_name(request: &ApiRequest, id: u32) -> ApiResponse {
+        with_body(request, requests::rename, |tx, rename| {
+            owned_response(preferences::rename(tx, id, &rename)?)
+        })
+    }
+
+    /// POST /versions/{id}/delete `{user, state}`: 409 si es la versión de las preferencias actuales.
+    fn post_delete(request: &ApiRequest, id: u32) -> ApiResponse {
+        with_body(request, preference_requests::delete, |tx, delete| {
+            owned_response(preferences::delete(tx, id, &delete)?)
+        })
+    }
+
+    /// POST /versions/{id}/restore `{user, expected_hash, state, version}`.
+    fn post_restore(request: &ApiRequest, id: u32) -> ApiResponse {
+        with_body(request, preference_requests::restore, |tx, restore| {
+            let prepared = preferences::prepare_restore(tx, &restore, id)?
+                .ok_or(RouteError::NotFound(VERSION_NOT_FOUND))?;
+            Ok(prepared_response(prepared))
+        })
+    }
+
+    /// POST /edits `{user, group, expected_hash, state, version}`: prepara el guardado de un grupo.
+    fn post_edit(request: &ApiRequest) -> ApiResponse {
+        with_body(request, preference_requests::edit, |tx, edit| {
+            Ok(prepared_response(preferences::prepare_edit(tx, &edit)?))
+        })
+    }
+
+    /// POST /changes/{id}/result `{user, result, message, changes, state, version}`.
+    fn post_result(request: &ApiRequest, id: u64) -> ApiResponse {
+        with_body(
+            request,
+            preference_requests::finish,
+            |tx, finish| match preferences::finish(tx, id, &finish)? {
+                PreferenceFinished::Done(change, version) => Ok(ApiResponse::ok(json_object! {
+                    change: to_json::preference_change(&change),
+                    version: version.as_ref().map(to_json::preference_version),
+                })),
+                PreferenceFinished::NotPending => Ok(ApiResponse::error(
+                    HTTP_CONFLICT,
+                    "the change already has a result",
+                )),
+                PreferenceFinished::NotFound => {
+                    Err(RouteError::NotFound("the change does not exist"))
+                }
+            },
+        )
+    }
+
+    /// Renombrar o borrar: 200 con la versión, 404 si no existe o no es del usuario, 409 si es la actual.
+    fn owned_response(owned: Owned<PreferenceVersion>) -> Result<ApiResponse, RouteError> {
+        match owned {
+            Owned::Done(version) => Ok(ApiResponse::ok(
+                json_object! { version: to_json::preference_version(&version), changed: true },
+            )),
+            Owned::Unchanged(version) => Ok(ApiResponse::ok(
+                json_object! { version: to_json::preference_version(&version), changed: false },
+            )),
+            Owned::Current => Ok(ApiResponse::error(
+                HTTP_CONFLICT,
+                "the current preferences are this version: it cannot be deleted",
+            )),
+            Owned::NotFound | Owned::NotOwner => Err(RouteError::NotFound(VERSION_NOT_FOUND)),
+        }
+    }
+
+    #[cfg(test)]
+    mod tests {
+        use super::*;
+        use crate::constants::HTTP_NOT_FOUND;
+
+        fn send(method: Method, path: &str, query: &str, body: &str) -> ApiResponse {
+            let request = ApiRequest {
+                query,
+                ..ApiRequest::new(&method, path).with_body(body)
+            };
+            super::super::routes(&request)
+        }
+
+        /// Las rutas que escriben validan el cuerpo antes de usar la base: un cuerpo inválido da 400.
+        #[test]
+        fn write_routes_validate_the_body_first() {
+            for path in [
+                "state",
+                "versions",
+                "versions/1/name",
+                "versions/1/delete",
+                "versions/1/restore",
+                "edits",
+                "changes/1/result",
+            ] {
+                for body in ["", "[]", "{}"] {
+                    let response = send(Method::Post, &format!("/preferences/{path}"), "", body);
+                    assert_eq!(response.status, HTTP_BAD_REQUEST, "{path} {body:?}");
+                }
+            }
+        }
+
+        /// Las rutas que leen necesitan el usuario dueño en la consulta.
+        #[test]
+        fn read_routes_need_the_owner() {
+            for path in ["/preferences/versions", "/preferences/versions/1"] {
+                assert_eq!(
+                    send(Method::Get, path, "", "").status,
+                    HTTP_BAD_REQUEST,
+                    "{path}"
+                );
+                assert_eq!(
+                    send(Method::Get, path, "user=0", "").status,
+                    HTTP_BAD_REQUEST,
+                    "{path}"
+                );
+            }
+        }
+
+        /// Las rutas inexistentes o con otro método dan 404.
+        #[test]
+        fn unknown_routes_are_not_found() {
+            for (method, path) in [
+                (Method::Get, "/preferences/edits"),
+                (Method::Delete, "/preferences/versions/1"),
+                (Method::Get, "/preferences"),
+                (Method::Get, "/preferences/otra"),
+            ] {
+                assert_eq!(
+                    send(method.clone(), path, "user=1", "").status,
+                    HTTP_NOT_FOUND,
+                    "{method} {path}"
+                );
+            }
+        }
     }
 }

@@ -7,7 +7,6 @@
  */
 $catalog = $this->getVar('catalog');
 $data_type_names = $this->getVar('data_type_names') ?? [];
-$database_summary = $this->getVar('database_summary') ?? [];
 $error = $this->getVar('error');
 $allowed_risks = $this->getVar('allowed_risks') ?? [];
 // Entradas que el usuario puede cambiar (ver Modulo2EditorData)
@@ -22,26 +21,12 @@ $groups = [
 	Modulo2Constants::SCOPE_GLOBAL => Modulo2I18n::t('Whole installation')
 ];
 
-// Valor en HTML: ✓/✗ para sí o no, una muestra para los colores, el texto de las plantillas en código
-// y las estructuras plegadas, con su contenido en la sintaxis de los .conf
+// Valor en HTML: ✓/✗ para sí o no; los demás, su texto
 $value_html = function($value, array $setting) use ($e, $data_type_names) {
 	$text = $e(Modulo2ValueFormatter::text($value, $setting, $data_type_names));
-	switch ($setting['kind']) {
-		case Modulo2Constants::KIND_BOOLEAN:
-			$on = Modulo2ValueFormatter::displayed($value, $setting);
-			return '<span class="m2-bool '.($on ? 'm2-on">✓ ' : 'm2-off">✗ ').$text.'</span>';
-		case Modulo2Constants::KIND_COLOR:
-			return strlen($value) ? '<span class="m2-swatch" style="background:#'.$e($value).'"></span>'.$text : $text;
-		case Modulo2Constants::KIND_TEXT:
-			return '<code class="m2-text">'.$text.'</code>';
-		case Modulo2Constants::KIND_KEY_ORDER:
-			if (!sizeof($value)) { return $text; }
-			return '<ol class="m2-order"><li>'.join('</li><li>', array_map($e, $value)).'</li></ol>';
-		case Modulo2Constants::KIND_STRUCTURED:
-			if (!sizeof($value)) { return $text; }
-			return '<details class="m2-structured"><summary>'.$text.'</summary><pre>'.$e(Modulo2ValueFormatter::structuredText($value)).'</pre></details>';
-	}
-	return $text;
+	if ($setting['kind'] !== Modulo2Constants::KIND_BOOLEAN) { return $text; }
+	$on = Modulo2ValueFormatter::displayed($value, $setting);
+	return '<span class="m2-bool '.($on ? 'm2-on">✓ ' : 'm2-off">✗ ').$text.'</span>';
 };
 // Ayuda de la celda: si cambió, el valor original de Providence
 $cell_title = function(array $entry, array $setting) use ($e, $data_type_names) {
@@ -59,49 +44,58 @@ $cell = function(array $entry, array $setting, string $file) use ($e, $value_htm
 $risk_badge = fn(array $setting) => isset($risk_labels[$setting['risk']]) ? ' <span class="m2-risk m2-risk-'.$e($setting['risk']).'">'.$risk_labels[$setting['risk']].'</span>' : '';
 $total_modified = $catalog ? array_sum(array_map([Modulo2CatalogMatrix::class, 'modifiedCount'], $catalog['sections'])) : 0;
 ?>
-<?= Modulo2Ui::buttonStyles(); ?>
+<?= Modulo2Ui::styles(); ?>
 <style>
 	.m2-panel { max-width: 1200px; }
-	.m2-toolbar { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; margin: 12px 0 8px 0; padding: 8px 12px; background: #f7f7f7; border: 1px solid #e2e2e2; border-radius: 4px; }
-	.m2-fold { display: flex; gap: 8px; margin: 0 0 12px 0; }
-	.m2-count { display: inline-block; min-width: 16px; padding: 0 5px; border-radius: 8px; background: #fff3cd; color: #664d03; font-size: 11px; text-align: center; }
-	.m2-group { margin: 20px 0 4px 0; padding-bottom: 4px; border-bottom: 2px solid #ccc; font-size: 15px; text-transform: uppercase; color: #444; }
-	.m2-section { margin: 12px 0; border: 1px solid #e2e2e2; border-radius: 4px; padding: 0 12px 8px 12px; scroll-margin-top: 60px; }
-	.m2-section > summary { cursor: pointer; padding: 8px 0; }
-	.m2-section > summary h2 { display: inline; margin: 0 8px 0 0; }
-	.m2-section-description { margin: 0 0 8px 0; color: #555; }
-	.m2-table { border-collapse: collapse; margin: 4px 0; }
-	.m2-table th, .m2-table td { border: 1px solid #ddd; padding: 4px 8px; text-align: center; vertical-align: middle; }
-	.m2-table th:first-child, .m2-table td:first-child { text-align: left; }
-	.m2-table thead th { background: #f2f2f2; font-weight: normal; }
-	.m2-table.m2-global { width: 100%; }
-	.m2-table.m2-global td { text-align: left; }
-	.m2-table.m2-global td:first-child { width: 30%; }
-	.m2-table.m2-global td.m2-value { width: 30%; }
-	.m2-table td.m2-help { color: #555; max-width: 480px; }
-	.m2-modified { background: #fff3cd; font-weight: bold; }
-	.m2-on { color: #1e7b34; }
-	.m2-off { color: #c62828; }
-	.m2-swatch { display: inline-block; width: 12px; height: 12px; margin-right: 4px; border: 1px solid #999; vertical-align: middle; }
-	.m2-text { display: inline-block; max-width: 360px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; vertical-align: middle; }
-	.m2-order { margin: 0; padding-left: 22px; columns: 2; font-size: 11px; }
-	.m2-structured { text-align: left; }
-	.m2-structured summary { cursor: pointer; color: #1a5f9c; }
-	.m2-structured pre { max-width: 640px; max-height: 360px; overflow: auto; margin: 4px 0; padding: 6px; background: #fafafa; border: 1px solid #eee; font-size: 11px; font-weight: normal; }
-	.m2-risk { display: inline-block; padding: 0 5px; border-radius: 3px; font-size: 10px; text-transform: uppercase; white-space: nowrap; }
-	.m2-risk-medium { background: #ffe5b4; color: #7a4a00; }
-	.m2-risk-high { background: #f8d7da; color: #842029; }
-	.m2-descriptions { margin: 8px 0 0 0; font-size: 11px; color: #555; }
-	.m2-descriptions dt { font-weight: bold; display: inline; }
-	.m2-descriptions dd { display: inline; margin: 0; }
-	.m2-descriptions dd::after { content: ""; display: block; }
+	.m2-toolbar { display: flex; flex-wrap: wrap; gap: 10px 18px; align-items: center; margin: 0 0 12px 0; padding: 10px 14px; background: #fff;
+		border: 1px solid var(--m2-border); border-radius: var(--m2-radius); box-shadow: var(--m2-shadow); color: var(--m2-muted); }
+	.m2-toolbar label { display: inline-flex; align-items: center; gap: 6px; margin-left: auto; color: var(--m2-text); font-weight: 600; cursor: pointer; }
+	.m2-fold { display: flex; gap: 8px; margin: 0 0 4px 0; }
+	.m2-count { display: inline-block; min-width: 18px; padding: 1px 8px; border-radius: 999px; background: var(--m2-warn-soft); color: var(--m2-warn); font-size: 11px; font-weight: 600; text-align: center; }
+	/* Cada sección es una tarjeta plegable, con una flecha que gira al abrirla */
+	.m2-section { margin: 12px 0; padding: 0 18px; border: 1px solid var(--m2-border); border-radius: var(--m2-radius); background: #fff; box-shadow: var(--m2-shadow); scroll-margin-top: 60px; }
+	.m2-section[open] { padding-bottom: 18px; }
+	.m2-section > summary { display: flex; align-items: center; gap: 10px; padding: 14px 0; list-style: none; cursor: pointer; }
+	.m2-section > summary::-webkit-details-marker { display: none; }
+	.m2-section > summary::before { content: ""; flex: none; width: 7px; height: 7px; margin: 0 2px; border-right: 2px solid var(--m2-muted); border-bottom: 2px solid var(--m2-muted);
+		transform: rotate(-45deg); transition: transform .15s; }
+	.m2-section[open] > summary::before { transform: rotate(45deg); }
+	.m2-section > summary h2 { display: inline; margin: 0; font: 650 16px/1.3 var(--m2-font); color: var(--m2-text); }
+	.m2-section > summary:hover h2 { color: var(--m2-accent-dark); }
+	.m2-section-description { margin: -6px 0 14px 21px; color: var(--m2-muted); }
+	.m2-subsection { display: flex; align-items: center; gap: 8px; margin: 22px 0 4px 0; padding-top: 16px; border-top: 1px solid var(--m2-border); font: 650 14px/1.3 var(--m2-font); }
+	.m2-subsection + .m2-section-description { margin: 4px 0 12px 0; }
+	.m2-deaccession-field form { margin: 0; }
+	/* Tablas por tipo de dato: una columna por configuración, con los valores centrados */
+	.m2-panel .m2-table { table-layout: auto; margin: 4px 0; }
+	.m2-panel .m2-table th, .m2-panel .m2-table td { padding: 6px 10px; text-align: center; vertical-align: middle; overflow-wrap: normal; }
+	.m2-panel .m2-table th:first-child, .m2-panel .m2-table td:first-child { text-align: left; font-weight: 600; }
+	.m2-panel .m2-table thead th { font-size: 11.5px; letter-spacing: 0; text-transform: none; line-height: 1.3; }
+	.m2-panel .m2-table.m2-global th, .m2-panel .m2-table.m2-global td { text-align: left; }
+	.m2-panel .m2-table.m2-global td:first-child { width: 30%; }
+	.m2-panel .m2-table.m2-global td.m2-value { width: 28%; }
+	.m2-panel .m2-table td.m2-help { color: var(--m2-muted); font-weight: normal; }
+	.m2-modified { background: #fff8e6 !important; box-shadow: inset 3px 0 0 #f0b429; }
+	.m2-legend { padding: 2px 8px; border-radius: 6px; color: var(--m2-warn); font-weight: 600; }
+	.m2-bool { display: inline-flex; align-items: center; gap: 4px; padding: 2px 10px; border-radius: 999px; font-size: 12px; font-weight: 600; white-space: nowrap; }
+	.m2-on { background: var(--m2-ok-soft); color: var(--m2-ok); }
+	.m2-off { background: #eef1f2; color: #7b888e; }
+	.m2-risk { display: inline-block; margin-left: 4px; padding: 1px 7px; border-radius: 999px; font-size: 10px; font-weight: 600; letter-spacing: .03em; text-transform: uppercase; white-space: nowrap; vertical-align: middle; }
+	.m2-risk-medium { background: #ffecc7; color: #7a4a00; }
+	.m2-risk-high { background: var(--m2-danger-soft); color: var(--m2-danger); }
+	.m2-descriptions { display: grid; grid-template-columns: fit-content(220px) 1fr; gap: 6px 14px; margin: 14px 0 0 0; padding: 12px 14px; border-radius: 8px;
+		background: var(--m2-soft); font-size: 12px; color: var(--m2-muted); }
+	.m2-descriptions dt { font-weight: 600; color: var(--m2-text); }
+	.m2-descriptions dd { margin: 0; }
 	.m2-only-modified .m2-section[data-modified="0"], .m2-only-modified .m2-row:not(.m2-row-modified), .m2-only-modified .m2-group, .m2-only-modified .m2-database { display: none; }
-	.m2-none-modified { display: none; padding: 8px 12px; background: #e9f5ec; border-radius: 4px; }
+	.m2-none-modified { display: none; padding: 12px 16px; border: 1px solid #c3e5cc; border-radius: var(--m2-radius); background: var(--m2-ok-soft); color: #1b5e30; }
 	.m2-only-modified[data-modified="0"] .m2-none-modified { display: block; }
-	button.m2-edit { display: inline-block; padding: 0; border: none; border-bottom: 1px dashed #8aa; background: none; color: inherit; font: inherit; cursor: pointer; }
-	button.m2-edit:hover { border-bottom-color: #138290; background: #e3f4f6; }
-	td.m2-pending { background: #e3f0fb; box-shadow: inset 0 0 0 2px #5b8ec9; font-weight: bold; }
-	.m2-intro { margin: 8px 0 12px 0; padding-left: 20px; line-height: 1.6; }
+	/* Un valor editable: se resalta al pasar el mouse; los que no son sí o no, subrayados */
+	button.m2-edit { display: inline-block; margin: 0; padding: 1px 4px; line-height: 1.4; border: 1px solid transparent; border-radius: 8px; background: none; color: inherit; font: inherit; cursor: pointer;
+		text-decoration: underline dotted #9fb3b9; text-underline-offset: 3px; transition: background .15s, border-color .15s; }
+	button.m2-edit:hover { border-color: #bfe0e4; background: var(--m2-accent-soft); }
+	button.m2-edit:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--m2-accent-ring); }
+	td.m2-pending { background: var(--m2-info-soft) !important; box-shadow: inset 0 0 0 2px #7aa7dc; font-weight: 600; }
 </style>
 
 <div class="m2-panel" id="m2-panel" data-modified="<?= $total_modified; ?>">
@@ -113,11 +107,11 @@ $total_modified = $catalog ? array_sum(array_map([Modulo2CatalogMatrix::class, '
 <?php return; } ?>
 
 <ul class="m2-intro">
-	<li><?= Modulo2I18n::t('These are Providence options that could only be changed by editing files.'); ?></li>
-	<li><?= Modulo2I18n::t('They are grouped by topic: open a section to see its options and the value of each one.'); ?></li>
+	<li><?= Modulo2Ui::emphasis(Modulo2I18n::t('These are Providence options that could only be changed by **editing files**.')); ?></li>
+	<li><?= Modulo2Ui::emphasis(Modulo2I18n::t('They are grouped by **topic**: open a section to see its options and the value of each one.')); ?></li>
 <?php if ($allowed_risks) { ?>
-	<li><?= Modulo2I18n::t('Click a value to change it. You can change as many as you want: nothing is applied until you press “Save changes”.'); ?></li>
-	<li><?= Modulo2I18n::t('When you save, all the changes are applied together and the result is kept as a new version, which you can go back to from %1.', $versions_url ? '<a href="'.$e($versions_url).'">'.Modulo2I18n::t('Configuration versions').'</a>' : Modulo2I18n::t('Configuration versions')); ?></li>
+	<li><?= Modulo2Ui::emphasis(Modulo2I18n::t('**Click a value** to change it. You can change as many as you want: nothing is applied until you press **“Save changes”**.')); ?></li>
+	<li><?= Modulo2Ui::emphasis(Modulo2I18n::t('When you save, all the changes are applied **together** and the result is kept as a **new version**, which you can go back to from %1.', $versions_url ? '<a href="'.$e($versions_url).'">'.Modulo2I18n::t('Configuration versions').'</a>' : Modulo2I18n::t('Configuration versions'))); ?></li>
 <?php } else { ?>
 	<li><?= Modulo2I18n::t('You are not allowed to change settings: you can only view them.'); ?></li>
 <?php } ?>
@@ -192,32 +186,12 @@ $total_modified = $catalog ? array_sum(array_map([Modulo2CatalogMatrix::class, '
 		</tbody>
 	</table>
 <?php 		} ?>
+<?php 		if ($section['id'] === 'deaccession' && $this->getVar('deaccession_field')) { include __DIR__.'/configurations_deaccession_field_html.php'; } ?>
 </details>
 <?php 	} ?>
 </div>
 <?php } ?>
 
-<div class="m2-database m2-group-block">
-<h2 class="m2-group"><?= Modulo2I18n::t('In the database'); ?></h2>
-<details class="m2-section" open id="m2-section-database" data-modified="0" data-m2-scope="database">
-	<summary><h2><?= Modulo2I18n::t('Configuration in the database'); ?></h2></summary>
-	<p class="m2-section-description"><?= Modulo2I18n::t('Providence keeps this configuration in its database, not in files. It is edited in its Providence screen; the order of the items of a list, in the list editor.'); ?></p>
-	<table class="m2-table m2-global">
-		<thead>
-			<tr><th><?= Modulo2I18n::t('Item'); ?></th><th><?= Modulo2I18n::t('Count'); ?></th><th><?= Modulo2I18n::t('Where it is edited'); ?></th></tr>
-		</thead>
-		<tbody>
-<?php foreach ($database_summary as $item) { ?>
-			<tr>
-				<td><?= $e($item['label']); ?></td>
-				<td class="m2-value"><?= (int)$item['count']; ?></td>
-				<td><a href="<?= $e($item['url']); ?>"><?= Modulo2I18n::t('Open in Providence'); ?></a></td>
-			</tr>
-<?php } ?>
-		</tbody>
-	</table>
-</details>
-</div>
 <?php if ($editor['entries']) { include __DIR__.'/configurations_editor_html.php'; } ?>
 </div>
 
@@ -239,7 +213,7 @@ $total_modified = $catalog ? array_sum(array_map([Modulo2CatalogMatrix::class, '
 		};
 		// En la barra lateral, cada grupo queda abierto si tiene al menos una sección abierta
 		var syncSidebar = function() {
-			['data_type', 'global', 'database'].forEach(function(scope) {
+			['data_type', 'global'].forEach(function(scope) {
 				var list = document.getElementById('m2-group-' + scope);
 				if (!list) { return; }
 				var open = sections.some(function(section) { return section.open && section.getAttribute('data-m2-scope') === scope; });
@@ -252,6 +226,9 @@ $total_modified = $catalog ? array_sum(array_map([Modulo2CatalogMatrix::class, '
 				if (section) { section.open = false; }
 			});
 		} catch (e) {}
+		// Al llegar desde la barra lateral de otra página, la sección elegida se abre aunque se hubiera cerrado
+		var target = window.location.hash ? document.getElementById(window.location.hash.slice(1)) : null;
+		if (target && sections.indexOf(target) !== -1) { target.open = true; target.scrollIntoView(); }
 		sections.forEach(function(section) {
 			section.addEventListener('toggle', function() { remember(); syncSidebar(); });
 		});

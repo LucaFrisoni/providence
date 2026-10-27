@@ -64,16 +64,28 @@ class modulo2Plugin extends BaseApplicationPlugin {
 	}
 	# -------------------------------------------------------
 	/**
-	 * Agrega a la barra lateral de la página de configuraciones su índice de secciones
-	 * (ConfigurationsController::Info)
+	 * Agrega las barras laterales del módulo: la de las configuraciones, sus versiones y su historial
+	 * (ConfigurationsController::Info) y los grupos de My preferences (MyPreferencesController::Info)
 	 */
 	public function hookRenderWidgets($widgets) {
-		$widgets[Modulo2Constants::CONFIGURATIONS_WIDGET] = [
-			'domain' => ['module' => 'modulo2', 'controller' => 'Configurations'],
-			'handler' => ['module' => 'modulo2', 'controller' => 'Configurations', 'action' => 'Info', 'isplugin' => true],
-			'requires' => [],
-			'parameters' => []
-		];
+		// My preferences y sus versiones comparten la barra lateral de los grupos
+		foreach (['MyPreferences', 'PreferenceVersions'] as $controller) {
+			$widgets[Modulo2Constants::PREFERENCES_WIDGET.$controller] = [
+				'domain' => ['module' => 'modulo2', 'controller' => $controller],
+				'handler' => ['module' => 'modulo2', 'controller' => 'MyPreferences', 'action' => 'Info', 'isplugin' => true],
+				'requires' => [],
+				'parameters' => []
+			];
+		}
+		// Las configuraciones, sus versiones y su historial comparten la barra lateral
+		foreach (['Configurations', 'Versions', 'Changes'] as $controller) {
+			$widgets[Modulo2Constants::CONFIGURATIONS_WIDGET.$controller] = [
+				'domain' => ['module' => 'modulo2', 'controller' => $controller],
+				'handler' => ['module' => 'modulo2', 'controller' => 'Configurations', 'action' => 'Info', 'isplugin' => true],
+				'requires' => [],
+				'parameters' => []
+			];
+		}
 		return $widgets;
 	}
 	# -------------------------------------------------------

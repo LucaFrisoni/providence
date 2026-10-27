@@ -20,7 +20,9 @@ use PHPUnit\Framework\TestCase;
 final class Modulo2EditorTest extends TestCase {
 	# -------------------------------------------------------
 	/** Valores de app/conf (distribución) que usa la configuración simulada */
-	const DISTRIBUTION = ['ca_places_disable' => '0', 'menu_color' => 'ffffff'];
+	const DISTRIBUTION = ['ca_places_disable' => '0', 'menu_color' => 'ffffff', 'ca_objects_children_display_mode_in_results' => 'show',
+		'enable_library_services' => '0', 'enable_object_checkout' => '0',
+		'ca_occurrences_breakout_find_by_type_in_menu' => '1', 'ca_occurrences_breakout_find_by_type_in_submenu' => '0'];
 	/** Versión que se guarda si el guardado se aplica */
 	const VERSION = ['name' => 'Cambios de prueba', 'description' => null];
 	# -------------------------------------------------------
@@ -57,17 +59,51 @@ final class Modulo2EditorTest extends TestCase {
 	// Varios cambios del mismo archivo llegan juntos al servicio y se verifican uno por uno
 	#[TestDox('Varios cambios van en un solo pedido, con sus valores, y se aplican juntos')]
 	public function testSeveralEditsGoInOneRequest() : void {
-		$content = "ca_places_disable = 1\nmenu_color = 000000\n";
-		$editor = $this->editor($this->plan(['app.conf' => $content], [true, '000000']), $this->finished('applied'));
-		$color = ['key' => 'menu_color', 'kind' => 'color', 'value' => '000000', 'expected' => 'ffffff'] + $this->edit(true);
+		$content = "ca_objects_children_display_mode_in_results = hide\nca_places_disable = 1\n";
+		$editor = $this->editor($this->plan(['app.conf' => $content], [true, 'hide']), $this->finished('applied'));
+		$choice = ['key' => 'ca_objects_children_display_mode_in_results', 'kind' => 'choice', 'value' => 'hide', 'expected' => 'show'] + $this->edit(true);
 
-		$result = $editor->apply([$this->edit(true), $color], $this->operator(), self::VERSION);
+		$result = $editor->apply([$this->edit(true), $choice], $this->operator(), self::VERSION);
 
 		$this->assertTrue($result['applied'], (string)$result['message']);
 		$items = $this->body(0)['edits'];
-		$this->assertSame(['ca_places_disable', 'menu_color'], array_column($items, 'key'));
-		$this->assertSame(['000000', 'ffffff', 'ffffff'], [$items[1]['value'], $items[1]['current'], $items[1]['distribution']]);
+		$this->assertSame(['ca_places_disable', 'ca_objects_children_display_mode_in_results'], array_column($items, 'key'));
+		$this->assertSame(['hide', 'show', 'show'], [$items[1]['value'], $items[1]['current'], $items[1]['distribution']]);
 		$this->assertCount(2, $this->history, 'Un pedido para preparar y otro para cerrar');
+	}
+	# -------------------------------------------------------
+	// La clave vinculada cambia junto con la de la configuración: no cuenta como "otra clave" que cambió
+	#[TestDox('Un cambio con claves vinculadas las escribe juntas y se verifica con todas')]
+	public function testLinkedKeysAreAppliedTogether() : void {
+		$content = "enable_library_services = 1\nenable_object_checkout = 1\n";
+		$editor = $this->editor($this->plan(['app.conf' => $content], [true]), $this->finished('applied'));
+		$library = ['key' => 'enable_library_services', 'linked' => ['enable_object_checkout']] + $this->edit(true);
+
+		$result = $editor->apply([$library], $this->operator(), self::VERSION);
+
+		$this->assertTrue($result['applied'], (string)$result['message']);
+		$this->assertSame([false, false], [$this->body(0)['edits'][0]['current'], $this->body(0)['edits'][0]['distribution']]);
+	}
+	# -------------------------------------------------------
+	// Las dos formas de mostrar los subtipos en "Encontrar" se excluyen: de fábrica los hechos usan la primera
+	#[TestDox('No guarda una configuración activa junto con la que excluye, salvo que esa se apague en el mismo guardado')]
+	public function testExcludedSettingsCannotBeOnTogether() : void {
+		$submenu = ['key' => 'ca_occurrences_breakout_find_by_type_in_submenu', 'excludes' => 'ca_occurrences_breakout_find_by_type_in_menu'] + $this->edit(true);
+		$menu_off = ['key' => 'ca_occurrences_breakout_find_by_type_in_menu', 'excludes' => 'ca_occurrences_breakout_find_by_type_in_submenu', 'expected' => true] + $this->edit(false);
+
+		try {
+			$this->editor()->apply([$submenu], $this->operator(), self::VERSION);
+			$this->fail('Se guardaron las dos activas');
+		} catch (Modulo2ConfigException $e) {
+			$this->assertSame([], $this->history, 'No se pidió nada al servicio');
+		}
+
+		$content = "ca_occurrences_breakout_find_by_type_in_menu = 0
+ca_occurrences_breakout_find_by_type_in_submenu = 1
+";
+		$editor = $this->editor($this->plan(['app.conf' => $content], [true, false]), $this->finished('applied'));
+		$result = $editor->apply([$submenu, $menu_off], $this->operator(), self::VERSION);
+		$this->assertTrue($result['applied'], (string)$result['message']);
 	}
 	# -------------------------------------------------------
 	// El servicio valida y registra: necesita el valor actual, el esperado, las claves del archivo y el estado
@@ -85,7 +121,17 @@ final class Modulo2EditorTest extends TestCase {
 		$this->assertSame([true, false, false, false], [$item['value'], $item['current'], $item['expected'], $item['distribution']]);
 		$this->assertSame(['app.conf' => ['menu_color' => '000000']], $request['local']);
 		$this->assertSame(['app.conf' => "menu_color = 000000\n"], $request['state']['files']);
-		$this->assertTrue($request['version']['name'] !== '' && $request['version']['description'] === null, 'Versión automática del estado anterior');
+		$this->assertNull($request['version'], 'Sin pedido del usuario no se guarda el estado anterior');
+	}
+	# -------------------------------------------------------
+	#[TestDox('Si el usuario pidió guardar el estado anterior, el pedido lleva su nombre')]
+	public function testPreviousVersionOnlyWhenRequested() : void {
+		$editor = $this->editor($this->plan(['app.conf' => "ca_places_disable = 1\n"], [true]), $this->finished('applied'));
+		$previous = ['name' => 'Antes de probar', 'description' => null];
+
+		$editor->apply([$this->edit(true)], $this->operator(), self::VERSION, $previous);
+
+		$this->assertSame($previous, $this->body(0)['version']);
 	}
 	# -------------------------------------------------------
 	#[TestDox('Sin archivo local, las claves y los archivos van como objetos JSON vacíos, no como listas')]

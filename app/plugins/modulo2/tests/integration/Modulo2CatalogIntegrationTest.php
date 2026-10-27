@@ -31,12 +31,19 @@ final class Modulo2CatalogIntegrationTest extends TestCase {
 		MemoryCache::flush('ConfigurationInstances');
 	}
 	# -------------------------------------------------------
-	#[TestDox('Todas las claves del catálogo existen en el archivo de la distribución de su sección')]
+	// Una configuración puede faltar en la distribución solo si el catálogo dice cómo se ve sin ella: una
+	// opción con el valor vacío como equivalente (por ejemplo, los dados de baja de lotes y colecciones)
+	#[TestDox('Todas las claves del catálogo existen en el archivo de la distribución de su sección, salvo las que tienen valor sin la clave')]
 	public function testEveryCatalogKeyExistsInProvidence() : void {
 		foreach ($this->catalog()['sections'] as $section) {
 			$distribution = $this->distribution($section['file']);
-			foreach ($this->sectionEntries($section) as [$entry]) {
-				$this->assertTrue(self::keyExists($distribution, $entry['key']), "{$entry['key']} no está en {$section['file']}");
+			foreach ($section['settings'] as $setting) {
+				$optional = (bool)array_filter($setting['options'], fn($option) => in_array('', $option['also'] ?? [], true));
+				foreach ($optional ? [] : $setting['entries'] as $entry) {
+					foreach (Modulo2ConfigValues::keysOf($entry) as $key) {
+						$this->assertTrue(self::keyExists($distribution, $key), "{$key} no está en {$section['file']}");
+					}
+				}
 			}
 		}
 	}
@@ -123,11 +130,7 @@ final class Modulo2CatalogIntegrationTest extends TestCase {
 	private static function hasKind($value, string $kind) : bool {
 		switch ($kind) {
 			case Modulo2Constants::KIND_BOOLEAN: return is_bool($value);
-			case Modulo2Constants::KIND_SUBTYPE_LIST:
-			case Modulo2Constants::KIND_TABLE_LIST:
-			case Modulo2Constants::KIND_STRUCTURED:
-			case Modulo2Constants::KIND_KEY_ORDER: return is_array($value);
-			case Modulo2Constants::KIND_NUMBER: return is_int($value) || is_float($value) || is_null($value);
+			case Modulo2Constants::KIND_SUBTYPE_LIST: return is_array($value);
 		}
 		return is_string($value);
 	}

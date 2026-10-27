@@ -7,7 +7,7 @@ use crate::constants::ER_DUP_ENTRY;
 use crate::db::dao::modulo2::versions;
 use crate::json::Json;
 use crate::json_object;
-use crate::types::modulo2::operations::{RenameRequest, VersionPage};
+use crate::types::modulo2::operations::{DeleteRequest, RenameRequest, VersionPage};
 use crate::types::modulo2::versions::{Owned, Saved, State, User, Version, VersionInfo};
 
 /// Guarda el estado como versión, salvo que ya exista una con el mismo hash.
@@ -36,6 +36,20 @@ pub fn save(
     Ok(Saved::Created(
         versions::find(conn, id)?.expect("la versión recién creada existe"),
     ))
+}
+
+/// Versión del estado antes de un cambio: la que pidió guardar el usuario o, si no pidió, la idéntica
+/// que ya exista (None si el estado no está guardado).
+pub fn previous(
+    conn: &mut impl Queryable,
+    info: Option<&VersionInfo>,
+    user: &User,
+    state: &State,
+) -> Result<Option<Saved>, mysql::Error> {
+    match info {
+        Some(info) => save(conn, info, false, user, state).map(Some),
+        None => Ok(versions::find_by_hash(conn, &state.hash())?.map(Saved::Existing)),
+    }
 }
 
 /// Hash del estado, la versión idéntica, si existe, y la última con los mismos archivos `.conf`.
@@ -76,6 +90,9 @@ pub fn rename(
         Ok(version) => version,
         Err(denied) => return Ok(denied),
     };
+    if version.name == request.name {
+        return Ok(Owned::Unchanged(version));
+    }
     versions::rename(conn, id, &request.name)?;
     Ok(Owned::Done(Version {
         name: request.name.clone(),
@@ -83,12 +100,26 @@ pub fn rename(
     }))
 }
 
-/// Borra la versión; solo quien la creó. El historial conserva sus cambios.
-pub fn delete(conn: &mut impl Queryable, id: u32, user: &User) -> Result<Owned, mysql::Error> {
-    let version = match own_version(conn, id, user)? {
+/// Borra la versión; solo quien la creó y si no es la de la configuración actual (la idéntica o la
+/// última con los mismos archivos). El historial conserva sus cambios.
+pub fn delete(
+    conn: &mut impl Queryable,
+    id: u32,
+    request: &DeleteRequest,
+) -> Result<Owned, mysql::Error> {
+    let version = match own_version(conn, id, &request.user)? {
         Ok(version) => version,
         Err(denied) => return Ok(denied),
     };
+    let same = |found: Option<Version>| found.is_some_and(|v| v.id == id);
+    if same(versions::find_by_hash(conn, &request.state.hash())?)
+        || same(versions::find_by_files_hash(
+            conn,
+            &request.state.files_hash(),
+        )?)
+    {
+        return Ok(Owned::Current);
+    }
     versions::delete(conn, &version)?;
     Ok(Owned::Done(version))
 }
@@ -202,6 +233,51 @@ mod tests {
         );
     }
 
+    /// Pedido de borrado desde un estado que no es el de ninguna versión.
+    fn deleting(user: User) -> DeleteRequest {
+        DeleteRequest {
+            user,
+            state: unique_state(),
+        }
+    }
+
+    /// No se puede borrar la versión de la configuración actual (por hash o por sus archivos), ni
+    /// se guarda nada al renombrar con el mismo nombre.
+    #[test]
+    #[ignore = "requiere el MySQL de Docker"]
+    fn current_version_cannot_be_deleted_and_same_name_is_not_saved() {
+        let mut conn = migrated_connection();
+        let mut tx = conn.start_transaction(TxOpts::default()).unwrap();
+        let state = unique_state();
+        let version = save(&mut tx, &info(), false, &owner(), &state)
+            .unwrap()
+            .version()
+            .clone();
+        let mut with_other_db = state.clone();
+        with_other_db
+            .files
+            .insert(crate::constants::DATABASE_FILE.into(), "<otra/>".into());
+
+        for current in [state, with_other_db] {
+            let request = DeleteRequest {
+                user: owner(),
+                state: current,
+            };
+            assert_eq!(
+                delete(&mut tx, version.id, &request).unwrap(),
+                Owned::Current
+            );
+        }
+        let same = RenameRequest {
+            user: owner(),
+            name: version.name.clone(),
+        };
+        assert_eq!(
+            rename(&mut tx, version.id, &same).unwrap(),
+            Owned::Unchanged(version)
+        );
+    }
+
     fn other_user() -> User {
         User {
             id: 2,
@@ -239,11 +315,11 @@ mod tests {
         let change_id = change_log::insert(&mut tx, &change).unwrap();
 
         assert_eq!(
-            delete(&mut tx, middle.id, &other_user()).unwrap(),
+            delete(&mut tx, middle.id, &deleting(other_user())).unwrap(),
             Owned::NotOwner
         );
         assert_eq!(
-            delete(&mut tx, middle.id, &owner()).unwrap(),
+            delete(&mut tx, middle.id, &deleting(owner())).unwrap(),
             Owned::Done(middle.clone())
         );
         assert_eq!(versions::find(&mut tx, middle.id).unwrap(), None);
@@ -258,7 +334,7 @@ mod tests {
             (None, None)
         );
         assert_eq!(
-            delete(&mut tx, middle.id, &owner()).unwrap(),
+            delete(&mut tx, middle.id, &deleting(owner())).unwrap(),
             Owned::NotFound
         );
     }
@@ -271,7 +347,7 @@ mod tests {
         let mut tx = conn.start_transaction(TxOpts::default()).unwrap();
         let first = saved_version(&mut tx, "a");
         let second = saved_version(&mut tx, "b");
-        delete(&mut tx, first.id, &owner()).unwrap();
+        delete(&mut tx, first.id, &deleting(owner())).unwrap();
         assert_eq!(saved_version(&mut tx, "c").number, second.number);
         let numbers: Vec<u32> = versions::list(&mut tx, u32::MAX, None, None)
             .unwrap()

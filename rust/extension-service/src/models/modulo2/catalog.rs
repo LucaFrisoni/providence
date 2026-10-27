@@ -2,7 +2,7 @@
 //! Solo incluye claves verificadas en Providence 2.0.12. Las negativas (`disable`...) llevan
 //! `inverted()` y una etiqueta positiva.
 
-use crate::constants::{APP_CONF, ID_NUMBERING_CONF, NAVIGATION_CONF, TRANSLATIONS_CONF};
+use crate::constants::APP_CONF;
 use crate::types::modulo2::catalog::{ChoiceOption, Kind, Risk, Scope, Section, Setting};
 
 // ---------------------------------------------------------------- Tipos de dato de cada configuración
@@ -45,7 +45,6 @@ const DELETE_TYPES: &[&str] = &[
     "ca_loans",
     "ca_movements",
     "ca_tours",
-    "ca_tour_stops",
 ];
 const FIND_TYPES: &[&str] = &[
     "ca_objects",
@@ -71,6 +70,17 @@ const NEW_MENU_TYPES: &[&str] = &[
     "ca_movements",
     "ca_object_representations",
 ];
+/// Los que muestran sus subtipos en el menú "Nuevo" (lugares y ubicaciones abren su jerarquía)
+const NEW_MENU_SUBTYPE_TYPES: &[&str] = &[
+    "ca_objects",
+    "ca_entities",
+    "ca_occurrences",
+    "ca_collections",
+    "ca_object_lots",
+    "ca_loans",
+    "ca_movements",
+    "ca_object_representations",
+];
 const SUBTYPE_FILTER_TYPES: &[&str] = &[
     "ca_objects",
     "ca_entities",
@@ -81,6 +91,19 @@ const SUBTYPE_FILTER_TYPES: &[&str] = &[
     "ca_loans",
     "ca_movements",
     "ca_object_representations",
+];
+/// En las representaciones, Providence arma mal el submenú (escribe "ca_object_representationd") y
+/// la barra de menú da un error fatal en todas las páginas
+const BREAKOUT_SUBMENU_TYPES: &[&str] = &[
+    "ca_objects",
+    "ca_object_lots",
+    "ca_entities",
+    "ca_places",
+    "ca_occurrences",
+    "ca_collections",
+    "ca_loans",
+    "ca_movements",
+    "ca_sets",
 ];
 const BREAKOUT_TYPES: &[&str] = &[
     "ca_objects",
@@ -104,7 +127,6 @@ const VALID_ID_TYPES: &[&str] = &[
     "ca_loans",
     "ca_movements",
     "ca_tours",
-    "ca_tour_stops",
     "ca_object_representations",
     "ca_storage_locations",
 ];
@@ -119,10 +141,10 @@ const DUPLICATE_ID_TYPES: &[&str] = &[
     "ca_loans",
     "ca_movements",
     "ca_tours",
-    "ca_tour_stops",
     "ca_object_representations",
     "ca_storage_locations",
 ];
+/// Sin los ítems de lista: Providence nunca los guarda sin nombre (el nombre en plural es obligatorio)
 const REQUIRED_LABEL_TYPES: &[&str] = &[
     "ca_objects",
     "ca_object_lots",
@@ -131,12 +153,10 @@ const REQUIRED_LABEL_TYPES: &[&str] = &[
     "ca_collections",
     "ca_occurrences",
     "ca_storage_locations",
-    "ca_list_items",
     "ca_loans",
     "ca_movements",
     "ca_object_representations",
     "ca_tours",
-    "ca_tour_stops",
 ];
 const DUPLICATE_LABEL_TYPES: &[&str] = &[
     "ca_objects",
@@ -152,7 +172,6 @@ const DUPLICATE_LABEL_TYPES: &[&str] = &[
     "ca_object_representations",
     "ca_sets",
     "ca_tours",
-    "ca_tour_stops",
 ];
 const STRICT_HIERARCHY_TYPES: &[&str] = &[
     "ca_objects",
@@ -162,109 +181,36 @@ const STRICT_HIERARCHY_TYPES: &[&str] = &[
     "ca_collections",
     "ca_storage_locations",
     "ca_loans",
-    "ca_tour_stops",
     "ca_list_items",
 ];
-const INSPECTOR_TYPES: &[&str] = &[
-    "ca_objects",
-    "ca_entities",
-    "ca_places",
-    "ca_occurrences",
-    "ca_collections",
-    "ca_storage_locations",
-    "ca_loans",
-    "ca_movements",
-    "ca_tour_stops",
-];
-const CAPTION_TYPES: &[&str] = &[
-    "ca_objects",
-    "ca_occurrences",
-    "ca_entities",
-    "ca_collections",
-];
-const ID_FORMAT_TYPES: &[&str] = &[
-    "ca_objects",
-    "ca_object_lots",
-    "ca_entities",
-    "ca_places",
-    "ca_occurrences",
-    "ca_collections",
-    "ca_storage_locations",
-    "ca_object_representations",
-    "ca_list_items",
-    "ca_loans",
-    "ca_movements",
-    "ca_tours",
-    "ca_tour_stops",
-    "ca_sets",
-];
+/// Los que se pueden dar de baja (tienen is_deaccessioned)
+const DEACCESSION_TYPES: &[&str] = &["ca_objects", "ca_object_lots", "ca_collections"];
 // ---------------------------------------------------------------- Opciones
 
 const STRICT_HIERARCHY_OPTIONS: &[ChoiceOption] = &[
-    ChoiceOption {
-        value: "0",
-        label: "No restriction",
-    },
-    ChoiceOption {
-        value: "~",
-        label: "Partial",
-    },
-    ChoiceOption {
-        value: "1",
-        label: "Strict",
-    },
+    ChoiceOption::new("0", "No restriction"),
+    ChoiceOption::new("~", "Partial"),
+    ChoiceOption::new("1", "Strict"),
 ];
 /// Niveles de acceso a campos, subtipos y orígenes (`__CA_BUNDLE_ACCESS_*__` en Providence)
 const BUNDLE_ACCESS_OPTIONS: &[ChoiceOption] = &[
-    ChoiceOption {
-        value: "0",
-        label: "No access",
-    },
-    ChoiceOption {
-        value: "1",
-        label: "Read only",
-    },
-    ChoiceOption {
-        value: "2",
-        label: "Edit",
-    },
+    ChoiceOption::new("0", "No access"),
+    ChoiceOption::new("1", "Read only"),
+    ChoiceOption::new("2", "Edit"),
 ];
 /// Niveles de acceso a registros (`__CA_ACL_*_ACCESS__` en Providence)
 const ITEM_ACCESS_OPTIONS: &[ChoiceOption] = &[
-    ChoiceOption {
-        value: "0",
-        label: "No access",
-    },
-    ChoiceOption {
-        value: "1",
-        label: "Read only",
-    },
-    ChoiceOption {
-        value: "2",
-        label: "Edit",
-    },
-    ChoiceOption {
-        value: "3",
-        label: "Edit and delete",
-    },
+    ChoiceOption::new("0", "No access"),
+    ChoiceOption::new("1", "Read only"),
+    ChoiceOption::new("2", "Edit"),
+    ChoiceOption::new("3", "Edit and delete"),
 ];
+/// "Show" y "Hide" de Providence son solo el valor inicial (el usuario elige y se recuerda su elección):
+/// el catálogo ofrece los que siempre se aplican y muestra aquellos como estos
 const RESULTS_DISPLAY_OPTIONS: &[ChoiceOption] = &[
-    ChoiceOption {
-        value: "alwaysShow",
-        label: "Always show",
-    },
-    ChoiceOption {
-        value: "show",
-        label: "Show (can be filtered)",
-    },
-    ChoiceOption {
-        value: "hide",
-        label: "Hide (can be shown)",
-    },
-    ChoiceOption {
-        value: "alwaysHide",
-        label: "Always hide",
-    },
+    // Sin la clave, Providence muestra todo ("": la clave no está en su app.conf)
+    ChoiceOption::new("alwaysShow", "Show").also(&["show", ""]),
+    ChoiceOption::new("alwaysHide", "Hide").also(&["hide"]),
 ];
 
 // ---------------------------------------------------------------- Configuraciones por tipo de dato
@@ -272,7 +218,7 @@ const RESULTS_DISPLAY_OPTIONS: &[ChoiceOption] = &[
 const DATA_TYPE_SETTINGS: &[Setting] = &[Setting::per_type(
     "disable",
     "Enabled",
-    "Shows the data type in the \"New\" and \"Find\" menus, the quick search and the relationship fields of the editors. Disabling it does not delete existing records.",
+    "Shows the data type in the menus, the quick search and the relationship fields of the editors. Disabling it does not delete existing records.",
     Kind::Boolean,
     EDITOR_TYPES,
 )
@@ -348,25 +294,33 @@ const NEW_MENU_SETTINGS: &[Setting] = &[
     )
     .inverted(),
     Setting::per_type(
+        "no_new_submenu",
+        "Types in a submenu",
+        "Groups the types of the data type in a submenu of the \"New\" menu. Off: the types are shown directly in the menu.",
+        Kind::Boolean,
+        NEW_MENU_SUBTYPE_TYPES,
+    )
+    .inverted(),
+    Setting::per_type(
         "navigation_new_menu_shows_top_level_types_only",
         "Top-level types only",
         "Shows in the \"New\" menu only the top-level types, without the types nested under them.",
         Kind::Boolean,
-        NEW_MENU_TYPES,
+        NEW_MENU_SUBTYPE_TYPES,
     ),
     Setting::per_type(
         "navigation_new_menu_limit_types_to",
         "Only these types",
-        "Shows in the \"New\" menu only the selected types. None selected: all of them. Types nested under another type are hidden (Providence limitation).",
+        "Shows in the \"New\" menu only the selected types. None selected: all of them.",
         Kind::SubtypeList,
-        NEW_MENU_TYPES,
+        NEW_MENU_SUBTYPE_TYPES,
     ),
     Setting::per_type(
         "navigation_new_menu_exclude_types",
         "Except these types",
-        "Hides the selected types from the \"New\" menu. It does not hide types nested under another type (Providence limitation).",
+        "Hides the selected types from the \"New\" menu.",
         Kind::SubtypeList,
-        SUBTYPE_FILTER_TYPES,
+        NEW_MENU_SUBTYPE_TYPES,
     ),
 ];
 
@@ -374,17 +328,19 @@ const FIND_MENU_SETTINGS: &[Setting] = &[
     Setting::per_type(
         "breakout_find_by_type_in_menu",
         "Types in the menu",
-        "Replaces the data type with one entry for each of its types in the \"Find\" menu.",
+        "Replaces the data type with one entry for each of its types in the \"Find\" menu. It turns off \"Types in a submenu\".",
         Kind::Boolean,
         BREAKOUT_TYPES,
-    ),
+    )
+    .excludes("breakout_find_by_type_in_submenu"),
     Setting::per_type(
         "breakout_find_by_type_in_submenu",
         "Types in a submenu",
-        "Keeps the data type in the \"Find\" menu and adds its types in a submenu.",
+        "Keeps the data type in the \"Find\" menu and adds its types in a submenu. It turns off \"Types in the menu\".",
         Kind::Boolean,
-        BREAKOUT_TYPES,
-    ),
+        BREAKOUT_SUBMENU_TYPES,
+    )
+    .excludes("breakout_find_by_type_in_menu"),
     Setting::per_type(
         "navigation_find_menu_limit_types_to",
         "Only these types",
@@ -413,7 +369,7 @@ const IDENTIFIER_SETTINGS: &[Setting] = &[
     Setting::per_type(
         "require_valid_id_number_for",
         "Valid identifier required",
-        "Does not allow saving a record whose identifier does not follow the configured format.",
+        "Does not allow saving a record whose identifier does not follow the format of its type. With a free text format any identifier is valid, even an empty one. Records saved before keep their identifier, but cannot be saved again until it is corrected.",
         Kind::Boolean,
         VALID_ID_TYPES,
     )
@@ -422,7 +378,7 @@ const IDENTIFIER_SETTINGS: &[Setting] = &[
     Setting::per_type(
         "allow_duplicate_id_number_for",
         "Duplicate identifiers",
-        "Allows two records to have the same identifier.",
+        "Allows two records to have the same identifier. Turning it off does not change the records that already share one: a new record just cannot repeat it.",
         Kind::Boolean,
         DUPLICATE_ID_TYPES,
     )
@@ -451,7 +407,7 @@ const LABEL_SETTINGS: &[Setting] = &[
     Setting::per_type(
         "warn_when_preferred_label_exists",
         "Duplicate name warning",
-        "Warns on save if a record with the same name already exists.",
+        "While the name is typed, warns if another record already has it. It does not prevent saving.",
         Kind::Boolean,
         &["ca_entities"],
     ),
@@ -475,13 +431,6 @@ const HIERARCHY_SETTINGS: &[Setting] = &[
     )
     .inverted(),
     Setting::per_type(
-        "show_add_child_control_in_inspector",
-        "Add child from the inspector",
-        "Shows the control to create a child record in the inspector.",
-        Kind::Boolean,
-        INSPECTOR_TYPES,
-    ),
-    Setting::per_type(
         "x_collections_hierarchy_enabled",
         "Single hierarchy with collections",
         "Shows collections and objects as a single hierarchy.",
@@ -491,162 +440,70 @@ const HIERARCHY_SETTINGS: &[Setting] = &[
     .risk(Risk::Medium),
 ];
 
-const INSPECTOR_SETTINGS: &[Setting] = &[
-    Setting::per_type(
-        "show_related_counts_in_inspector_for",
-        "Related counts",
-        "Related data types whose count is shown in the inspector.",
-        Kind::TableList,
-        INSPECTOR_TYPES,
-    ),
-    Setting::per_type(
-        "inspector_display_idno_sequence_navigation",
-        "Identifier navigation",
-        "Shows links to the previous and next record by identifier in the inspector.",
-        Kind::Boolean,
-        &["ca_objects"],
-    ),
-];
-
 const RESULTS_SETTINGS: &[Setting] = &[
-    Setting::per_type(
-        "results_thumbnail_caption_template",
-        "Thumbnail caption",
-        "Template of the text shown under each thumbnail in the results.",
-        Kind::Text,
-        CAPTION_TYPES,
-    ),
     Setting::per_type(
         "children_display_mode_in_results",
         "Child records",
-        "Whether results include records nested under other records in the hierarchy.",
+        "Whether the search and browse results include the objects nested under other objects. The quick search (the box at the top of every page) does not apply it yet: Providence has to be changed for that.",
         Kind::Choice(RESULTS_DISPLAY_OPTIONS),
         &["ca_objects"],
     ),
     Setting::per_type(
         "deaccession_display_mode_in_results",
         "Deaccessioned records",
-        "Whether results include deaccessioned records.",
+        "Whether the search and browse results include the deaccessioned records. The quick search (the box at the top of every page) does not apply it yet: Providence has to be changed for that.",
         Kind::Choice(RESULTS_DISPLAY_OPTIONS),
-        &["ca_objects"],
+        DEACCESSION_TYPES,
     ),
 ];
-
-const ID_FORMAT_SETTINGS: &[Setting] = &[Setting::per_type(
-    "formats",
-    "Identifier format",
-    "Parts of the identifier (fixed text, year, serial number, list...) and their separator, by type.",
-    Kind::Structured,
-    ID_FORMAT_TYPES,
-)
-.nested()
-.risk(Risk::Medium)];
 
 // ---------------------------------------------------------------- Configuraciones globales
 
-const SEARCH_SETTINGS: &[Setting] = &[
+const REPORT_SETTINGS: &[Setting] = &[
+    // Providence solo pone la búsqueda en el encabezado si el encabezado está activo
     Setting::global(
-        "quicksearch_default_results",
-        "Quick search",
-        "Data types included in the quick search, in the order they are shown.",
-        Kind::TableList,
-    ),
-    Setting::global(
-        "quicksearch_breakout_by_type",
-        "Quick search by type",
-        "Data types whose quick search results are split by type.",
-        Kind::TableList,
-    ),
-    Setting::global(
-        "autocomplete_minimum_search_length",
-        "Autocomplete",
-        "Minimum number of characters before autocomplete suggests related records.",
-        Kind::Number,
-    ),
-];
-
-const VISUAL_IDENTITY_SETTINGS: &[Setting] = &[
-    Setting::global(
-        "menu_color",
-        "Menu color",
-        "Color of the menu bar.",
-        Kind::Color,
-    ),
-    Setting::global(
-        "footer_color",
-        "Footer color",
-        "Color of the page footer.",
-        Kind::Color,
-    ),
-    Setting::global(
-        "report_header_enabled",
-        "Report header",
-        "Adds a header to PDF result reports.",
+        "excel_report_show_search_term",
+        "Search in Excel downloads",
+        "Adds the search at the top of each page of the Excel files downloaded from the results. It is seen when printing the sheet.",
         Kind::Boolean,
-    ),
+    )
+    .linked(&["excel_report_header_enabled"]),
     Setting::global(
-        "report_color",
-        "Header color",
-        "Background color of the report header.",
-        Kind::Color,
-    ),
-    Setting::global(
-        "report_text_color",
-        "Header text color",
-        "Text color of the report header.",
-        Kind::Color,
+        "excel_report_footer_enabled",
+        "Footer in Excel downloads",
+        "Adds the data type, the page number and the date at the bottom of each page of the Excel files downloaded from the results. It is seen when printing the sheet.",
+        Kind::Boolean,
     ),
     Setting::global(
         "report_include_labels_in_docx_output",
-        "Labels in Word reports",
-        "Includes the name of each field next to its value in Word reports.",
+        "Field names in Word downloads",
+        "Writes the name of each field next to its value in the Word files downloaded from the results and from the summary of a record.",
         Kind::Boolean,
     ),
 ];
 
-const DEACCESSION_SETTINGS: &[Setting] = &[
-    Setting::global(
-        "deaccession_force_access_private",
-        "Private on deaccession",
-        "Makes a record private (not public) when it is deaccessioned.",
-        Kind::Boolean,
-    )
-    .risk(Risk::Medium),
-    Setting::global(
-        "deaccession_dont_allow_editing",
-        "Editing deaccessioned records",
-        "Allows editing deaccessioned records.",
-        Kind::Boolean,
-    )
-    .inverted()
-    .risk(Risk::Medium),
-];
+const DEACCESSION_SETTINGS: &[Setting] = &[Setting::global(
+    "deaccession_dont_allow_editing",
+    "Editing deaccessioned records",
+    "Allows editing deaccessioned records.",
+    Kind::Boolean,
+)
+.inverted()
+.risk(Risk::Medium)];
 
 const OPTIONAL_MODULE_SETTINGS: &[Setting] = &[
     Setting::global(
         "enable_library_services",
-        "Library services",
-        "Enables library services (lending objects to users).",
+        "Library",
+        "Adds the \"Library\" menu to check objects out and in. Users also need the check out or check in permission of their role.",
         Kind::Boolean,
     )
-    .risk(Risk::Medium),
-    Setting::global(
-        "enable_object_checkout",
-        "Object checkout",
-        "Enables recording the checkout and return of objects.",
-        Kind::Boolean,
-    )
+    .linked(&["enable_object_checkout"])
     .risk(Risk::Medium),
     Setting::global(
         "enable_user_generated_content",
         "User generated content",
-        "Allows moderating comments, tags and ratings made by users.",
-        Kind::Boolean,
-    ),
-    Setting::global(
-        "enable_dependent_field_visibility",
-        "Dependent fields",
-        "Shows or hides editor fields according to the value of other fields.",
+        "Allows moderating the comments, tags and ratings made by users, in Management panel → Content and community → User generated content.",
         Kind::Boolean,
     ),
 ];
@@ -701,44 +558,6 @@ const ACCESS_CONTROL_SETTINGS: &[Setting] = &[
         Kind::Choice(BUNDLE_ACCESS_OPTIONS),
     )
     .risk(Risk::High),
-];
-
-const MENU_ORDER_SETTINGS: &[Setting] = &[
-    Setting::global(
-        "navigation/New/navigation",
-        "\"New\" menu",
-        "Items of the \"New\" menu, in the order they are shown. The order of the items of a list is edited in the list editor.",
-        Kind::KeyOrder,
-    )
-    .risk(Risk::Medium),
-    Setting::global(
-        "navigation/find/navigation",
-        "\"Find\" menu",
-        "Items of the \"Find\" menu, in the order they are shown.",
-        Kind::KeyOrder,
-    )
-    .risk(Risk::Medium),
-];
-
-const TRANSLATION_SETTINGS: &[Setting] = &[
-    Setting::global(
-        "strings",
-        "Replaced texts",
-        "Interface texts that are fully replaced by others (matching is case sensitive).",
-        Kind::Structured,
-    ),
-    Setting::global(
-        "replacements",
-        "Replaced fragments",
-        "Fragments replaced inside any interface text. Use sparingly: it affects performance.",
-        Kind::Structured,
-    ),
-    Setting::global(
-        "fields",
-        "Field names",
-        "Name and description of the built-in fields of each data type (for example, the identifier).",
-        Kind::Structured,
-    ),
 ];
 
 // ---------------------------------------------------------------- Secciones
@@ -804,14 +623,6 @@ pub const SECTIONS: &[Section] = &[
         IDENTIFIER_SETTINGS,
     ),
     section(
-        "id_formats",
-        "Identifier formats",
-        "How the identifier of each data type is built automatically.",
-        ID_NUMBERING_CONF,
-        Scope::DataType,
-        ID_FORMAT_SETTINGS,
-    ),
-    section(
         "labels",
         "Names",
         "Rules for the name (preferred label) of records.",
@@ -828,14 +639,6 @@ pub const SECTIONS: &[Section] = &[
         HIERARCHY_SETTINGS,
     ),
     section(
-        "inspector",
-        "Inspector",
-        "What the side panel of each record shows.",
-        APP_CONF,
-        Scope::DataType,
-        INSPECTOR_SETTINGS,
-    ),
-    section(
         "results",
         "Results",
         "How search and browse results are shown.",
@@ -844,36 +647,12 @@ pub const SECTIONS: &[Section] = &[
         RESULTS_SETTINGS,
     ),
     section(
-        "menu_order",
-        "Menu order",
-        "In which order menu items are shown.",
-        NAVIGATION_CONF,
-        Scope::Global,
-        MENU_ORDER_SETTINGS,
-    ),
-    section(
-        "search",
-        "Search",
-        "Quick search and autocomplete.",
+        "reports",
+        "Downloads",
+        "Files downloaded from the results of a search or browse, and from the summary of a record.",
         APP_CONF,
         Scope::Global,
-        SEARCH_SETTINGS,
-    ),
-    section(
-        "visual_identity",
-        "Visual identity",
-        "Colors of the interface and the reports.",
-        APP_CONF,
-        Scope::Global,
-        VISUAL_IDENTITY_SETTINGS,
-    ),
-    section(
-        "translations",
-        "Texts and translations",
-        "Interface texts adapted to the terminology of the institution.",
-        TRANSLATIONS_CONF,
-        Scope::Global,
-        TRANSLATION_SETTINGS,
+        REPORT_SETTINGS,
     ),
     section(
         "deaccession",

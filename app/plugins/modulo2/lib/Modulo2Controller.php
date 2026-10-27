@@ -68,6 +68,23 @@ abstract class Modulo2Controller extends ActionController {
 		return $valid;
 	}
 	# -------------------------------------------------------
+	/** Nombre y nota de la versión que se guarda con los cambios (version_name, version_note) */
+	protected function versionFromForm() : array {
+		$name = mb_substr(trim($this->rawParameter('version_name')), 0, 255) ?: $this->operator()->versionName();
+		$note = trim($this->rawParameter('version_note'));
+		return ['name' => $name, 'description' => strlen($note) ? $note : null];
+	}
+	# -------------------------------------------------------
+	/**
+	 * Versión del estado anterior que el usuario pidió guardar (casilla save_previous y nombre
+	 * previous_name), o null si no la pidió
+	 */
+	protected function previousVersionFromForm() : ?array {
+		if ($this->rawParameter('save_previous') !== '1') { return null; }
+		$name = mb_substr(trim($this->rawParameter('previous_name')), 0, 255);
+		return ['name' => $name !== '' ? $name : $this->operator()->previousVersionName(), 'description' => null];
+	}
+	# -------------------------------------------------------
 	protected function operator() : Modulo2Operator {
 		return Modulo2Operator::fromRequest($this->request);
 	}
@@ -105,7 +122,8 @@ abstract class Modulo2Controller extends ActionController {
 		$names = [];
 		foreach ($data_types as $data_type) {
 			$instance = Datamodel::getInstance($data_type, true);
-			$names[$data_type] = $instance ? (string)$instance->getProperty('NAME_PLURAL') : $data_type;
+			// Se traduce de nuevo: si Providence cargó el modelo antes de elegir el idioma, el nombre quedó en inglés
+			$names[$data_type] = $instance ? _t((string)$instance->getProperty('NAME_PLURAL')) : $data_type;
 		}
 		return $names;
 	}

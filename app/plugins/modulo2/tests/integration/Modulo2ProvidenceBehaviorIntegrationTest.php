@@ -1,47 +1,23 @@
 <?php
 /* ----------------------------------------------------------------------
  * app/plugins/modulo2/tests/integration/Modulo2ProvidenceBehaviorIntegrationTest.php :
- * Qué hace Providence con cada configuración del catálogo (#1 a #4): se escribe en app/conf/local y se
- * mira el resultado con el código de Providence (la barra de menú real, el buscador de relaciones,
- * el borrado). app/conf/local queda como estaba al terminar.
+ * Qué hace Providence con las configuraciones de tipos de dato, funciones, menús y módulos opcionales:
+ * se escriben en app/conf/local y se mira el resultado con el código de Providence (la barra de menú
+ * real, el buscador de relaciones, el borrado). Las de registros están en sus propias pruebas.
  * ----------------------------------------------------------------------
  */
-require_once(__CA_APP_DIR__.'/plugins/modulo2/lib/Modulo2LocalConfig.php');
-require_once(__CA_LIB_DIR__.'/AppNavigation.php');
+require_once(__CA_APP_DIR__.'/plugins/modulo2/tests/support/Modulo2BehaviorTestCase.php');
 require_once(__CA_LIB_DIR__.'/Service/ItemService.php');
 require_once(__CA_LIB_DIR__.'/Search/QuickSearch.php');
 require_once(__CA_APP_DIR__.'/controllers/lookup/EntityController.php');
+require_once(__CA_APP_DIR__.'/plugins/modulo2/controllers/ManageController.php');
+require_once(__CA_APP_DIR__.'/plugins/modulo2/lib/Modulo2ManageHub.php');
+require_once(__CA_APP_DIR__.'/plugins/modulo2/lib/Modulo2ManageMap.php');
 
 use PHPUnit\Framework\Attributes\TestDox;
-use PHPUnit\Framework\TestCase;
 
-#[TestDox('Módulo 2 · efecto de las configuraciones en Providence')]
-final class Modulo2ProvidenceBehaviorIntegrationTest extends TestCase {
-	# -------------------------------------------------------
-	/** Usuario con todos los permisos de la instalación de desarrollo */
-	const ADMIN_ID = 1;
-	/** Identificador de los registros que crean las pruebas */
-	const TEST_IDNO = 'M2TEST';
-	# -------------------------------------------------------
-	private Modulo2LocalConfig $local;
-	private array $previous_files;
-	/** Registros y subtipos creados por la prueba, para borrarlos al final */
-	private array $created = [];
-	# -------------------------------------------------------
-	protected function setUp() : void {
-		global $AUTH_CURRENT_USER_ID;
-		$AUTH_CURRENT_USER_ID = self::ADMIN_ID;
-		if (!(new ca_users(self::ADMIN_ID))->getPrimaryKey()) { $this->markTestSkipped('La instalación no tiene el usuario '.self::ADMIN_ID); }
-		$this->local = new Modulo2LocalConfig();
-		$this->previous_files = $this->local->files();
-		$this->configure([]);
-	}
-	# -------------------------------------------------------
-	protected function tearDown() : void {
-		foreach (array_reverse($this->created) as $instance) { $instance->setMode(ACCESS_WRITE); $instance->delete(true, ['hard' => true]); }
-		$this->local->replaceAll($this->previous_files);
-		Modulo2ConfigValues::clearCaches();
-	}
+#[TestDox('Módulo 2 · efecto de las configuraciones de tipos de dato, funciones y menús')]
+final class Modulo2ProvidenceBehaviorIntegrationTest extends Modulo2BehaviorTestCase {
 	# -------------------------------------------------------
 	// ---------------------------------------------------------------- #1 Tipos de dato
 	#[TestDox('#1 Un tipo de dato desactivado desaparece de los menús "New" y "Find"; los demás siguen')]
@@ -80,6 +56,20 @@ final class Modulo2ProvidenceBehaviorIntegrationTest extends TestCase {
 		$this->assertContains('Places', $this->menu('Find'));
 	}
 	# -------------------------------------------------------
+	// Recorre el catálogo real: si una clave estuviera mal escrita, Providence la ignoraría sin avisar
+	#[TestDox('#1 Cada tipo de dato del catálogo se desactiva con su clave y sus opciones salen de la barra de menú')]
+	public function testEveryCatalogDataTypeIsDisabledByItsKey() : void {
+		foreach ($this->catalogEntries('data_types', 'disable') as $table => $key) {
+			$this->configure([$key => 0]);
+			$enabled = $this->menuBarLinkCount();
+			$this->assertTrue(caTableIsActive($table), $table);
+
+			$this->configure([$key => 1]);
+			$this->assertFalse(caTableIsActive($table), $table);
+			$this->assertLessThan($enabled, $this->menuBarLinkCount(), "{$table} sigue en la barra de menú");
+		}
+	}
+	# -------------------------------------------------------
 	// ---------------------------------------------------------------- #2 Funciones por tipo de dato
 	#[TestDox('#2 Búsqueda básica, búsqueda avanzada, constructor de búsquedas y navegación salen del menú "Find" de ese tipo de dato')]
 	public function testSearchFeaturesLeaveTheFindMenu() : void {
@@ -90,6 +80,9 @@ final class Modulo2ProvidenceBehaviorIntegrationTest extends TestCase {
 
 		$this->assertSame([$paths[0], $paths[2]], array_values(array_filter($paths, fn($path) => $this->findHasLink($path))));
 		$this->assertTrue($this->findHasLink('find/BrowseObjects/Index'), 'Los demás tipos de dato no cambian');
+
+		$this->configure(['ca_entities_disable_basic_search' => 1, 'ca_entities_disable_search_builder' => 1]);
+		$this->assertSame([$paths[1], $paths[3]], array_values(array_filter($paths, fn($path) => $this->findHasLink($path))));
 	}
 	# -------------------------------------------------------
 	// El botón "Delete" del editor se muestra según isDeletable
@@ -112,6 +105,17 @@ final class Modulo2ProvidenceBehaviorIntegrationTest extends TestCase {
 		$this->configure(['ca_entities_disable_quickadd' => 1]);
 
 		$this->assertFalse($this->lookupOffersCreate('Zzqx nobody'));
+	}
+	# -------------------------------------------------------
+	// El inspector de un conjunto ofrece duplicar sus ítems ("Duplicate items in this set and add to")
+	#[TestDox('#2 Sin duplicar ítems, el inspector de un conjunto ya no ofrece duplicarlos')]
+	public function testDisableDuplicationHidesTheSetOption() : void {
+		$set = $this->createSet();
+		$this->assertStringContainsString('caDupeSetItemsForm', $this->setInspector($set));
+
+		$this->configure(['ca_sets_disable_duplication_of_items' => 1]);
+
+		$this->assertStringNotContainsString('caDupeSetItemsForm', $this->setInspector($set));
 	}
 	# -------------------------------------------------------
 	// ---------------------------------------------------------------- #3 Menú "New"
@@ -146,8 +150,8 @@ final class Modulo2ProvidenceBehaviorIntegrationTest extends TestCase {
 		$this->assertContains('Painting', $this->menu('New'));
 	}
 	# -------------------------------------------------------
-	// Limitación de Providence (BaseEditorController::_getSubTypes compara códigos con ids y usa la lista
-	// equivocada para excluir): si la corrigen, esta prueba avisa para actualizar la ayuda del catálogo
+	// Limitación de Providence (BaseEditorController::_genTypeNav filtra solo los subtipos de primer nivel
+	// y _getSubTypes usa la lista equivocada para excluir): si la corrigen, esta prueba avisa
 	#[TestDox('#3 Limitación de Providence: los filtros de subtipos de "New" no se aplican bien a los subtipos que dependen de otro')]
 	public function testNewMenuFiltersIgnoreNestedTypes() : void {
 		$this->createNestedType('painting', 'm2test_fresco', 'M2 fresco');
@@ -157,6 +161,59 @@ final class Modulo2ProvidenceBehaviorIntegrationTest extends TestCase {
 
 		$this->configure(['ca_objects_navigation_new_menu_limit_types_to' => ['painting', 'm2test_fresco']]);
 		$this->assertNotContains('M2 fresco', $this->menu('New'), 'Limitar saca los subtipos anidados aunque estén en la lista');
+	}
+	# -------------------------------------------------------
+	// Lugares y ubicaciones no tienen subtipos en "New" (abren su jerarquía): el catálogo no les ofrece filtros
+	#[TestDox('#3 En cada tipo de dato del catálogo, "Only these types" deja en "New" el subtipo elegido')]
+	public function testEveryCatalogNewMenuLimitShowsTheChosenType() : void {
+		foreach ($this->catalogEntries('new_menu', 'navigation_new_menu_limit_types_to') as $table => $key) {
+			$type = $this->topLevelType($table);
+			$this->configure([$table.'_disable' => 0, $key => [$type['idno']]]);
+
+			// Providence muestra algunos nombres con la primera letra en mayúscula
+			$this->assertContains(mb_strtolower($type['name_singular']), array_map('mb_strtolower', $this->menu('New')), $table);
+		}
+	}
+	# -------------------------------------------------------
+	// Por ejemplo, los hechos: de fábrica sus subtipos (Exhibition, Publication...) están sueltos en "New"
+	#[TestDox('#3 En cada tipo de dato del catálogo, "Subtipos en un submenú" agrupa sus subtipos en "New" debajo del tipo de dato')]
+	public function testEveryCatalogDataTypeGroupsItsTypesInASubmenu() : void {
+		foreach ($this->catalogEntries('new_menu', 'no_new_submenu') as $table => $key) {
+			$this->configure([$table.'_disable' => 0, $key => 0]);
+			$grouped = $this->newMenuGroups();
+
+			$this->configure([$table.'_disable' => 0, $key => 1]);
+			$this->assertSame(count($grouped) - 1, count($this->newMenuGroups()), $table);
+		}
+	}
+	# -------------------------------------------------------
+	// De fábrica Providence muestra los subtipos de hechos sueltos; la instalación los agrupa (initial-app.conf)
+	#[TestDox('#3 Hechos: con la configuración inicial de la instalación sus subtipos quedan agrupados en "New"; sin ella, sueltos')]
+	public function testOccurrenceTypesInTheNewMenu() : void {
+		// Providence muestra algunos nombres con la primera letra en mayúscula
+		$types = array_map('mb_strtolower', array_column(Datamodel::getInstance('ca_occurrences', true)->getTypeList() ?: [], 'name_singular'));
+		$this->assertNotEmpty($types);
+		$new = fn() => array_map('mb_strtolower', $this->menu('New'));
+
+		$this->configure([]);
+		$loose = $this->newMenuGroups();
+		$this->assertSame([], array_diff($types, $new()), 'De fábrica: los subtipos están en "New"');
+
+		$this->configure([], ['app.conf' => file_get_contents(__CA_BASE_DIR__.'/docker/providence/initial-app.conf')]);
+		$groups = $this->newMenuGroups();
+		$this->assertCount(1, array_diff($groups, $loose), 'Aparece el grupo de los hechos');
+		$this->assertSame([], array_diff($types, $new()), 'Los subtipos siguen en "New", dentro del grupo');
+	}
+	# -------------------------------------------------------
+	#[TestDox('#4 Hechos: con la configuración inicial de la instalación aparecen en "Find" con sus subtipos en un submenú; sin ella, solo sus subtipos')]
+	public function testOccurrencesInTheFindMenu() : void {
+		$name = _t('Occurrences');
+		$this->assertNotContains($name, $this->menu('Find'), 'De fábrica se muestran sus subtipos en lugar de los hechos');
+
+		$this->configure([], ['app.conf' => file_get_contents(__CA_BASE_DIR__.'/docker/providence/initial-app.conf')]);
+
+		$this->assertContains($name, $this->menu('Find'));
+		$this->assertTrue((bool)array_filter($this->menuLinks('Find'), fn($link) => str_contains($link[1], 'SearchOccurrences') && str_contains($link[1], 'type_id')), 'Con sus subtipos en un submenú');
 	}
 	# -------------------------------------------------------
 	// ---------------------------------------------------------------- #4 Menú "Find"
@@ -191,40 +248,71 @@ final class Modulo2ProvidenceBehaviorIntegrationTest extends TestCase {
 		$this->assertContains('Objects', $this->menu('Find'), 'Sin subtipos en el menú no cambia nada');
 	}
 	# -------------------------------------------------------
+	// Regresión: Providence arma mal el submenú de las representaciones y daba un error fatal en todas las páginas
+	#[TestDox('#4 Cada tipo de dato del catálogo se puede mostrar por subtipos en "Find" sin romper la barra de menú')]
+	public function testEveryCatalogBreakoutRendersTheMenuBar() : void {
+		foreach (['breakout_find_by_type_in_menu', 'breakout_find_by_type_in_submenu'] as $setting) {
+			foreach ($this->catalogEntries('find_menu', $setting) as $table => $key) {
+				$this->configure([$table.'_disable' => 0, $key => 1]);
+
+				$this->assertNotEmpty($this->menu('Find'), $key);
+			}
+		}
+	}
+	# -------------------------------------------------------
+	#[TestDox('#4 "Shown in the menu" en no saca las representaciones del menú "Find", pero siguen activas')]
+	public function testDontShowRepresentationsInFindMenu() : void {
+		$this->configure(['ca_object_representations_disable' => 0]);
+		$this->assertContains('Representations', $this->menu('Find'));
+
+		$this->configure(['ca_object_representations_disable' => 0, 'ca_object_representations_dont_show_in_find_menu' => 1]);
+
+		$this->assertNotContains('Representations', $this->menu('Find'));
+		$this->assertTrue(caTableIsActive('ca_object_representations'));
+	}
+	# -------------------------------------------------------
+	// ---------------------------------------------------------------- Módulos opcionales
+	// Por eso el catálogo las une en una sola configuración, "Biblioteca"
+	#[TestDox('El menú "Library" aparece solo con las dos claves de la biblioteca activas')]
+	public function testLibraryMenuNeedsBothKeys() : void {
+		$this->configure(['enable_library_services' => 1]);
+		$this->assertSame([], $this->menu('Library'));
+
+		$this->configure(['enable_object_checkout' => 1]);
+		$this->assertSame([], $this->menu('Library'));
+
+		$this->configure(['enable_library_services' => 1, 'enable_object_checkout' => 1]);
+		$this->assertNotEmpty($this->menu('Library'));
+	}
+	# -------------------------------------------------------
+	// En Providence la sección está en Manage; el módulo la muestra en el panel de gestión
+	#[TestDox('"Contenido de usuarios" agrega su sección al panel de gestión, y sin él la sección no está')]
+	public function testUserContentSection() : void {
+		$this->configure(['enable_user_generated_content' => 0]);
+		$this->assertNotContains('user_generated_content', $this->panelSections());
+
+		$this->configure(['enable_user_generated_content' => 1]);
+		$this->assertContains('user_generated_content', $this->panelSections());
+	}
+	# -------------------------------------------------------
 	// ---------------------------------------------------------------- Ayudas
-	/** Deja app/conf/local/app.conf con estas claves (sin otras) y descarta lo que Providence ya leyó */
-	private function configure(array $settings) : void {
-		$this->local->replaceAll([]);
-		$lines = array_map(fn($key, $value) => $key.' = '.(is_array($value) ? '['.join(', ', $value).']' : $value), array_keys($settings), $settings);
-		if ($lines) { $this->local->write('app.conf', join("\n", $lines)."\n"); }
-		Modulo2ConfigValues::clearCaches();
-		MemoryCache::flush();
+	/** Opciones de "New" que agrupan subtipos en un submenú (enlazan a "#") */
+	private function newMenuGroups() : array {
+		return array_column(array_filter($this->menuLinks('New'), fn($link) => $link[1] === '#'), 0);
 	}
 	# -------------------------------------------------------
-	/** Petición de Providence con el usuario administrador */
-	private function request() : RequestHTTP {
-		$request = new RequestHTTP(new ResponseHTTP());
-		$request->user = new ca_users(self::ADMIN_ID);
-		return $request;
+	/** Secciones del panel de gestión que ve el administrador */
+	private function panelSections() : array {
+		$user = new ca_users(self::ADMIN_ID);
+		$hub = new Modulo2ManageHub(ManageController::manageNavigation(), fn($action) => $user->canDoAction($action), fn($key) => Configuration::load()->get($key));
+		return array_merge([], ...array_map(fn($group) => array_column($group['sections'], 'id'), array_values($hub->groups(Modulo2ManageMap::groups()))));
 	}
 	# -------------------------------------------------------
-	/** Nombres de las opciones de un menú de la barra principal ("New" o "Find"), como los arma Providence */
-	private function menu(string $name) : array {
-		return array_column($this->menuLinks($name), 0);
-	}
-	# -------------------------------------------------------
-	/** [[nombre, enlace]] de las opciones de un menú de la barra principal */
-	private function menuLinks(string $name) : array {
+	/** Cantidad de enlaces de toda la barra de menú */
+	private function menuBarLinkCount() : int {
 		$request = $this->request();
 		AppNavigation::clearMenuBarCache($request);
-		$html = (new AppNavigation($request, new ResponseHTTP()))->getHTMLMenuBar('menuBar');
-		foreach (preg_split("/^<li>\n\t<a href='#'>/m", $html, -1, PREG_SPLIT_NO_EMPTY) as $block) {
-			[$title, $items] = array_pad(explode('</a>', $block, 2), 2, '');
-			if (trim($title) !== _t($name)) { continue; }
-			preg_match_all("!<a href='([^']*)'[^>]*>([^<]*)</a>!", $items, $matches);
-			return array_map(fn($label, $href) => [trim($label), $href], $matches[2], $matches[1]);
-		}
-		return [];
+		return substr_count((new AppNavigation($request, new ResponseHTTP()))->getHTMLMenuBar('menuBar'), '<a href=');
 	}
 	# -------------------------------------------------------
 	private function findHasLink(string $path) : bool {
@@ -251,7 +339,7 @@ final class Modulo2ProvidenceBehaviorIntegrationTest extends TestCase {
 		$data = ['intrinsic_fields' => ['type_id' => $type, 'idno' => self::TEST_IDNO.'-'.bin2hex(random_bytes(3))], 'preferred_labels' => [$label + ['locale' => 'en_US']]];
 		$ids = (new ItemService($this->request(), $table))->addItem($table, $data);
 		$this->assertNotEmpty($ids, "No se pudo crear el registro de prueba en {$table}");
-		return $this->created[] = Datamodel::getInstance($table, false, array_shift($ids));
+		return $this->track(Datamodel::getInstance($table, false, array_shift($ids)));
 	}
 	# -------------------------------------------------------
 	/** Agrega un subtipo de objeto debajo de otro; se borra al terminar */
@@ -262,12 +350,43 @@ final class Modulo2ProvidenceBehaviorIntegrationTest extends TestCase {
 		$item = $list->addItem($code, true, false, $list->getItemIDFromList('object_types', $parent), null, $code);
 		$this->assertNotNull($item, 'No se pudo crear el subtipo de prueba');
 		$item->addLabel(['name_singular' => $name, 'name_plural' => $name], ca_locales::codeToID('en_US'), null, true);
-		$this->created[] = $item;
+		$this->track($item);
 		MemoryCache::flush();
 	}
 	# -------------------------------------------------------
 	private function recordCount(string $table) : int {
 		return (int)(new Db())->query("SELECT COUNT(*) c FROM {$table} WHERE deleted = 0")->getAllFieldValues('c')[0];
+	}
+	# -------------------------------------------------------
+	/** Primer subtipo de primer nivel de un tipo de dato: ['idno' => ..., 'name_singular' => ...] */
+	private function topLevelType(string $table) : array {
+		$types = Datamodel::getInstance($table, true)->getTypeList(['directChildrenOnly' => true]);
+		$this->assertNotEmpty($types, "{$table} no tiene subtipos");
+		return array_shift($types);
+	}
+	# -------------------------------------------------------
+	/**
+	 * Conjunto de prueba; se borra al terminar. Es de ítems de lista porque ca_sets quita para siempre de
+	 * sus opciones los tipos de dato que encuentra desactivados, y otras pruebas los desactivan
+	 */
+	private function createSet() : ca_sets {
+		$set = new ca_sets();
+		$set->setMode(ACCESS_WRITE);
+		$set->set('table_num', Datamodel::getTableNum('ca_list_items'));
+		$set->set(['type_id' => $set->getDefaultTypeID(), 'set_code' => strtolower(self::TEST_IDNO).'_'.bin2hex(random_bytes(3)), 'user_id' => self::ADMIN_ID]);
+		$set->insert();
+		$this->assertGreaterThan(0, (int)$set->getPrimaryKey(), 'No se pudo crear el conjunto de prueba: '.join('; ', $set->getErrors()));
+		return $this->track($set);
+	}
+	# -------------------------------------------------------
+	/** Inspector del editor de conjuntos, como lo arma Providence */
+	private function setInspector(ca_sets $set) : string {
+		$request = $this->request();
+		$view = new View($request, $request->getViewsDirectoryPath());
+		$view->setVar('t_item', new ca_sets($set->getPrimaryKey()));
+		$view->setVar('result_context', new ResultContext($request, 'ca_sets', 'basic_search'));
+		$view->setVar('ancestors', []);
+		return caEditorInspector($view);
 	}
 	# -------------------------------------------------------
 }

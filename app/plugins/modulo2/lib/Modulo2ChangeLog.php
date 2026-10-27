@@ -24,7 +24,7 @@ class Modulo2ChangeLog {
 	# -------------------------------------------------------
 	private function row(array $change) : array {
 		$row = ['when' => Modulo2Dates::friendly((int)$change['changed_at']), 'who' => (string)($change['user']['name'] ?? ''),
-			'result' => $change['result'], 'message' => $change['message'], 'detail' => '', 'before' => null, 'after' => null];
+			'result' => $change['result'], 'message' => self::message($change['message']), 'detail' => '', 'before' => null, 'after' => null];
 		if ($change['action'] === 'restore') {
 			$number = $change['version_after_number'] ?? null;
 			return ['what' => $number ? Modulo2I18n::t('Restore of version %1', $number) : Modulo2I18n::t('Restore of a deleted version')] + $row;
@@ -39,14 +39,24 @@ class Modulo2ChangeLog {
 		] + $row;
 	}
 	# -------------------------------------------------------
+	/** Motivo en el idioma del usuario: el servicio lo guarda en inglés */
+	private static function message(?string $message) : ?string {
+		return $message === null ? null : Modulo2I18n::message($message);
+	}
+	# -------------------------------------------------------
 	/** Valor legible; uno rechazado puede no tener el tipo de la configuración y se muestra tal cual */
 	private function text($value, array $setting) : ?string {
 		if ($value === null) { return null; }
-		try {
-			return Modulo2ValueFormatter::text($value, $setting, $this->names);
-		} catch (TypeError $e) {
-			return json_encode($value, JSON_UNESCAPED_UNICODE);
+		if (!self::fitsKind($value, (string)($setting['kind'] ?? ''))) { return json_encode($value, JSON_UNESCAPED_UNICODE); }
+		return Modulo2ValueFormatter::text($value, $setting, $this->names);
+	}
+	# -------------------------------------------------------
+	private static function fitsKind($value, string $kind) : bool {
+		switch ($kind) {
+			case Modulo2Constants::KIND_BOOLEAN: return is_bool($value);
+			case Modulo2Constants::KIND_SUBTYPE_LIST: return is_array($value);
 		}
+		return is_scalar($value);
 	}
 	# -------------------------------------------------------
 }

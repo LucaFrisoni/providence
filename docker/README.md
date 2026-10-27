@@ -83,6 +83,24 @@ menos de un minuto. Para seguir el progreso: `docker compose logs -f providence`
 
 Ingresar con `CA_ADMIN_USERNAME` y `CA_ADMIN_PASSWORD` de `.env`.
 
+Al instalar Providence, el entrypoint copia [initial-app.conf](providence/initial-app.conf) a
+`app/conf/local/app.conf`: la configuración inicial de la instalación (por ahora, los hechos agrupan sus
+subtipos en un submenú de "Nuevo" y de "Encontrar"). Después se administra desde el módulo 2.
+
+En cada arranque, [repair-installation.php](providence/repair-installation.php) corrige y completa el
+perfil de Providence; si no hay nada que hacer no cambia nada. Agrega el nombre en castellano de los
+subtipos de hechos, que el perfil trae solo en inglés y francés, y corrige un error del perfil `default`: la pantalla de entidades tiene un campo de un elemento de metadatos que el
+perfil ya no crea (`ca_attribute_lifespan`), y cada guardado mostraba "'ca_attribute_lifespan' no
+existe en este objeto". Lo reemplaza por el campo propio de las entidades (`lifespan`). Lo verifica
+`ProvidenceInstallationTest`.
+
+El pie de página de Providence tiene estilos propios en
+[themes/default/css/local.css](../themes/default/css/local.css), el archivo que Providence carga después
+de los estilos del tema para los ajustes de cada instalación. Ese archivo importa
+[administration.css](../themes/default/css/administration.css), que da a las pantallas de
+Administración el aspecto del módulo 2. Como son parte del tema, un cambio ahí necesita
+`docker compose up -d --build providence`.
+
 Cada módulo que ya tiene plugin agrega su menú en la barra principal (el del módulo 2 ocupa
 el lugar de **Manage** y se llama **Management**).
 

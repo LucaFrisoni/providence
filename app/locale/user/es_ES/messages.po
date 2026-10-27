@@ -1,0 +1,12 @@
+# Traducciones propias de la instalación para es_ES. Providence las carga además de app/locale/es_ES
+# (initializeLocale.php: app/locale/user/<idioma>/messages.mo).
+# Completan las que la traducción de Providence tiene marcadas como dudosas (fuzzy), que no se usan.
+# messages.mo se genera desde este archivo con gettext: msgfmt messages.po -o messages.mo
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Language: es_ES\n"
+
+# Menú "Nuevo" (navigation.conf): la traducción de Providence es dudosa ("Localizaciones")
+msgid "Storage location"
+msgstr "Localización"

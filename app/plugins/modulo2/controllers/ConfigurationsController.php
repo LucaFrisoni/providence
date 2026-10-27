@@ -2,18 +2,19 @@
 /* ----------------------------------------------------------------------
  * app/plugins/modulo2/controllers/ConfigurationsController.php :
  * Configuraciones del catálogo: la lista, donde se cambian en el lugar (Index, con su barra lateral en
- * Info), y el guardado de todos los cambios juntos (Save).
+ * Info), el guardado de todos los cambios juntos (Save) y el campo de baja de las pantallas de edición
+ * (DeaccessionField), que se aplica al instante.
  * ----------------------------------------------------------------------
  */
 require_once(__CA_APP_DIR__.'/plugins/modulo2/lib/Modulo2Controller.php');
 require_once(__CA_APP_DIR__.'/plugins/modulo2/lib/Modulo2ConfigValues.php');
 require_once(__CA_APP_DIR__.'/plugins/modulo2/lib/Modulo2CatalogMatrix.php');
 require_once(__CA_APP_DIR__.'/plugins/modulo2/lib/Modulo2ValueFormatter.php');
-require_once(__CA_APP_DIR__.'/plugins/modulo2/lib/Modulo2DatabaseConfiguration.php');
 require_once(__CA_APP_DIR__.'/plugins/modulo2/lib/Modulo2FormValue.php');
 require_once(__CA_APP_DIR__.'/plugins/modulo2/lib/Modulo2Editor.php');
 require_once(__CA_APP_DIR__.'/plugins/modulo2/lib/Modulo2EditorData.php');
 require_once(__CA_APP_DIR__.'/plugins/modulo2/lib/Modulo2Ui.php');
+require_once(__CA_APP_DIR__.'/plugins/modulo2/lib/Modulo2DeaccessionField.php');
 
 class ConfigurationsController extends Modulo2Controller {
 	# -------------------------------------------------------
@@ -31,12 +32,9 @@ class ConfigurationsController extends Modulo2Controller {
 			$names = $this->dataTypeNames(Modulo2CatalogMatrix::dataTypes(self::$catalog));
 			$this->view->setVar('catalog', self::$catalog);
 			$this->view->setVar('data_type_names', $names);
-			$this->view->setVar('database_summary', $this->withUrls(Modulo2DatabaseConfiguration::summary()));
 			$this->view->setVar('allowed_risks', $this->operator()->allowedRisks());
-			$this->view->setVar('editor', $this->editorData(self::$catalog, $names));
-			$this->view->setVar('save_url', $this->navUrl('Configurations', 'Save'));
-			$this->view->setVar('csrf_token', caGenerateCSRFToken($this->request));
-			$this->view->setVar('suggested_version_name', $this->operator()->versionName());
+			$this->setEditorVars(self::$catalog, $names);
+			$this->setDeaccessionFieldVars();
 			$this->view->setVar('versions_url', $this->navUrl('Versions'));
 		} catch (Modulo2ServiceException | Modulo2ConfigException $e) {
 			$this->view->setVar('error', $e->getMessage());
@@ -46,7 +44,8 @@ class ConfigurationsController extends Modulo2Controller {
 	# -------------------------------------------------------
 	/**
 	 * Guarda los cambios de la página, todos o ninguno (POST changes: JSON [{file, key, value | reset,
-	 * expected}], version_name y version_note para la versión nueva). Ver Modulo2Editor
+	 * expected}], version_name y version_note para la versión nueva y, si el usuario lo pidió,
+	 * save_previous y previous_name para guardar antes la configuración actual). Ver Modulo2Editor
 	 */
 	public function Save() {
 		if (!$this->allowed() || !$this->validChange(['Configurations'])) { return; }
@@ -54,7 +53,7 @@ class ConfigurationsController extends Modulo2Controller {
 		$edits = [];
 		try {
 			$edits = $this->editsFromForm($this->catalogWithValues());
-			$result = $this->editor()->apply($edits, $this->operator(), $this->versionFromForm());
+			$result = $this->editor()->apply($edits, $this->operator(), $this->versionFromForm(), $this->previousVersionFromForm());
 			$this->notifySave($result, sizeof($edits));
 			if ($result['applied']) { $this->refreshMenuOnNextPage(); }
 		} catch (Modulo2ServiceException $e) {
@@ -66,13 +65,84 @@ class ConfigurationsController extends Modulo2Controller {
 	}
 	# -------------------------------------------------------
 	/**
-	 * Barra lateral: índice de las secciones, agrupadas por alcance (ver modulo2Plugin::hookRenderWidgets)
+	 * Si la configuración actual está guardada en alguna versión, como JSON {saved}. La página lo pide al
+	 * editar y no al abrirse: exportar la configuración en base tarda unos segundos cuando cambió. Si no se
+	 * puede saber, responde que no, así el guardado ofrece conservarla
+	 */
+	public function CurrentSaved() {
+		if (!$this->allowed()) { return; }
+
+		try {
+			$saved = (bool)($this->client()->getStateInfo($this->state()->current())['version'] ?? null);
+		} catch (Modulo2ServiceException | Modulo2ConfigException $e) {
+			$saved = false;
+		}
+		$this->response->addContent(json_encode(['saved' => $saved]));
+	}
+	# -------------------------------------------------------
+	/** Muestra u oculta el campo de baja en las pantallas de edición de un tipo de dato (table, show) */
+	public function DeaccessionField() {
+		if (!$this->allowed() || !$this->validChange(['Configurations'])) { return; }
+
+		$table = $this->rawParameter('table');
+		if (!$this->canEditDeaccessionField() || !in_array($table, Modulo2DeaccessionField::TABLES, true)) {
+			$this->notify(Modulo2I18n::t('Nothing was changed: you are not allowed to change this setting.'), true);
+		} elseif ($this->rawParameter('show') === '1') {
+			Modulo2DeaccessionField::show($table);
+			$this->notify(Modulo2I18n::t('The editing screen of %1 now shows the field to deaccession records.', $this->dataTypeNames([$table])[$table]));
+		} else {
+			Modulo2DeaccessionField::hide($table);
+			$this->notify(Modulo2I18n::t('The editing screen of %1 no longer shows the field to deaccession records.', $this->dataTypeNames([$table])[$table]));
+		}
+		$this->redirectTo('Configurations', 'Index', [], 'm2-section-deaccession');
+	}
+	# -------------------------------------------------------
+	/**
+	 * Barra lateral de las configuraciones, sus versiones y su historial: índice de las secciones, agrupadas por
+	 * alcance, y los enlaces a las versiones y al historial (ver modulo2Plugin::hookRenderWidgets). Fuera de
+	 * la página de configuraciones, las secciones llevan a esa página
 	 */
 	public function Info() {
-		if (!self::$catalog || !$this->request->user->canDoAction(Modulo2Constants::PERMISSION)) { return ''; }
+		if (!$this->request->user->canDoAction(Modulo2Constants::PERMISSION)) { return ''; }
 
-		$this->view->setVar('catalog', self::$catalog);
+		$page = $this->request->getController();
+		$this->view->setVar('catalog', self::$catalog ?? $this->sidebarCatalog());
+		$this->view->setVar('sections_url', $page === 'Configurations' ? '' : $this->navUrl('Configurations'));
+		$this->view->setVar('current_page', $page);
+		$this->view->setVar('versions_url', $this->navUrl('Versions'));
+		$this->view->setVar('history_url', $this->navUrl('Changes'));
 		return $this->render('configurations_info_html.php', true);
+	}
+	# -------------------------------------------------------
+	/** Catálogo para la barra lateral de otra página; si el servicio no responde, solo versiones e historial */
+	private function sidebarCatalog() : array {
+		try {
+			return $this->catalogWithValues();
+		} catch (Modulo2ServiceException | Modulo2ConfigException $e) {
+			return ['sections' => []];
+		}
+	}
+	# -------------------------------------------------------
+	/** Si cada tipo de dato muestra el campo de baja, y si el usuario lo puede cambiar (riesgo medio) */
+	private function setDeaccessionFieldVars() : void {
+		$this->view->setVar('deaccession_field', Modulo2DeaccessionField::states());
+		$this->view->setVar('deaccession_field_url', $this->navUrl('Configurations', 'DeaccessionField'));
+		$this->view->setVar('can_edit_deaccession_field', $this->canEditDeaccessionField());
+	}
+	# -------------------------------------------------------
+	private function canEditDeaccessionField() : bool {
+		return in_array(Modulo2Constants::RISK_MEDIUM, $this->operator()->allowedRisks(), true);
+	}
+	# -------------------------------------------------------
+	/** Lo que necesita la edición en el lugar y el guardado */
+	private function setEditorVars(array $catalog, array $names) : void {
+		$operator = $this->operator();
+		$this->view->setVar('editor', $this->editorData($catalog, $names));
+		$this->view->setVar('save_url', $this->navUrl('Configurations', 'Save'));
+		$this->view->setVar('csrf_token', caGenerateCSRFToken($this->request));
+		$this->view->setVar('suggested_version_name', $operator->versionName());
+		$this->view->setVar('state_url', $this->navUrl('Configurations', 'CurrentSaved'));
+		$this->view->setVar('suggested_previous_name', $operator->previousVersionName());
 	}
 	# -------------------------------------------------------
 	/** Catálogo del servicio con el valor actual y el de la distribución de cada entrada */
@@ -104,7 +174,7 @@ class ConfigurationsController extends Modulo2Controller {
 		if (!$found) { throw new Modulo2ConfigException(Modulo2I18n::t('one of the settings is not in the catalog.')); }
 		$kind = $found['setting']['kind'];
 		$edit = [
-			'file' => $found['section']['file'], 'key' => $found['entry']['key'], 'kind' => $kind,
+			'file' => $found['section']['file'], 'key' => $found['entry']['key'], 'linked' => $found['entry']['linked'] ?? [], 'excludes' => $found['entry']['excludes'] ?? null, 'kind' => $kind, 'options' => $found['setting']['options'] ?? [],
 			'label' => Modulo2ValueFormatter::entryLabel($found['setting'], $found['entry'], $this->dataTypeNames(array_filter([$found['entry']['data_type'] ?? null]))),
 			'value' => Modulo2FormValue::fromInput($kind, $change['value'] ?? null),
 			'reset' => !empty($change['reset']),
@@ -115,22 +185,13 @@ class ConfigurationsController extends Modulo2Controller {
 		return $edit;
 	}
 	# -------------------------------------------------------
-	/** Nombre y nota de la versión que se guarda con los cambios */
-	private function versionFromForm() : array {
-		$name = mb_substr(trim($this->rawParameter('version_name')), 0, 255) ?: $this->operator()->versionName();
-		$note = trim($this->rawParameter('version_note'));
-		return ['name' => $name, 'description' => strlen($note) ? $note : null];
-	}
-	# -------------------------------------------------------
-	/** Subtipos o tipos de dato del valor que no existen en Providence */
+	/** Subtipos del valor que no existen en Providence */
 	private function unknownCodes(array $found, array $edit) : array {
 		if ($edit['reset'] || !is_array($edit['value'])) { return []; }
 		switch ($edit['kind']) {
 			case Modulo2Constants::KIND_SUBTYPE_LIST:
 				$known = array_column($this->subtypesOf((string)($found['entry']['data_type'] ?? '')), 'idno');
 				return Modulo2FormValue::unknownCodes($edit['value'], fn($code) => in_array($code, $known, true));
-			case Modulo2Constants::KIND_TABLE_LIST:
-				return Modulo2FormValue::unknownCodes($edit['value'], fn($table) => (bool)Datamodel::tableExists($table));
 		}
 		return [];
 	}
@@ -164,16 +225,6 @@ class ConfigurationsController extends Modulo2Controller {
 		$instance = $data_type ? Datamodel::getInstance($data_type, true) : null;
 		$types = $instance ? ($instance->getTypeList() ?: []) : [];
 		return array_values(array_map(fn($type) => ['idno' => (string)$type['idno'], 'name' => (string)($type['name_plural'] ?? $type['idno'])], $types));
-	}
-	# -------------------------------------------------------
-	/**
-	 * Agrega a cada elemento del resumen de la base la URL de su pantalla nativa en Providence
-	 */
-	private function withUrls(array $summary) : array {
-		foreach ($summary as &$item) {
-			$item['url'] = caNavUrl($this->request, ...$item['nav']);
-		}
-		return $summary;
 	}
 	# -------------------------------------------------------
 }

@@ -6,6 +6,7 @@ use crate::json_object;
 use crate::models::modulo2::catalog::SECTIONS;
 use crate::types::modulo2::catalog::Code;
 use crate::types::modulo2::catalog::{ChoiceOption, Section, Setting};
+use crate::types::modulo2::preferences::{PreferenceChange, PreferenceVersion};
 use crate::types::modulo2::versions::{Change, State, User, Version};
 
 /// Catálogo completo: secciones, configuraciones y la clave de cada tipo de dato.
@@ -42,18 +43,25 @@ fn setting(setting: &Setting) -> Json {
 }
 
 fn option(option: &ChoiceOption) -> Json {
-    json_object! { value: option.value, label: option.label }
+    json_object! { value: option.value, label: option.label, also: option.also.to_vec() }
 }
 
-/// Una entrada por tipo de dato con su clave, o una sola sin tipo de dato si es global.
+/// Una entrada por tipo de dato con su clave, o una sola sin tipo de dato si es global (con sus
+/// claves vinculadas).
 fn entries(setting: &Setting) -> Vec<Json> {
     if setting.data_types.is_empty() {
-        return vec![json_object! { key: setting.id }];
+        return vec![json_object! { key: setting.id, linked: setting.linked.to_vec() }];
     }
     setting
         .data_types
         .iter()
-        .map(|data_type| json_object! { data_type: *data_type, key: setting.key_for(data_type) })
+        .map(|data_type| {
+            json_object! {
+                data_type: *data_type,
+                key: setting.key_for(data_type),
+                excludes: setting.excluded_key_for(data_type),
+            }
+        })
         .collect()
 }
 
@@ -124,6 +132,43 @@ pub fn change_page(changes: &[Change], limit: u32) -> Json {
         .then(|| changes.last().map(|c| c.id))
         .flatten();
     json_object! { changes: changes.iter().map(change).collect::<Vec<Json>>(), next_before: next_before }
+}
+
+/// Versión de las preferencias de un usuario.
+pub fn preference_version(version: &PreferenceVersion) -> Json {
+    json_object! {
+        id: version.id,
+        number: version.number,
+        name: &version.name,
+        description: version.description.as_deref(),
+        parent_id: version.parent_id,
+        hash: &version.hash,
+        created_by: user(&version.owner),
+        created_at: version.created_at,
+    }
+}
+
+/// Guardado o restauración de preferencias; las que cambiaron vuelven a ser JSON.
+pub fn preference_change(change: &PreferenceChange) -> Json {
+    let changes = change
+        .changes
+        .as_deref()
+        .and_then(|text| Json::parse(text).ok())
+        .unwrap_or_else(Json::array);
+    json_object! {
+        id: change.id,
+        changed_at: change.changed_at,
+        user: user(&change.user),
+        action: &change.action,
+        group: change.group.as_deref(),
+        changes: changes,
+        version_before: change.version_before,
+        version_after: change.version_after,
+        version_before_number: change.version_before_number,
+        version_after_number: change.version_after_number,
+        result: &change.result,
+        message: change.message.as_deref(),
+    }
 }
 
 /// Página de versiones y desde dónde pedir la siguiente (null si no hay más).

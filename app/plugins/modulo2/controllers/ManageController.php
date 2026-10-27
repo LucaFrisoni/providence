@@ -8,6 +8,7 @@
  */
 require_once(__CA_APP_DIR__.'/plugins/modulo2/lib/Modulo2Constants.php');
 require_once(__CA_APP_DIR__.'/plugins/modulo2/lib/Modulo2ManageHub.php');
+require_once(__CA_APP_DIR__.'/plugins/modulo2/lib/Modulo2Ui.php');
 
 class ManageController extends ActionController {
 	# -------------------------------------------------------

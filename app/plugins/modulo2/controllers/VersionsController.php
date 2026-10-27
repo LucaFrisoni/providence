@@ -31,6 +31,7 @@ class VersionsController extends Modulo2Controller {
 		$this->view->setVar('can_create', $operator->can(Modulo2Constants::PERMISSION_CREATE_VERSION));
 		$this->view->setVar('suggested_name', $operator->versionName());
 		$this->view->setVar('page_url', $this->navUrl('Versions', 'Page'));
+		$this->view->setVar('rename_url', $this->navUrl('Versions', 'Rename'));
 		$this->setFormVars('Create');
 		$this->setLinkVars();
 		$this->render('versions_index_html.php');
@@ -58,7 +59,7 @@ class VersionsController extends Modulo2Controller {
 		if (!$this->allowed() || !$this->validChange(['Versions'])) { return; }
 
 		try {
-			$version = $this->client()->deleteVersion((int)$this->request->getParameter('id', pInteger), $this->operator()->user());
+			$version = $this->client()->deleteVersion((int)$this->request->getParameter('id', pInteger), $this->operator()->user(), $this->state()->current());
 			$this->notify(Modulo2I18n::t('Version %1 was deleted.', $version['number']));
 		} catch (Modulo2ServiceException $e) {
 			$this->notify(Modulo2I18n::t('The version was not deleted: %1', $e->getMessage()), true);
@@ -90,8 +91,9 @@ class VersionsController extends Modulo2Controller {
 
 		$name = trim($this->rawParameter('name'));
 		try {
-			$version = $this->client()->renameVersion((int)$this->request->getParameter('id', pInteger), $this->operator()->user(), $name);
-			$this->notify(Modulo2I18n::t('Version %1 is now called «%2».', $version['number'], $version['name']));
+			$renamed = $this->client()->renameVersion((int)$this->request->getParameter('id', pInteger), $this->operator()->user(), $name);
+			// Con el mismo nombre no se guarda nada ni se avisa
+			if ($renamed['changed'] ?? true) { $this->notify(Modulo2I18n::t('Version %1 is now called «%2».', $renamed['version']['number'], $renamed['version']['name'])); }
 		} catch (Modulo2ServiceException $e) {
 			$this->notify(Modulo2I18n::t('The name was not changed: %1', $e->getMessage()), true);
 		}
@@ -126,8 +128,11 @@ class VersionsController extends Modulo2Controller {
 			$state = $this->state()->current();
 			$changes = $this->settingsDiff()->changes($state['files'], $version['files']);
 			$current_db = isset($state['database']) ? hash('sha256', $state['database']) : null;
+			$info = $client->getStateInfo($state);
 			$this->view->setVar('version', $version['version']);
-			$this->view->setVar('expected_hash', $client->getStateInfo($state)['hash']);
+			$this->view->setVar('expected_hash', $info['hash']);
+			$this->view->setVar('current_saved', (bool)($info['version'] ?? null));
+			$this->view->setVar('suggested_previous_name', $this->operator()->previousVersionName());
 			$this->setChangeVars($changes, self::differs($current_db, $version['database_hash']));
 		} catch (Modulo2ServiceException | Modulo2ConfigException $e) {
 			$this->view->setVar('error', $e->getMessage());
@@ -137,7 +142,7 @@ class VersionsController extends Modulo2Controller {
 		$this->render('versions_restore_html.php');
 	}
 	# -------------------------------------------------------
-	/** Aplica la restauración confirmada (POST id, expected_hash) */
+	/** Aplica la restauración confirmada (POST id, expected_hash y, si se pidió, save_previous y previous_name) */
 	public function DoRestore() {
 		$id = (int)$this->request->getParameter('id', pInteger);
 		if (!$this->allowed(Modulo2Constants::PERMISSION_RESTORE_VERSION) || !$this->validChange(['Versions', 'Restore', ['id' => $id]])) { return; }
@@ -145,7 +150,7 @@ class VersionsController extends Modulo2Controller {
 		try {
 			$local = new Modulo2LocalConfig();
 			$restorer = new Modulo2Restorer($this->client(), $local, Modulo2State::fromConfig($this->config, $local));
-			$result = $restorer->restore($id, $this->rawParameter('expected_hash'), $this->operator());
+			$result = $restorer->restore($id, $this->rawParameter('expected_hash'), $this->operator(), $this->previousVersionFromForm());
 			$this->notifyRestore($result);
 			if ($result['applied']) { $this->refreshMenuOnNextPage(); }
 			$this->redirectTo('Versions');
@@ -162,7 +167,7 @@ class VersionsController extends Modulo2Controller {
 			return;
 		}
 		$message = Modulo2I18n::t('Version %1 was restored.', $number);
-		if ($result['database_differs']) { $message .= ' '.Modulo2I18n::t('Lists, fields and other options of the Providence screens are not restored.'); }
+		if ($result['database_differs']) { $message .= ' '.Modulo2I18n::t('The configuration stored in the database (lists, metadata elements, user interfaces…) is not restored.'); }
 		$this->notify($message);
 	}
 	# -------------------------------------------------------
