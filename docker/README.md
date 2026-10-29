@@ -98,7 +98,7 @@ El pie de página de Providence tiene estilos propios en
 [themes/default/css/local.css](../themes/default/css/local.css), el archivo que Providence carga después
 de los estilos del tema para los ajustes de cada instalación. Ese archivo importa
 [native-screens.css](../themes/default/css/native-screens.css), que da a las pantallas de Providence
-el aspecto del módulo 2; `pageFooter.php` carga además `js/unsaved-changes.js`. Como son parte del
+el aspecto del módulo 2; `pageFooter.php` carga además `js/unsaved-changes.js` y `js/native-ui.js`. Como son parte del
 tema, un cambio ahí (o en `app/locale/user`) necesita `docker compose up -d --build providence`.
 
 Cada módulo que ya tiene plugin agrega su menú en la barra principal (el del módulo 2 ocupa

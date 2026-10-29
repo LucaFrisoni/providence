@@ -16,6 +16,7 @@ $status_labels = [Modulo2ManageMap::STATUS_PLANNED => Modulo2I18n::t('Improvemen
 $search_text = fn(array $section) => join(' ', array_merge([$section['label'], $section['description']], array_column($section['links'], 'label')));
 ?>
 <?= Modulo2Ui::styles(); ?>
+<?= ($prepare_url = $this->getVar('prepare_versions_url')) ? Modulo2Ui::prepareVersionsScript($prepare_url) : ''; ?>
 <style>
 	.m2-manage { max-width: 1200px; }
 	.m2-manage > p { margin: 0 0 4px 0; color: var(--m2-muted); font-size: 14px; }

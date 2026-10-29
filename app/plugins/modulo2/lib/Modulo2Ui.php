@@ -205,6 +205,12 @@ class Modulo2Ui {
 </style>';
 	}
 	# -------------------------------------------------------
+	/** Pide en segundo plano, con la página ya cargada, que se prepare la lista de versiones (Versions/Prepare) */
+	public static function prepareVersionsScript(string $url) : string {
+		$url = json_encode($url, JSON_HEX_TAG | JSON_HEX_AMP | JSON_UNESCAPED_SLASHES);
+		return '<script>window.addEventListener("load", function() { setTimeout(function() { fetch('.$url.', { credentials: "same-origin", headers: { "X-Requested-With": "XMLHttpRequest" } }).catch(function() {}); }, 500); });</script>';
+	}
+	# -------------------------------------------------------
 	/** Texto de las explicaciones con sus palabras clave resaltadas: **texto** pasa a <strong> */
 	public static function emphasis(string $text) : string {
 		return preg_replace('/\*\*(.+?)\*\*/u', '<strong>$1</strong>', $text);

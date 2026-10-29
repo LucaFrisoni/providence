@@ -33,6 +33,7 @@ class ManageController extends ActionController {
 		);
 		$this->view->setVar('groups', $this->withUrls($hub->groups(Modulo2ManageMap::groups())));
 		$this->view->setVar('module_names', Modulo2ManageMap::moduleNames());
+		$this->view->setVar('prepare_versions_url', caNavUrl($this->request, 'modulo2', 'Versions', 'Prepare'));
 		$this->render('manage_index_html.php');
 	}
 	# -------------------------------------------------------

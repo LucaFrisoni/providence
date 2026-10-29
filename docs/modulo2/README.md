@@ -555,18 +555,30 @@ tipo de dato, subtipos anidados de objetos, para "Resultados" un objeto con dos 
   no se puede estilizar. [themes/default/js/unsaved-changes.js](../../themes/default/js/unsaved-changes.js)
   lo reemplaza, al seguir un enlace (Cancelar, el menú...), por un diálogo con el aspecto del módulo, usando
   el mismo control de cambios de Providence (`caUI.utils`). Al cerrar la pestaña o usar "Atrás" sigue el
-  aviso del navegador. Lo carga `pageFooter.php` con sus textos traducidos (`app/locale/user`).
+  aviso del navegador. Lo carga `pageFooter.php` con sus textos traducidos (`app/locale/user`). Borrar
+  no pregunta: lleva a su propia confirmación.
+- **Ajustes de las pantallas nativas.** [themes/default/js/native-ui.js](../../themes/default/js/native-ui.js),
+  cargado también por `pageFooter.php`, agrega lo que no se puede con estilos, sin cambiar qué hace cada
+  pantalla: la ayuda "Escriba * para ver todos los registros" bajo la búsqueda básica; quita los espacios
+  con que Providence sangra las opciones de listas jerárquicas (el valor elegido quedaba corrido) y los
+  reemplaza por margen; un campo para filtrar las listas largas de la barra lateral (historia, búsquedas
+  memorizadas; Providence guarda hasta 100 búsquedas en la historia y ya están todas en la página, así
+  que no hace falta cargarlas de a poco); abre Descargar y Opciones junto a su botón; avisa con un
+  mensaje al vigilar o dejar de vigilar un registro; y cierra el menú de arriba si el navegador lo
+  restaura abierto al volver con "Atrás".
 - **Tiempos de carga (medidos el 28/10/2026).** Las páginas del módulo responden como las de Providence
   (0,2 a 0,6 s; la mayor parte es el arranque de Providence). Los pasos propios del versionado tardan
   milisegundos: estado actual unos 5 ms (la exportación de la base sale de la caché), consultas al
   servicio Rust 1 a 10 ms. La excepción es la primera página de versiones después de un cambio en la
   configuración en base (listas, elementos, interfaces...): exporta el perfil de nuevo, unos 1,8 s, y
-  queda en caché. Por ahora no se cambió nada.
+  queda en caché. El panel de gestión y Configuraciones piden esa exportación en segundo plano
+  (`Versions/Prepare`) apenas se abren, así al llegar a las versiones ya está lista (29/10/2026: 1,8 s
+  en frío, 0,2 s después de prepararla).
 - **Pie de página sin "Preferencias".** Llevaba a las preferencias nativas de Providence, que el módulo
   no modifica (las del usuario se editan desde Gestión > Mis preferencias). Se quitó el enlace en
   `themes/default/views/pageFormat/pageFooter.php`: es un cambio en una vista del tema de Providence,
   pedido explícitamente, porque con estilos no se puede quitar sin dejar el separador suelto. En la misma
-  vista se carga `unsaved-changes.js`.
+  vista se cargan `unsaved-changes.js` y `native-ui.js`.
 
 ## Tareas por fase
 

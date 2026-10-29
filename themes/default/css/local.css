@@ -55,7 +55,7 @@ span[style*="#bb0000"]::after {
     font-size: 14px;
     font-weight: 700;
     line-height: 1;
-    vertical-align: top;
+    vertical-align: baseline;
 }
 
 /* --- Diálogo al salir con cambios sin guardar (unsaved-changes.js), con el aspecto del módulo 2 --- */
@@ -126,4 +126,33 @@ dialog.ca-leave-dialog::backdrop {
 
 .ca-leave-btn-danger:hover {
     background: #912018;
+}
+
+/* --- Avisos abajo a la derecha (native-ui.js), como los del módulo 2 --- */
+.ca-toasts {
+    position: fixed;
+    right: 20px;
+    bottom: 20px;
+    z-index: 30000;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    max-width: min(380px, 90vw);
+}
+
+.ca-toast {
+    padding: 14px 16px;
+    border: 1px solid #e2e8eb;
+    border-left: 4px solid #138290;
+    border-radius: 10px;
+    background: #fff;
+    box-shadow: 0 12px 32px rgba(16, 24, 40, .18);
+    font: 13px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    color: #1d2b33;
+    animation: ca-toast-in .18s ease-out;
+}
+
+@keyframes ca-toast-in {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: none; }
 }

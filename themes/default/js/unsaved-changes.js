@@ -55,9 +55,18 @@
 		actions.firstChild.focus();
 	}
 
+	// Borrar lleva a su propia confirmación: los cambios sin guardar ya no importan
+	function isDeleteLink(link) {
+		return /\/Delete(\/|\?|$)/.test(link.pathname);
+	}
+
 	document.addEventListener('click', function (event) {
 		var link = leavingLink(event);
 		if (!link || !hasUnsavedChanges() || !window.HTMLDialogElement) { return; }
+		if (isDeleteLink(link)) {
+			window.caUI.utils.disableUnsavedChangesWarning(true);
+			return;
+		}
 		event.preventDefault();
 		confirmLeave(link.href);
 	}, true);

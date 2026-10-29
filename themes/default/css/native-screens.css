@@ -364,6 +364,15 @@
         white-space: nowrap;
     }
 
+    /* Providence fija el ancho de algunas listas pensando en los textos en inglés */
+    & div.control-box select[style*="width"] {
+        width: auto !important;
+    }
+
+    & div.control-box input.dateBg {
+        width: 150px;
+    }
+
     /* --- Botones --- */
     & a.form-button {
         height: auto;
@@ -810,7 +819,7 @@
     }
 
     /* "Añadir …" sueltos con un "+" (por ejemplo, Añadir lista nueva): botón principal con la cruz simple */
-    & #mainContent a:has(> i.caIcon.fa-plus-circle):not(.control-box a, .caAddItemButton a, .caAddLabelButton a, .inline-button-small) {
+    & #mainContent a:has(> i.caIcon.fa-plus-circle):not(.control-box a, .caAddItemButton a, .caAddLabelButton a, .inline-button-small, :is(#facetList, #refineBrowse, #searchRefineContent, .quickSearchResultHeader) a) {
         display: inline-flex;
         align-items: center;
         justify-content: center;
@@ -827,16 +836,16 @@
         vertical-align: middle;
     }
 
-    & #mainContent a:has(> i.caIcon.fa-plus-circle):not(.control-box a, .caAddItemButton a, .caAddLabelButton a, .inline-button-small):hover {
+    & #mainContent a:has(> i.caIcon.fa-plus-circle):not(.control-box a, .caAddItemButton a, .caAddLabelButton a, .inline-button-small, :is(#facetList, #refineBrowse, #searchRefineContent, .quickSearchResultHeader) a):hover {
         background: var(--adm-accent-dark);
     }
 
-    & #mainContent a:not(.control-box a, .caAddItemButton a, .caAddLabelButton a, .inline-button-small) > i.caIcon.fa-plus-circle {
+    & #mainContent a:not(.control-box a, .caAddItemButton a, .caAddLabelButton a, .inline-button-small, :is(#facetList, #refineBrowse, #searchRefineContent, .quickSearchResultHeader) a) > i.caIcon.fa-plus-circle {
         font-size: 12px !important;
         color: #fff;
     }
 
-    & #mainContent a:not(.control-box a, .caAddItemButton a, .caAddLabelButton a, .inline-button-small) > i.caIcon.fa-plus-circle::before {
+    & #mainContent a:not(.control-box a, .caAddItemButton a, .caAddLabelButton a, .inline-button-small, :is(#facetList, #refineBrowse, #searchRefineContent, .quickSearchResultHeader) a) > i.caIcon.fa-plus-circle::before {
         content: "\f067";
     }
 
@@ -1151,12 +1160,14 @@
 
     /* Facetas para filtrar: botones en grilla, en Refinar resultados y en Exploración */
     & :is(#searchRefineContent, #facetList, #refineBrowse) {
+        float: none;
+        width: auto;
         display: grid;
         grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
         gap: 8px;
     }
 
-    & :is(#searchRefineContent, #facetList, #refineBrowse) > :is(.startBrowsingBy, .refineHeading, div[style*="clear"]) {
+    & :is(#searchRefineContent, #facetList, #refineBrowse) > :is(.startBrowsingBy, .refineHeading, div[style*="clear:both"], div[style*="clear: both"]) {
         grid-column: 1 / -1;
     }
 
@@ -1429,6 +1440,441 @@
     & #advancedSearchFormContainer .saveAs input {
         width: 150px;
     }
+
+    /* --- Búsqueda básica: la ayuda debajo del campo (native-ui.js) --- */
+    & .ca-search-hint {
+        margin: 6px 0 0 62px;
+        font: 12px var(--adm-font);
+        color: var(--adm-muted);
+        text-align: left;
+    }
+
+    & .ca-search-hint + br {
+        display: none;
+    }
+
+    /* --- Resultados: sin barra horizontal; los textos largos (nombres, identificadores) pasan de línea --- */
+    & #mainContent #scrollingResults {
+        overflow-x: hidden;
+    }
+
+    & #mainContent #scrollingResults table.listtable {
+        width: 100%;
+    }
+
+    & #mainContent table.listtable thead th nobr {
+        white-space: normal;
+    }
+
+    & #mainContent table.listtable td div.result-content {
+        min-width: 60px;
+        overflow-x: hidden;
+        overflow-wrap: anywhere;
+    }
+
+    & #mainContent table.listtable td div.result-content img {
+        max-width: 100%;
+        height: auto;
+    }
+
+    /* Sin resultados: Providence repite el aviso arriba y en la lista; queda el de la lista, como un recuadro vacío */
+    & #resultBox:has(.sectionBox > #resultBox > .subTitle:only-child) > :is(.searchNav:first-child, .searchNav:first-child + .divide, .divide:has(+ .searchNav:empty), .searchNav:empty) {
+        display: none;
+    }
+
+    & .sectionBox > #resultBox > .subTitle:only-child {
+        margin: 8px 0 16px 0;
+        padding: 28px 16px;
+        border: 1px dashed #cdd6da;
+        border-radius: 10px;
+        background: var(--adm-soft);
+        font: 13px var(--adm-font);
+        color: var(--adm-muted);
+        text-align: center;
+    }
+
+    /* Descargar y Opciones abiertas junto a su botón (native-ui.js calcula la posición) */
+    & :is(#searchToolsBox, #searchOptionsBox).ca-box-anchored {
+        top: var(--ca-box-top) !important;
+        right: var(--ca-box-right) !important;
+        left: auto !important;
+        max-width: calc(100vw - 32px);
+    }
+
+    & :is(#searchToolsBox, #searchOptionsBox).ca-box-anchored.ca-box-from-left {
+        right: auto !important;
+        left: var(--ca-box-left) !important;
+    }
+
+    & #searchToolsBox .col select {
+        flex: 1 1 160px;
+        min-width: 0;
+        white-space: nowrap;
+    }
+
+    /* Deja lugar para la cruz de cerrar */
+    & #searchToolsBox .bg > .col:first-child {
+        padding-right: 30px;
+    }
+
+    & #searchToolsBox a.button {
+        display: inline-flex;
+        align-items: center;
+        height: 34px;
+        box-sizing: border-box;
+        padding: 0 14px;
+        border-radius: 8px;
+        background: var(--adm-accent);
+        color: #fff;
+        font: 600 13px var(--adm-font);
+        text-decoration: none;
+    }
+
+    & #searchToolsBox a.button:hover {
+        background: var(--adm-accent-dark);
+    }
+
+    /* --- Búsqueda rápida (la barra de arriba): una tarjeta por tipo de dato, con enlaces como los del panel --- */
+    & .quickSearchHeader {
+        font: 600 14px var(--adm-font);
+        color: var(--adm-text);
+    }
+
+    & .quickSearchContentArea {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        height: auto;
+        overflow: visible;
+        font-family: var(--adm-font);
+    }
+
+    & .quickSearchContentArea > * {
+        flex-shrink: 0;
+    }
+
+    & :is(.quickSearchResultHeader, .quickSearchNoResults) {
+        box-sizing: border-box;
+        width: auto;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        height: auto;
+        margin: 0;
+        padding: 10px 14px;
+        border: 1px solid var(--adm-border);
+        border-radius: 10px;
+        background: #fff;
+        box-shadow: var(--adm-shadow);
+        font: 600 13px var(--adm-font);
+        color: var(--adm-text);
+    }
+
+    & .quickSearchNoResults {
+        box-shadow: none;
+        background: var(--adm-soft);
+        color: var(--adm-muted);
+    }
+
+    & .quickSearchResultHeader:has(+ .quickSearchHalfWidthResults:not([style*="none"])) {
+        border-radius: 10px 10px 0 0;
+        box-shadow: none;
+    }
+
+    & .quickSearchResultHeader > a {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        color: var(--adm-text) !important;
+    }
+
+    & .quickSearchResultHeader .caIcon {
+        font-size: 13px !important;
+        color: var(--adm-muted);
+    }
+
+    & .quickSearchFullResultsLink {
+        float: none;
+        order: 2;
+    }
+
+    & .quickSearchFullResultsLink a {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 5px 10px;
+        border: 1px solid var(--adm-border);
+        border-radius: 8px;
+        font: 600 12px var(--adm-font);
+        color: var(--adm-accent-dark);
+        text-decoration: none;
+    }
+
+    & .quickSearchFullResultsLink a:hover {
+        border-color: var(--adm-accent);
+        background: var(--adm-accent-soft);
+    }
+
+    & .quickSearchFullResultsLink .caIcon {
+        font-size: 12px !important;
+        color: var(--adm-accent);
+    }
+
+    & .quickSearchHalfWidthResults {
+        float: none;
+        width: auto;
+        margin-top: -10px;
+        padding: 6px 14px 8px 14px;
+        border: 1px solid var(--adm-border);
+        border-top: none;
+        border-radius: 0 0 10px 10px;
+        background: #fff;
+        box-shadow: var(--adm-shadow);
+    }
+
+    & :is(ul.quickSearchList, li.quickSearchList) {
+        margin: 0;
+        padding: 0;
+        list-style: none;
+    }
+
+    & li.quickSearchList {
+        padding: 4px 0;
+        border-bottom: 1px solid var(--adm-border);
+        font: 12.5px/1.45 var(--adm-font);
+        color: var(--adm-muted);
+    }
+
+    & li.quickSearchList:last-child {
+        border-bottom: none;
+    }
+
+    & li.quickSearchList a {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        margin-left: -6px;
+        padding: 3px 6px;
+        border-radius: 6px;
+        font-weight: 600;
+        color: var(--adm-accent-dark);
+        text-decoration: none;
+        transition: background .15s, color .15s;
+    }
+
+    & li.quickSearchList a::before {
+        content: "";
+        flex: none;
+        width: 5px;
+        height: 5px;
+        border-top: 2px solid currentColor;
+        border-right: 2px solid currentColor;
+        transform: rotate(45deg);
+        opacity: .6;
+        transition: transform .15s, opacity .15s;
+    }
+
+    & li.quickSearchList a:hover {
+        background: var(--adm-soft);
+        color: var(--adm-accent);
+    }
+
+    & li.quickSearchList a:hover::before {
+        opacity: 1;
+        transform: translateX(2px) rotate(45deg);
+    }
+
+    & .quickSearchResultHide {
+        display: none;
+    }
+
+    /* --- Formularios de edición: nombres con varias partes (entidades), cada campo en su columna y a la misma altura --- */
+    & .labelInfo table.objectRepresentationListItem:has(td:nth-child(4)) {
+        width: calc(100% - 46px);
+    }
+
+    & .labelInfo table.objectRepresentationListItem table:has(td:nth-child(4)) {
+        width: 100%;
+        table-layout: fixed;
+        border-spacing: 0 8px;
+    }
+
+    & .labelInfo table.objectRepresentationListItem table:has(td:nth-child(4)) td {
+        padding: 0 10px 0 0;
+        vertical-align: bottom;
+    }
+
+    & .labelInfo table.objectRepresentationListItem table:has(td:nth-child(4)) input[type="text"] {
+        box-sizing: border-box !important;
+        width: 100%;
+        margin-top: 4px;
+    }
+
+    /* --- Borrar un registro: qué hacer con sus metadatos o referencias --- */
+    & #caReferenceHandlingToCount {
+        margin: 6px 0 10px 0;
+        font: 600 13px var(--adm-font);
+        color: var(--adm-text);
+    }
+
+    & input[name="caReferenceHandlingTo"] {
+        margin: 0 6px 8px 0;
+        vertical-align: middle;
+    }
+
+    /* --- Jerarquía de lugares y localizaciones: "Añadir bajo un/a nuevo/a" con la lista y el botón de la misma altura --- */
+    & #mainContent #browse:has(> #hierarchyBrowser):not(.hierarchyWindow) {
+        margin: 4px 0 14px 0;
+        padding: 14px 16px;
+        border: 1px solid var(--adm-border);
+        border-radius: 10px;
+        background: #fff;
+        box-shadow: var(--adm-shadow);
+        font-family: var(--adm-font);
+    }
+
+    & #mainContent #browse > .subTitle {
+        margin-bottom: 10px;
+        padding: 0 0 8px 0 !important;
+        border-bottom: 1px solid var(--adm-border);
+        background: none !important;
+        font: 600 14px var(--adm-font);
+        color: var(--adm-text);
+    }
+
+    & #browseTypeMenu form > div {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 10px;
+        font: 12.5px var(--adm-font);
+        color: var(--adm-muted);
+    }
+
+    & #mainContent #browseTypeMenu select {
+        height: 34px;
+        box-sizing: border-box !important;
+        padding: 0 10px;
+    }
+
+    & #browseCurrentSelection:empty {
+        display: none;
+    }
+
+    & #mainContent #browseTypeMenu a:has(> i.caIcon.fa-plus-circle) {
+        width: 34px;
+        min-width: 34px;
+        height: 34px;
+        padding: 0;
+    }
+
+    & #mainContent .hierarchyBrowser {
+        border: 1px solid var(--adm-border);
+        border-radius: 8px;
+    }
+
+    /* --- Importar archivos de contenido: más aire en Emparejamiento, Relaciones y las demás opciones --- */
+    & #mainContent :is(#caBatchMediaAdvancedContent, form[id*="MediaImport"]) .bundleContainer > .caLabelList {
+        padding: 12px 14px;
+    }
+
+    & #caBatchMediaAdvancedContent .caLabelList > table {
+        border-spacing: 0;
+    }
+
+    & #caBatchMediaAdvancedContent .caLabelList td.formLabel {
+        padding: 6px 16px 10px 0;
+        font: 12.5px/2.2 var(--adm-font);
+        color: var(--adm-text);
+        vertical-align: top;
+    }
+
+    & #caBatchMediaAdvancedContent .caLabelList > div[style*="padding"] {
+        padding: 0 !important;
+    }
+
+    & #caBatchMediaAdvancedContent select[multiple] {
+        min-width: 220px;
+        margin-top: 4px;
+    }
+
+    & #caBatchMediaAdvancedHeader a {
+        color: var(--adm-accent-dark);
+        font-weight: 600;
+        text-decoration: none;
+    }
+
+    & p.bundleDisplayPlacementEditorHelpText {
+        margin: 0 0 8px 0;
+        font: 12.5px/1.5 var(--adm-font);
+        color: var(--adm-muted);
+    }
+
+
+    /* --- Ventana para crear o editar una ordenación (y para cambiar el tipo de un registro) --- */
+    & #caTypeChangePanel {
+        border: 1px solid var(--adm-border);
+        border-radius: 12px;
+        background: #fff;
+        box-shadow: var(--adm-shadow-lg);
+        font-family: var(--adm-font);
+    }
+
+    & #caTypeChangePanelContentArea {
+        padding: 18px 22px 14px 22px;
+    }
+
+    & #caTypeChangePanelControlButtons table {
+        margin: 0 0 14px auto;
+    }
+
+    & #caUserSortForm .formLabel {
+        margin-bottom: 14px;
+    }
+
+    & #caUserSortForm input[type="text"] {
+        box-sizing: border-box !important;
+        width: 100%;
+        margin-top: 4px;
+    }
+
+    & #caUserSortForm table {
+        width: 100%;
+        border-spacing: 0 8px;
+    }
+
+    & #caUserSortForm td:first-child {
+        width: 70px;
+        padding-right: 10px;
+        font: 600 12px var(--adm-font);
+        white-space: nowrap;
+    }
+
+    & #caUserSortForm select[style*="width"] {
+        box-sizing: border-box !important;
+        width: 100% !important;
+    }
+
+    /* --- Vigilar este registro: cuando ya está vigilado, el botón queda marcado --- */
+    & #leftNav .inspectorActionButton a#caWatchItemButton:has(.caIconRed) {
+        border-color: var(--adm-accent);
+        background: var(--adm-accent);
+        color: #fff;
+    }
+
+    /* --- Barra lateral: listas largas con un campo para filtrarlas (native-ui.js) --- */
+    & #leftNav input.ca-select-filter {
+        display: block;
+        box-sizing: border-box !important;
+        width: 150px;
+        margin: 2px 0 4px 0;
+        padding: 4px 8px;
+        border: 1px solid #cfd8dc;
+        border-radius: 8px;
+        font: 12px var(--adm-font);
+    }
 }
 
 /* Listas desplegables con el mismo estilo abiertas que cerradas. Las reglas con ::picker van aparte: un
@@ -1481,4 +1927,34 @@
 
 #providenceApp:not(:has(#mainContent [class*="m2-"])) :is(#mainContent, #leftNav) select option::checkmark {
     color: #138290;
+}
+
+/* En la barra lateral una opción larga no se sale del campo: se corta con "…" y la flecha queda a la derecha */
+#providenceApp:not(:has(#mainContent [class*="m2-"])) #leftNav select:not([multiple]):not([size]) {
+    display: inline-block;
+    position: relative;
+    box-sizing: border-box !important;
+    width: 150px;
+    height: 32px;
+    overflow: hidden;
+    padding: 0 26px 0 8px;
+    line-height: 30px;
+    text-overflow: ellipsis;
+    vertical-align: middle;
+}
+
+#providenceApp:not(:has(#mainContent [class*="m2-"])) #leftNav select:not([multiple]):not([size])::picker-icon {
+    position: absolute;
+    top: 50%;
+    right: 9px;
+    translate: 0 -50%;
+}
+
+#providenceApp:not(:has(#mainContent [class*="m2-"])) #leftNav select:not([multiple]):not([size])::picker(select) {
+    max-width: 340px;
+}
+
+#providenceApp:not(:has(#mainContent [class*="m2-"])) #leftNav select option {
+    white-space: normal;
+    overflow-wrap: anywhere;
 }

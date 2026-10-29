@@ -45,6 +45,7 @@ $risk_badge = fn(array $setting) => isset($risk_labels[$setting['risk']]) ? ' <s
 $total_modified = $catalog ? array_sum(array_map([Modulo2CatalogMatrix::class, 'modifiedCount'], $catalog['sections'])) : 0;
 ?>
 <?= Modulo2Ui::styles(); ?>
+<?= ($prepare_url = $this->getVar('prepare_versions_url')) ? Modulo2Ui::prepareVersionsScript($prepare_url) : ''; ?>
 <style>
 	.m2-panel { max-width: 1200px; }
 	.m2-toolbar { display: flex; flex-wrap: wrap; gap: 10px 18px; align-items: center; margin: 0 0 12px 0; padding: 10px 14px; background: #fff;

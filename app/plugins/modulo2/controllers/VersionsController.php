@@ -54,6 +54,22 @@ class VersionsController extends Modulo2Controller {
 		$this->response->addContent(json_encode($data, JSON_UNESCAPED_UNICODE));
 	}
 	# -------------------------------------------------------
+	/**
+	 * Deja guardada la exportación de la configuración en base, lo que más tarda de la lista de versiones.
+	 * El panel y Configuraciones la piden en segundo plano, así la lista abre sin esperarla
+	 */
+	public function Prepare() {
+		if (!$this->allowed()) { return; }
+
+		try {
+			$this->state()->current();
+			$ok = true;
+		} catch (Throwable $e) {
+			$ok = false;
+		}
+		$this->response->addContent(json_encode(['ok' => $ok]));
+	}
+	# -------------------------------------------------------
 	/** Borra una versión (POST id). El servicio verifica que la haya creado este usuario */
 	public function Delete() {
 		if (!$this->allowed() || !$this->validChange(['Versions'])) { return; }

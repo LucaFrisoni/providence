@@ -36,6 +36,7 @@ class ConfigurationsController extends Modulo2Controller {
 			$this->setEditorVars(self::$catalog, $names);
 			$this->setDeaccessionFieldVars();
 			$this->view->setVar('versions_url', $this->navUrl('Versions'));
+			$this->view->setVar('prepare_versions_url', $this->navUrl('Versions', 'Prepare'));
 		} catch (Modulo2ServiceException | Modulo2ConfigException $e) {
 			$this->view->setVar('error', $e->getMessage());
 		}
