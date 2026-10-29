@@ -1,0 +1,31 @@
+# Traducciones propias de la instalación para cs_CZ: los textos del tema ModernUI (diálogo al salir sin
+# guardar y ajustes de las pantallas de Providence). Providence las carga además de app/locale/cs_CZ.
+# messages.mo se genera desde este archivo con gettext: msgfmt messages.po -o messages.mo
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Language: cs_CZ\n"
+
+msgid "Leave without saving?"
+msgstr "Odejít bez uložení?"
+
+msgid "This form has changes that are not saved. If you leave the page, they are discarded."
+msgstr "Tento formulář obsahuje neuložené změny. Pokud stránku opustíte, budou zahozeny."
+
+msgid "Keep editing"
+msgstr "Pokračovat v úpravách"
+
+msgid "Leave without saving"
+msgstr "Odejít bez uložení"
+
+msgid "Type * to see all the records."
+msgstr "Zadejte * pro zobrazení všech záznamů."
+
+msgid "The record was added to your watched items."
+msgstr "Záznam byl přidán mezi sledované položky."
+
+msgid "The record was removed from your watched items."
+msgstr "Záznam byl odebrán ze sledovaných položek."
+
+msgid "Filter…"
+msgstr "Filtrovat…"

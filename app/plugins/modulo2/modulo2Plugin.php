@@ -64,10 +64,17 @@ class modulo2Plugin extends BaseApplicationPlugin {
 	}
 	# -------------------------------------------------------
 	/**
-	 * Agrega las barras laterales del módulo: la de las configuraciones, sus versiones y su historial
-	 * (ConfigurationsController::Info) y los grupos de My preferences (MyPreferencesController::Info)
+	 * Agrega las barras laterales del módulo: el índice del panel de gestión (ManageController::Info), la de
+	 * las configuraciones, sus versiones y su historial (ConfigurationsController::Info) y los grupos de My
+	 * preferences (MyPreferencesController::Info)
 	 */
 	public function hookRenderWidgets($widgets) {
+		$widgets[Modulo2Constants::MANAGE_WIDGET] = [
+			'domain' => ['module' => 'modulo2', 'controller' => 'Manage'],
+			'handler' => ['module' => 'modulo2', 'controller' => 'Manage', 'action' => 'Info', 'isplugin' => true],
+			'requires' => [],
+			'parameters' => []
+		];
 		// My preferences y sus versiones comparten la barra lateral de los grupos
 		foreach (['MyPreferences', 'PreferenceVersions'] as $controller) {
 			$widgets[Modulo2Constants::PREFERENCES_WIDGET.$controller] = [

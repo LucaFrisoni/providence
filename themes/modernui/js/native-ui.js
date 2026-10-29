@@ -1,5 +1,5 @@
 /* ----------------------------------------------------------------------
- * themes/default/js/native-ui.js : ajustes chicos de las pantallas nativas de Providence, sin cambiar
+ * themes/modernui/js/native-ui.js : ajustes chicos de las pantallas nativas de Providence, sin cambiar
  * qué hacen: ayuda de la búsqueda, listas desplegables, ventanas de herramientas, avisos y menú.
  * Los textos llegan traducidos en data-* del <script>. Lo carga pageFooter.php.
  * ----------------------------------------------------------------------

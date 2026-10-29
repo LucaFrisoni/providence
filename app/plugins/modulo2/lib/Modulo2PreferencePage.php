@@ -2,7 +2,8 @@
 /* ----------------------------------------------------------------------
  * app/plugins/modulo2/lib/Modulo2PreferencePage.php :
  * Lo que muestra la pantalla de un grupo de My preferences: cada preferencia con su nombre, su
- * descripción y su campo, tal como los arma Providence, y la tabla de elementos de la duplicación.
+ * descripción y su campo, tal como los arma Providence (con la traducción del módulo para los textos que
+ * Providence no tiene traducidos), y la tabla de elementos de la duplicación.
  * ----------------------------------------------------------------------
  */
 require_once(__DIR__.'/Modulo2PreferenceGroups.php');
@@ -27,7 +28,19 @@ final class Modulo2PreferencePage {
 		// Las interfaces por subtipo vienen como filas de una tabla
 		if (stripos(ltrim($html), '<tr') === 0) { $html = '<table class="m2-pref-rows">'.$html.'</table>'; }
 		$info = $user->getPreferenceInfo($pref) ?: [];
-		return ['key' => $pref, 'label' => (string)($info['label'] ?? $pref), 'description' => (string)($info['description'] ?? ''), 'html' => $html];
+		return ['key' => $pref, 'label' => Modulo2I18n::t((string)($info['label'] ?? $pref)), 'description' => Modulo2I18n::t((string)($info['description'] ?? '')),
+			'html' => self::translatedOptions($html)];
+	}
+	# -------------------------------------------------------
+	/**
+	 * Las opciones de la lista con la traducción del módulo cuando Providence no tiene una: Providence
+	 * traduce sus definiciones al cargarlas, y las que le faltan quedan en inglés
+	 */
+	private static function translatedOptions(string $html) : string {
+		return preg_replace_callback('/(<option\b[^>]*>)([^<]*)(<\/option>)/i', function($match) {
+			$text = html_entity_decode($match[2], ENT_QUOTES, 'UTF-8');
+			return $match[1].htmlspecialchars(Modulo2I18n::t($text), ENT_QUOTES, 'UTF-8').$match[3];
+		}, $html);
 	}
 	# -------------------------------------------------------
 	/** Elementos de metadatos de la tabla y si se duplican, como la pantalla de duplicación de Providence */

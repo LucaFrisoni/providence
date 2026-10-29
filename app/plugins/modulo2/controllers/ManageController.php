@@ -6,35 +6,41 @@
  * pantalla nativa; las mejoras se suman de a una (ver docs/modulo2/README.md, "Panel de gestión").
  * ----------------------------------------------------------------------
  */
-require_once(__CA_APP_DIR__.'/plugins/modulo2/lib/Modulo2Constants.php');
+require_once(__CA_APP_DIR__.'/plugins/modulo2/lib/Modulo2Controller.php');
 require_once(__CA_APP_DIR__.'/plugins/modulo2/lib/Modulo2ManageHub.php');
 require_once(__CA_APP_DIR__.'/plugins/modulo2/lib/Modulo2Ui.php');
 
-class ManageController extends ActionController {
+class ManageController extends Modulo2Controller {
 	# -------------------------------------------------------
-	public function __construct(&$request, &$response, $view_paths=null) {
-		if (!is_array($view_paths)) { $view_paths = []; }
-		$view_paths[] = Modulo2Constants::VIEWS_DIR;
-
-		parent::__construct($request, $response, $view_paths);
-
-		if (!$this->request->user->canDoAction(Modulo2Constants::PERMISSION)) {
-			$this->response->setRedirect($this->request->config->get('error_display_url').'/n/3000?r='.urlencode($this->request->getFullUrlPath()));
-		}
-	}
+	/** Grupos del panel de la petición en curso: la barra lateral (Info) los reutiliza */
+	private static ?array $groups = null;
 	# -------------------------------------------------------
 	public function Index() {
-		if (!$this->request->user->canDoAction(Modulo2Constants::PERMISSION)) { return; }
+		if (!$this->allowed()) { return; }
 
+		$this->view->setVar('groups', $this->groups());
+		$this->view->setVar('module_names', Modulo2ManageMap::moduleNames());
+		$this->view->setVar('prepare_versions_url', $this->navUrl('Versions', 'Prepare'));
+		$this->render('manage_index_html.php');
+	}
+	# -------------------------------------------------------
+	/** Barra lateral del panel: un índice de sus grupos */
+	public function Info() {
+		if (!$this->request->user->canDoAction(Modulo2Constants::PERMISSION)) { return ''; }
+
+		$this->view->setVar('groups', $this->groups());
+		return $this->render('manage_info_html.php', true);
+	}
+	# -------------------------------------------------------
+	/** Grupos con las secciones que el usuario puede usar, con sus URL */
+	private function groups() : array {
+		if (self::$groups !== null) { return self::$groups; }
 		$hub = new Modulo2ManageHub(
 			self::manageNavigation(),
 			fn(string $action) => $this->request->user->canDoAction($action),
 			fn(string $key) => $this->request->config->get($key)
 		);
-		$this->view->setVar('groups', $this->withUrls($hub->groups(Modulo2ManageMap::groups())));
-		$this->view->setVar('module_names', Modulo2ManageMap::moduleNames());
-		$this->view->setVar('prepare_versions_url', caNavUrl($this->request, 'modulo2', 'Versions', 'Prepare'));
-		$this->render('manage_index_html.php');
+		return self::$groups = $this->withUrls($hub->groups(Modulo2ManageMap::groups()));
 	}
 	# -------------------------------------------------------
 	/** Ítems del menú Manage de Providence (navigation.conf, con sus sobrescrituras) */

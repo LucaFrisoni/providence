@@ -1,0 +1,31 @@
+# Traducciones propias de la instalación para az_AZ: los textos del tema ModernUI (diálogo al salir sin
+# guardar y ajustes de las pantallas de Providence). Providence las carga además de app/locale/az_AZ.
+# messages.mo se genera desde este archivo con gettext: msgfmt messages.po -o messages.mo
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Language: az_AZ\n"
+
+msgid "Leave without saving?"
+msgstr "Saxlamadan çıxılsın?"
+
+msgid "This form has changes that are not saved. If you leave the page, they are discarded."
+msgstr "Bu formada saxlanılmamış dəyişikliklər var. Səhifədən çıxsanız, onlar ləğv ediləcək."
+
+msgid "Keep editing"
+msgstr "Redaktəyə davam et"
+
+msgid "Leave without saving"
+msgstr "Saxlamadan çıx"
+
+msgid "Type * to see all the records."
+msgstr "Bütün qeydləri görmək üçün * yazın."
+
+msgid "The record was added to your watched items."
+msgstr "Qeyd izlədiyiniz elementlərə əlavə edildi."
+
+msgid "The record was removed from your watched items."
+msgstr "Qeyd izlədiyiniz elementlərdən çıxarıldı."
+
+msgid "Filter…"
+msgstr "Süzgəc…"

@@ -1,5 +1,5 @@
 /* ----------------------------------------------------------------------
- * themes/default/js/unsaved-changes.js : al salir de un formulario con cambios sin guardar (Cancelar o
+ * themes/modernui/js/unsaved-changes.js : al salir de un formulario con cambios sin guardar (Cancelar o
  * cualquier enlace), pregunta con un diálogo con el aspecto del módulo 2 en lugar del aviso del navegador.
  * Usa el mismo control de cambios de Providence (caUI.utils). Lo carga pageFooter.php.
  * ----------------------------------------------------------------------

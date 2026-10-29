@@ -1,0 +1,31 @@
+# Traducciones propias de la instalación para uk_UA: los textos del tema ModernUI (diálogo al salir sin
+# guardar y ajustes de las pantallas de Providence). Providence las carga además de app/locale/uk_UA.
+# messages.mo se genera desde este archivo con gettext: msgfmt messages.po -o messages.mo
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Language: uk_UA\n"
+
+msgid "Leave without saving?"
+msgstr "Вийти без збереження?"
+
+msgid "This form has changes that are not saved. If you leave the page, they are discarded."
+msgstr "Ця форма містить незбережені зміни. Якщо ви залишите сторінку, їх буде відхилено."
+
+msgid "Keep editing"
+msgstr "Продовжити редагування"
+
+msgid "Leave without saving"
+msgstr "Вийти без збереження"
+
+msgid "Type * to see all the records."
+msgstr "Введіть *, щоб побачити всі записи."
+
+msgid "The record was added to your watched items."
+msgstr "Запис додано до елементів, за якими ви стежите."
+
+msgid "The record was removed from your watched items."
+msgstr "Запис вилучено з елементів, за якими ви стежите."
+
+msgid "Filter…"
+msgstr "Фільтр…"

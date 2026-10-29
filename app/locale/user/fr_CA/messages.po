@@ -1,0 +1,31 @@
+# Traducciones propias de la instalación para fr_CA: los textos del tema ModernUI (diálogo al salir sin
+# guardar y ajustes de las pantallas de Providence). Providence las carga además de app/locale/fr_CA.
+# messages.mo se genera desde este archivo con gettext: msgfmt messages.po -o messages.mo
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Language: fr_CA\n"
+
+msgid "Leave without saving?"
+msgstr "Quitter sans enregistrer ?"
+
+msgid "This form has changes that are not saved. If you leave the page, they are discarded."
+msgstr "Ce formulaire contient des modifications non enregistrées. Si vous quittez la page, elles seront abandonnées."
+
+msgid "Keep editing"
+msgstr "Continuer à modifier"
+
+msgid "Leave without saving"
+msgstr "Quitter sans enregistrer"
+
+msgid "Type * to see all the records."
+msgstr "Saisissez * pour voir tous les enregistrements."
+
+msgid "The record was added to your watched items."
+msgstr "L'enregistrement a été ajouté à vos éléments surveillés."
+
+msgid "The record was removed from your watched items."
+msgstr "L'enregistrement a été retiré de vos éléments surveillés."
+
+msgid "Filter…"
+msgstr "Filtrer…"

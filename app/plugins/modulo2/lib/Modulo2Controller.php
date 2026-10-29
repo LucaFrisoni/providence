@@ -1,7 +1,7 @@
 <?php
 /* ----------------------------------------------------------------------
  * app/plugins/modulo2/lib/Modulo2Controller.php :
- * Base de los controladores de configuraciones, versiones e historial: permisos, CSRF y servicios.
+ * Base de los controladores del módulo: permisos, CSRF, servicios y el rastro de navegación.
  * ----------------------------------------------------------------------
  */
 require_once(__DIR__.'/Modulo2Constants.php');
@@ -9,12 +9,16 @@ require_once(__DIR__.'/Modulo2ServiceClient.php');
 require_once(__DIR__.'/Modulo2Operator.php');
 require_once(__DIR__.'/Modulo2LocalConfig.php');
 require_once(__DIR__.'/Modulo2State.php');
+require_once(__DIR__.'/Modulo2Breadcrumbs.php');
+require_once(__DIR__.'/Modulo2Ui.php');
 
 abstract class Modulo2Controller extends ActionController {
 	# -------------------------------------------------------
 	protected $config;
 	/** Si esta petición pidió rearmar el menú (entonces se rearma en la siguiente) */
 	private static bool $menu_flag_set_now = false;
+	/** Nombre de la página dentro de su sección, para el rastro de navegación (null en la principal) */
+	protected ?string $breadcrumb_page = null;
 	# -------------------------------------------------------
 	public function __construct(&$request, &$response, $view_paths=null) {
 		if (!is_array($view_paths)) { $view_paths = []; }
@@ -25,6 +29,15 @@ abstract class Modulo2Controller extends ActionController {
 
 		if (!$this->request->user->canDoAction(Modulo2Constants::PERMISSION)) { $this->denyAccess(); }
 		$this->refreshMenuIfPending();
+	}
+	# -------------------------------------------------------
+	/** Como el de Providence, con el rastro de navegación delante de la página si el usuario lo pidió */
+	public function &render($view, $dont_add_content = false, $dont_replace_tags = false) {
+		if (!$dont_add_content && Modulo2Breadcrumbs::enabled($this->request->user)) {
+			$trail = Modulo2Breadcrumbs::trail($this->request->getController(), $this->breadcrumb_page, fn($controller, $action) => $this->navUrl($controller, $action));
+			$this->response->addContent(Modulo2Ui::breadcrumbs($trail), 'view');
+		}
+		return parent::render($view, $dont_add_content, $dont_replace_tags);
 	}
 	# -------------------------------------------------------
 	/**

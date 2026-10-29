@@ -30,6 +30,8 @@ final class Modulo2Constants {
 	const CONFIGURATIONS_WIDGET = 'modulo2ConfigurationsInfo';
 	/** Prefijo de las barras laterales de My preferences y sus versiones */
 	const PREFERENCES_WIDGET = 'modulo2PreferencesInfo';
+	/** Clave de la barra lateral del panel de gestión */
+	const MANAGE_WIDGET = 'modulo2ManageInfo';
 	/** Archivo de Providence con el árbol de menús, del que el panel de gestión lee Manage */
 	const NAVIGATION_CONF = 'navigation.conf';
 	# -------------------------------------------------------

@@ -369,7 +369,7 @@ const IDENTIFIER_SETTINGS: &[Setting] = &[
     Setting::per_type(
         "require_valid_id_number_for",
         "Valid identifier required",
-        "Does not allow saving a record whose identifier does not follow the format of its type. With a free text format any identifier is valid, even an empty one. Records saved before keep their identifier, but cannot be saved again until it is corrected.",
+        "Does not allow saving a record without an identifier or with one that does not follow the format of its type. Records saved before keep their identifier, but cannot be saved again until it is corrected.",
         Kind::Boolean,
         VALID_ID_TYPES,
     )

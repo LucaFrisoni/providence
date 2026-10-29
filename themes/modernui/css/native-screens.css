@@ -1,5 +1,5 @@
 /* ----------------------------------------------------------------------
- * themes/default/css/native-screens.css : aspecto moderno, igual al del módulo 2, para las pantallas
+ * themes/modernui/css/native-screens.css : aspecto moderno, igual al del módulo 2, para las pantallas
  * nativas de Providence (Administración, Nuevo, Encontrar, Exploración, Gestión, Importar...).
  * Solo cambia la apariencia. Lo carga local.css.
  * ----------------------------------------------------------------------
@@ -1957,4 +1957,69 @@
 #providenceApp:not(:has(#mainContent [class*="m2-"])) #leftNav select option {
     white-space: normal;
     overflow-wrap: anywhere;
+}
+
+/* --- Rastro de navegación (preferencia "rastro de navegación"): una barra con los pasos separados por "›",
+   igual a la de las pantallas del módulo 2 (Modulo2Ui::breadcrumbs). Las flechas en imagen se ocultan --- */
+#providenceApp div.navBreadCrumbContainer {
+    margin: 2px 0 14px 0;
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+#providenceApp div.navBreadCrumbs {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px 0;
+    height: auto;
+    padding: 7px 14px;
+    border: 1px solid #e2e8eb;
+    border-radius: 10px;
+    background: #f5f8f9;
+}
+
+#providenceApp div.navBreadCrumbs :is(.crumb, .lastcrumb) {
+    float: none;
+    height: auto;
+    background: none;
+}
+
+#providenceApp div.navBreadCrumbs :is(.crumb, .lastcrumb) img {
+    display: none;
+}
+
+#providenceApp div.navBreadCrumbs .crumbtext {
+    float: none;
+    height: auto;
+    padding: 0;
+    background: none;
+    font-size: 12.5px;
+    line-height: 1.4;
+    color: #66757e;
+}
+
+#providenceApp div.navBreadCrumbs .crumb:not(:first-child) .crumbtext::after {
+    content: "›";
+    margin: 0 8px;
+    color: #9aa7ad;
+}
+
+#providenceApp div.navBreadCrumbs .crumbtext.navBreadCrumbLabel {
+    margin-right: 10px;
+    background: none;
+    font-size: 10.5px;
+    font-weight: 700;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: #138290;
+}
+
+#providenceApp div.navBreadCrumbs .lastcrumb .crumbtext {
+    font-weight: 600;
+    color: #1d2b33;
+}
+
+#providenceApp div.navBreadCrumbs .expandCollapse {
+    margin: 0 0 0 auto;
+    float: none;
 }

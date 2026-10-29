@@ -1,0 +1,31 @@
+# Traducciones propias de la instalación para hu_HU: los textos del tema ModernUI (diálogo al salir sin
+# guardar y ajustes de las pantallas de Providence). Providence las carga además de app/locale/hu_HU.
+# messages.mo se genera desde este archivo con gettext: msgfmt messages.po -o messages.mo
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Language: hu_HU\n"
+
+msgid "Leave without saving?"
+msgstr "Kilép mentés nélkül?"
+
+msgid "This form has changes that are not saved. If you leave the page, they are discarded."
+msgstr "Ezen az űrlapon nem mentett módosítások vannak. Ha elhagyja az oldalt, elvesznek."
+
+msgid "Keep editing"
+msgstr "Szerkesztés folytatása"
+
+msgid "Leave without saving"
+msgstr "Kilépés mentés nélkül"
+
+msgid "Type * to see all the records."
+msgstr "Írjon be *-ot az összes rekord megtekintéséhez."
+
+msgid "The record was added to your watched items."
+msgstr "A rekord felkerült a figyelt elemei közé."
+
+msgid "The record was removed from your watched items."
+msgstr "A rekord lekerült a figyelt elemei közül."
+
+msgid "Filter…"
+msgstr "Szűrés…"

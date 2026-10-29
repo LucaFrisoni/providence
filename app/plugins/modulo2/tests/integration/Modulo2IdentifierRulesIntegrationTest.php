@@ -81,13 +81,21 @@ final class Modulo2IdentifierRulesIntegrationTest extends Modulo2BehaviorTestCas
 		$this->assertNotNull($this->insertRecord('ca_objects', 'ABCD', 'sculpture'));
 	}
 	# -------------------------------------------------------
-	// El formato de objetos de la distribución es texto libre sin largo mínimo
-	#[TestDox('#5 Con el formato de texto libre de Providence, "identificador válido" acepta cualquiera, incluso vacío')]
-	public function testValidIdentifierWithFreeFormatAcceptsAnything() : void {
-		$this->configure(['require_valid_id_number_for_ca_objects' => 1]);
+	// El tema agrega un largo mínimo de 1 al formato de texto libre (themes/default/conf/multipart_id_numbering.conf)
+	#[TestDox('#5 En cada tipo de dato, con identificador válido obligatorio no se guarda uno vacío; sin la regla sí (salvo recorridos)')]
+	public function testValidIdentifierRejectsEmptyOnlyWhenRequired() : void {
+		// Se permiten repetidos: la base puede tener ya un registro sin identificador
+		foreach ($this->catalogEntries('identifiers', 'require_valid_id_number_for') as $table => $key) {
+			$duplicates = 'allow_duplicate_id_number_for_'.$table;
+			$this->configure([$key => 1, $duplicates => 1]);
+			$this->assertNull($this->insertRecord($table, ''), "{$table}: vacío");
+			$this->assertNotNull($this->insertRecord($table, str_repeat('x', 40)), "{$table}: cualquier texto");
 
-		$this->assertNotNull($this->insertRecord('ca_objects', ''));
-		$this->assertNotNull($this->insertRecord('ca_objects', str_repeat('x', 40)));
+			$this->configure([$key => 0, $duplicates => 1]);
+			// El código de los recorridos nunca puede quedar vacío en Providence (largo mínimo 1 en el modelo)
+			$expected = $table === 'ca_tours' ? 'assertNull' : 'assertNotNull';
+			$this->$expected($this->insertRecord($table, ''), "{$table}: vacío sin la regla");
+		}
 	}
 	# -------------------------------------------------------
 	// Qué pasa con los registros creados antes de activar la regla

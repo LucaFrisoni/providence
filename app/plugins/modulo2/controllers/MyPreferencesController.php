@@ -10,6 +10,7 @@ require_once(__CA_APP_DIR__.'/plugins/modulo2/lib/Modulo2Controller.php');
 require_once(__CA_APP_DIR__.'/plugins/modulo2/lib/Modulo2PreferencePage.php');
 require_once(__CA_APP_DIR__.'/plugins/modulo2/lib/Modulo2PreferenceEditor.php');
 require_once(__CA_APP_DIR__.'/plugins/modulo2/lib/Modulo2Ui.php');
+require_once(__CA_APP_DIR__.'/plugins/modulo2/lib/Modulo2PreferenceValidator.php');
 
 class MyPreferencesController extends Modulo2Controller {
 	# -------------------------------------------------------
@@ -49,6 +50,7 @@ class MyPreferencesController extends Modulo2Controller {
 			$this->notify(Modulo2I18n::t('Those preferences cannot be saved from here.'), true);
 			return $this->redirectTo('MyPreferences', 'EditUIPrefs');
 		}
+		if (!$this->validValues($group, $table)) { return $this->redirectTo(...$back); }
 		try {
 			$editor = new Modulo2PreferenceEditor($this->client(), $this->request->user, Modulo2PreferenceEditor::nativeSave($this->request, $table));
 			$this->notifySave($editor->apply($group, $this->rawParameter('expected_hash'), $this->operator(), $this->versionFromForm(), $this->previousVersionFromForm()));
@@ -56,6 +58,15 @@ class MyPreferencesController extends Modulo2Controller {
 			$this->notify(Modulo2I18n::t('The preferences were not saved: %1', $e->getMessage()), true);
 		}
 		$this->redirectTo(...$back);
+	}
+	# -------------------------------------------------------
+	/** Si los valores enviados son válidos; si no, avisa cuáles y no se guarda nada */
+	private function validValues(string $group, ?string $table) : bool {
+		$prefs = array_merge(...array_column(Modulo2PreferenceGroups::sections($this->request->user, $group, $table), 'prefs'));
+		$sent = fn(string $field) => (isset($_REQUEST[$field]) && !is_array($_REQUEST[$field])) ? $this->rawParameter($field) : null;
+		$invalid = Modulo2PreferenceValidator::invalid($this->request->user, $prefs, $sent);
+		if ($invalid) { $this->notify(Modulo2I18n::t('Nothing was saved: these values are not valid: %1.', join(', ', $invalid)), true); }
+		return !$invalid;
 	}
 	# -------------------------------------------------------
 	/** Barra lateral: los grupos de My preferences, las versiones y el historial */
@@ -79,7 +90,7 @@ class MyPreferencesController extends Modulo2Controller {
 			$this->view->setVar('error', $e->getMessage());
 		}
 		$this->view->setVar('group', $group);
-		$this->view->setVar('group_name', Modulo2I18n::t((string)($user->getPreferenceGroupInfo($group)['name'] ?? $group)));
+		$this->view->setVar('group_name', $this->breadcrumb_page = Modulo2I18n::t((string)($user->getPreferenceGroupInfo($group)['name'] ?? $group)));
 		$this->view->setVar('action', Modulo2PreferenceGroups::GROUPS[$group]['action']);
 		$this->view->setVar('sections', Modulo2PreferencePage::sections($this->request->user, $group, $table));
 		$this->setSaveVars($table);

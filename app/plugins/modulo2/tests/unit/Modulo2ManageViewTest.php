@@ -1,7 +1,7 @@
 <?php
 /* ----------------------------------------------------------------------
  * app/plugins/modulo2/tests/unit/Modulo2ManageViewTest.php :
- * Pruebas unitarias de la vista del panel de gestión, con grupos de prueba ya armados.
+ * Pruebas unitarias de la vista del panel de gestión y de su barra lateral, con grupos de prueba ya armados.
  * ----------------------------------------------------------------------
  */
 require_once(__CA_APP_DIR__.'/plugins/modulo2/lib/Modulo2Constants.php');
@@ -53,14 +53,26 @@ final class Modulo2ManageViewTest extends TestCase {
 		$this->assertStringNotContainsString('<b>Sets</b>', $html);
 	}
 	# -------------------------------------------------------
-	private function render(string $sets_label = 'My sets') : string {
+	// El índice de la barra lateral lleva a cada grupo de la página: si un id cambiara en una sola vista, el enlace no haría nada
+	#[TestDox('La barra lateral tiene un enlace por grupo, al título del grupo en la página, con la cantidad de secciones')]
+	public function testSidebarLinksEveryGroupOfThePage() : void {
+		$page = $this->render();
+		$sidebar = $this->render('My sets', 'manage_info_html.php');
+
+		preg_match_all('/<a href="#(m2-manage-[a-z_]+)">([^<]+)<span class="m2-count">(\d+)<\/span>/', $sidebar, $links);
+		$this->assertSame(['Configuration', 'Mi trabajo', 'Acceso'], $links[2]);
+		$this->assertSame(['1', '1', '1'], $links[3]);
+		foreach ($links[1] as $anchor) { $this->assertStringContainsString('id="'.$anchor.'"', $page); }
+	}
+	# -------------------------------------------------------
+	private function render(string $sets_label = 'My sets', string $view = 'manage_index_html.php') : string {
 		$vars = ['groups' => $this->sampleGroups($sets_label), 'module_names' => [3 => 'Módulo 3 (prueba)']];
 		$context = new class($vars) {
 			public function __construct(private array $vars) {}
 			public function getVar(string $name) { return $this->vars[$name] ?? null; }
 		};
 		$include = function(string $path) { ob_start(); include $path; return ob_get_clean(); };
-		return Closure::bind($include, $context, get_class($context))(Modulo2Constants::VIEWS_DIR.'/manage_index_html.php');
+		return Closure::bind($include, $context, get_class($context))(Modulo2Constants::VIEWS_DIR.'/'.$view);
 	}
 	# -------------------------------------------------------
 	private function sampleGroups(string $sets_label) : array {

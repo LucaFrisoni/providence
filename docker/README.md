@@ -94,12 +94,12 @@ perfil ya no crea (`ca_attribute_lifespan`), y cada guardado mostraba "'ca_attri
 existe en este objeto". Lo reemplaza por el campo propio de las entidades (`lifespan`). Lo verifica
 `ProvidenceInstallationTest`.
 
-El pie de página de Providence tiene estilos propios en
-[themes/default/css/local.css](../themes/default/css/local.css), el archivo que Providence carga después
-de los estilos del tema para los ajustes de cada instalación. Ese archivo importa
-[native-screens.css](../themes/default/css/native-screens.css), que da a las pantallas de Providence
-el aspecto del módulo 2; `pageFooter.php` carga además `js/unsaved-changes.js` y `js/native-ui.js`. Como son parte del
-tema, un cambio ahí (o en `app/locale/user`) necesita `docker compose up -d --build providence`.
+El aspecto moderno de las pantallas de Providence es el tema
+[CollectiveAccess ModernUI](../themes/modernui), que cada usuario elige en sus preferencias (es el de
+quien todavía no eligió): su `css/local.css`, el archivo que Providence carga después de sus estilos,
+importa `native-screens.css`, y `pageFooter.php` carga `js/unsaved-changes.js` y `js/native-ui.js`.
+Los temas no se montan en el contenedor: un cambio ahí (o en `app/locale/user`) necesita
+`docker compose up -d --build providence`.
 
 Cada módulo que ya tiene plugin agrega su menú en la barra principal (el del módulo 2 ocupa
 el lugar de **Manage** y se llama **Management**).

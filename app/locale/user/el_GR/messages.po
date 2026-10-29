@@ -1,0 +1,31 @@
+# Traducciones propias de la instalación para el_GR: los textos del tema ModernUI (diálogo al salir sin
+# guardar y ajustes de las pantallas de Providence). Providence las carga además de app/locale/el_GR.
+# messages.mo se genera desde este archivo con gettext: msgfmt messages.po -o messages.mo
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Language: el_GR\n"
+
+msgid "Leave without saving?"
+msgstr "Έξοδος χωρίς αποθήκευση;"
+
+msgid "This form has changes that are not saved. If you leave the page, they are discarded."
+msgstr "Αυτή η φόρμα έχει αλλαγές που δεν έχουν αποθηκευτεί. Αν φύγετε από τη σελίδα, θα απορριφθούν."
+
+msgid "Keep editing"
+msgstr "Συνέχεια επεξεργασίας"
+
+msgid "Leave without saving"
+msgstr "Έξοδος χωρίς αποθήκευση"
+
+msgid "Type * to see all the records."
+msgstr "Πληκτρολογήστε * για να δείτε όλες τις εγγραφές."
+
+msgid "The record was added to your watched items."
+msgstr "Η εγγραφή προστέθηκε στα στοιχεία που παρακολουθείτε."
+
+msgid "The record was removed from your watched items."
+msgstr "Η εγγραφή αφαιρέθηκε από τα στοιχεία που παρακολουθείτε."
+
+msgid "Filter…"
+msgstr "Φίλτρο…"

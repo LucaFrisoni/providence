@@ -205,6 +205,23 @@ class Modulo2Ui {
 </style>';
 	}
 	# -------------------------------------------------------
+	/** Rastro de navegación (ver Modulo2Breadcrumbs::trail), con el mismo aspecto que el del tema ModernUI */
+	public static function breadcrumbs(array $trail) : string {
+		$e = fn($text) => htmlspecialchars((string)$text, ENT_QUOTES, 'UTF-8');
+		$items = array_map(fn($crumb) => $crumb['url'] ? '<li><a href="'.$e($crumb['url']).'">'.$e($crumb['label']).'</a></li>' : '<li>'.$e($crumb['label']).'</li>', $trail);
+		$items[sizeof($items) - 1] = str_replace('<li>', '<li aria-current="page">', end($items));
+		return '<style>
+	.m2-breadcrumbs { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; margin: 2px 0 14px 0; padding: 7px 14px; border: 1px solid #e2e8eb; border-radius: 10px;
+		background: #f5f8f9; font: 12.5px/1.4 system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; color: #66757e; }
+	.m2-breadcrumbs > span { font-size: 10.5px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: #138290; }
+	.m2-breadcrumbs ol { display: flex; flex-wrap: wrap; align-items: center; margin: 0; padding: 0; list-style: none; }
+	.m2-breadcrumbs li + li::before { content: "›"; margin: 0 8px; color: #9aa7ad; }
+	.m2-breadcrumbs a { color: #0e6b75; text-decoration: none; }
+	.m2-breadcrumbs a:hover { text-decoration: underline; }
+	.m2-breadcrumbs li[aria-current] { color: #1d2b33; font-weight: 600; }
+</style><nav class="m2-breadcrumbs" aria-label="'.$e(Modulo2I18n::t('Current location')).'"><span>'.$e(Modulo2I18n::t('Current location')).'</span><ol>'.join('', $items).'</ol></nav>';
+	}
+	# -------------------------------------------------------
 	/** Pide en segundo plano, con la página ya cargada, que se prepare la lista de versiones (Versions/Prepare) */
 	public static function prepareVersionsScript(string $url) : string {
 		$url = json_encode($url, JSON_HEX_TAG | JSON_HEX_AMP | JSON_UNESCAPED_SLASHES);

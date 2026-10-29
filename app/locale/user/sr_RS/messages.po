@@ -1,0 +1,31 @@
+# Traducciones propias de la instalación para sr_RS: los textos del tema ModernUI (diálogo al salir sin
+# guardar y ajustes de las pantallas de Providence). Providence las carga además de app/locale/sr_RS.
+# messages.mo se genera desde este archivo con gettext: msgfmt messages.po -o messages.mo
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Language: sr_RS\n"
+
+msgid "Leave without saving?"
+msgstr "Изаћи без чувања?"
+
+msgid "This form has changes that are not saved. If you leave the page, they are discarded."
+msgstr "Овај образац има несачуване измене. Ако напустите страницу, биће одбачене."
+
+msgid "Keep editing"
+msgstr "Настави уређивање"
+
+msgid "Leave without saving"
+msgstr "Изађи без чувања"
+
+msgid "Type * to see all the records."
+msgstr "Унесите * да видите све записе."
+
+msgid "The record was added to your watched items."
+msgstr "Запис је додат у ставке које пратите."
+
+msgid "The record was removed from your watched items."
+msgstr "Запис је уклоњен из ставки које пратите."
+
+msgid "Filter…"
+msgstr "Филтер…"

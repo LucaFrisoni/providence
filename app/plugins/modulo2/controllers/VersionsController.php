@@ -126,6 +126,7 @@ class VersionsController extends Modulo2Controller {
 			$parent = $version['version']['parent_id'] ? $client->getVersion((int)$version['version']['parent_id']) : null;
 			$changes = $this->settingsDiff()->changes($parent['files'] ?? [], $version['files']);
 			$this->view->setVar('version', $version['version']);
+			$this->breadcrumb_page = Modulo2I18n::t('Version %1', (int)$version['version']['number']);
 			$this->setChangeVars($changes, self::differs($parent['database_hash'] ?? null, $version['database_hash']));
 		} catch (Modulo2ServiceException | Modulo2ConfigException $e) {
 			$this->view->setVar('error', $e->getMessage());
@@ -146,6 +147,7 @@ class VersionsController extends Modulo2Controller {
 			$current_db = isset($state['database']) ? hash('sha256', $state['database']) : null;
 			$info = $client->getStateInfo($state);
 			$this->view->setVar('version', $version['version']);
+			$this->breadcrumb_page = Modulo2I18n::t('Restore version %1', (int)$version['version']['number']);
 			$this->view->setVar('expected_hash', $info['hash']);
 			$this->view->setVar('current_saved', (bool)($info['version'] ?? null));
 			$this->view->setVar('suggested_previous_name', $this->operator()->previousVersionName());

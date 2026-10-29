@@ -104,6 +104,7 @@ class PreferenceVersionsController extends Modulo2Controller {
 			$version = $this->version((int)$this->request->getParameter('id', pInteger));
 			$parent = $version['version']['parent_id'] ? $this->version((int)$version['version']['parent_id']) : null;
 			$this->view->setVar('version', $version['version']);
+			$this->breadcrumb_page = Modulo2I18n::t('Version %1', (int)$version['version']['number']);
 			$this->view->setVar('changes', $this->rows((array)($parent['preferences'] ?? []), (array)$version['preferences']));
 		} catch (Modulo2ServiceException $e) {
 			$this->view->setVar('error', $e->getMessage());
@@ -120,6 +121,7 @@ class PreferenceVersionsController extends Modulo2Controller {
 			$version = $this->version((int)$this->request->getParameter('id', pInteger));
 			$info = $this->client()->getPreferenceStateInfo($this->operator()->user(), $this->preferences());
 			$this->view->setVar('version', $version['version']);
+			$this->breadcrumb_page = Modulo2I18n::t('Restore version %1', (int)$version['version']['number']);
 			$this->view->setVar('changes', $this->rows($this->preferences(), (array)$version['preferences']));
 			$this->view->setVar('expected_hash', $info['hash']);
 			$this->view->setVar('current_saved', (bool)($info['version'] ?? null));

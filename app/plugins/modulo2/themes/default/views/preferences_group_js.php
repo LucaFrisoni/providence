@@ -62,11 +62,22 @@
 			return rows.length ? rowsText(rows) : valuesText(scope);
 		};
 
+		// La autoría al final de un nombre ("… (by Luca Frisoni)", en los temas) va en letra chica
+		var showText = function(el, text) {
+			var match = /^(.*\S)\s+(\(by [^)]+\))$/.exec(text);
+			el.textContent = match ? match[1] + ' ' : text;
+			if (!match) { return; }
+			var credit = document.createElement('small');
+			credit.className = 'm2-credit';
+			credit.textContent = match[2];
+			el.appendChild(credit);
+		};
+
 		// ---------------------------------------------------------------- Tabla y pendientes
 		var pendingKeys = function() { return Object.keys(fields).filter(function(key) { return !same(snapshot(fields[key]), original[key]); }); };
 		var refresh = function(key) {
 			var row = document.querySelector('tr[data-m2-pref="' + CSS.escape(key) + '"]'), text = summary(fields[key]);
-			row.querySelector('.m2-summary').textContent = text;
+			showText(row.querySelector('.m2-summary'), text);
 			row.querySelector('td.m2-value').title = text;
 			row.querySelector('td.m2-value').classList.toggle('m2-pending', !same(snapshot(fields[key]), original[key]));
 			var count = pendingKeys().length;
@@ -112,7 +123,7 @@
 			var row = document.createElement('tr'), name = document.createElement('td');
 			name.textContent = clean(document.querySelector('tr[data-m2-pref="' + CSS.escape(key) + '"] strong').textContent);
 			row.appendChild(name);
-			[originalText[key], summary(fields[key])].forEach(function(text) { var cell = document.createElement('td'); cell.textContent = text; row.appendChild(cell); });
+			[originalText[key], summary(fields[key])].forEach(function(text) { var cell = document.createElement('td'); showText(cell, text); row.appendChild(cell); });
 			var undo = document.createElement('td'), button = document.createElement('button');
 			button.type = 'button';
 			button.className = 'm2-btn m2-btn-small';

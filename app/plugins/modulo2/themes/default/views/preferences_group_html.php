@@ -42,6 +42,7 @@ $row = fn(string $key, string $label, string $description) => '<tr data-m2-pref=
 		transition: background .15s, border-color .15s; }
 	button.m2-edit:hover { border-color: #bfe0e4; background: var(--m2-accent-soft); }
 	button.m2-edit:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--m2-accent-ring); }
+	.m2-credit { color: var(--m2-muted); font-size: 10.5px; font-weight: normal; }
 	td.m2-pending button.m2-edit { border-color: #7aa7dc; background: var(--m2-info-soft); font-weight: 600; }
 	.m2-tabs { display: flex; flex-wrap: wrap; gap: 6px; margin: 12px 0; padding: 4px; border-radius: 10px; background: var(--m2-soft); width: fit-content; max-width: 100%; }
 	.m2-tabs a { padding: 6px 14px; border-radius: 7px; color: var(--m2-muted); font-weight: 600; text-decoration: none; font-size: 12px; transition: background .15s, color .15s; }

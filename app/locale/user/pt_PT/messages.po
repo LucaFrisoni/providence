@@ -1,0 +1,31 @@
+# Traducciones propias de la instalación para pt_PT: los textos del tema ModernUI (diálogo al salir sin
+# guardar y ajustes de las pantallas de Providence). Providence las carga además de app/locale/pt_PT.
+# messages.mo se genera desde este archivo con gettext: msgfmt messages.po -o messages.mo
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Language: pt_PT\n"
+
+msgid "Leave without saving?"
+msgstr "Sair sem guardar?"
+
+msgid "This form has changes that are not saved. If you leave the page, they are discarded."
+msgstr "Este formulário tem alterações que não foram guardadas. Se sair da página, serão descartadas."
+
+msgid "Keep editing"
+msgstr "Continuar a editar"
+
+msgid "Leave without saving"
+msgstr "Sair sem guardar"
+
+msgid "Type * to see all the records."
+msgstr "Escreva * para ver todos os registos."
+
+msgid "The record was added to your watched items."
+msgstr "O registo foi adicionado aos elementos que acompanha."
+
+msgid "The record was removed from your watched items."
+msgstr "O registo foi removido dos elementos que acompanha."
+
+msgid "Filter…"
+msgstr "Filtrar…"

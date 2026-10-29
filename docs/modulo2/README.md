@@ -92,12 +92,21 @@ cambios de Providence (`ca_change_log`).
     - **Pantalla de Providence:** el resto de las secciones funcionan tal cual en Providence; el panel
       las ordena, las describe y las enlaza.
 - **Interfaz en el idioma del usuario:** los textos se escriben en inglés (el idioma por defecto de
-  Providence) con `Modulo2I18n::t()` y se muestran en el idioma que el usuario elige en My preferences.
-  Providence solo busca traducciones en `app/locale` y en el tema, así que el módulo trae las suyas en
-  `app/plugins/modulo2/locale/<idioma>.php` (por ahora `es.php`, para todos los `es_*`); un idioma sin
-  archivo se ve en inglés. También se traducen el catálogo y los mensajes del servicio. Las pruebas
-  fallan si a un texto le falta su traducción. Para sumar un idioma alcanza con copiar `es.php` y
-  traducirlo.
+  Providence) y se muestran en el idioma que el usuario elige en My preferences, en todos los idiomas
+  que trae Providence. Las traducciones propias están en dos lugares:
+    - `app/plugins/modulo2/locale/<idioma>.php`: los textos del módulo (`Modulo2I18n::t()`), el catálogo,
+      los mensajes del servicio y los nombres de preferencias que Providence no tiene traducidos. Un
+      archivo por idioma (`de.php` sirve para `de_DE` y `de_AT`) o por locale cuando la variante cambia
+      mucho (`pt_BR.php`). Providence solo busca traducciones en `app/locale` y en el tema, por eso el
+      módulo trae las suyas.
+    - `app/locale/user/<locale>/messages.po` (y su `.mo` compilado): los textos de Providence que su
+      traducción no tiene (en `es_ES`, copiado a `es_MX`) y los del tema ModernUI (diálogo al salir sin
+      guardar, ayuda de la búsqueda, avisos). Providence los carga junto con los suyos, pero los suyos
+      tienen prioridad: un texto que Providence ya traduce no se puede cambiar desde acá.
+  Las traducciones a otros idiomas se hicieron siguiendo los términos que ya usa la traducción de
+  Providence de cada idioma (menús, conjuntos, visualizaciones…); conviene que las revise alguien que
+  hable el idioma. Las pruebas fallan si a un texto le falta su traducción en algún idioma o si una
+  traducción pierde un dato (`%1`) o un resaltado (`**`).
 - **Trabaja con una lista blanca:** solo muestra y modifica las configuraciones del catálogo.
 - **Escribe solo en `app/conf/local/`:** es el lugar que Providence prevé para los cambios de cada
   instalación. Los archivos de `app/conf/` quedan como vienen, así que volver al valor original es sacar
@@ -317,6 +326,22 @@ reglas de cada preferencia. Antes, el servicio verifica que las preferencias no 
 abrió la pantalla (por hash); después, el plugin relee la base y, si algo no quedó guardado, deja todo
 como estaba. Restaurar una versión reemplaza las preferencias y conserva las demás variables del usuario.
 
+**Valores revisados en el servidor:** antes del guardado de Providence, el módulo rechaza un valor
+que la pantalla no ofrece (`Modulo2PreferenceValidator`) y no guarda nada. Providence no revisa el
+tema ni el idioma: guardaría cualquier texto como tema, también una ruta. La antigüedad del borrado
+automático de conjuntos tiene que ser un número entero de 1 día o más: con 0 o un texto, Providence la
+toma como 0 días.
+
+**Textos sin traducción en Providence:** algunas preferencias no tienen traducción en Providence (por
+ejemplo, las de conjuntos públicos, exportación y borrado automático). La pantalla les aplica la
+traducción del módulo a su nombre, su descripción y sus opciones; las que Providence sí traduce se ven
+con su traducción.
+
+**Rastro de navegación:** con la preferencia de Providence "rastro de navegación", las pantallas del
+módulo muestran Gestión › Panel de gestión › sección › página (`Modulo2Breadcrumbs`). Providence arma
+el de sus pantallas con `navigation.conf`, que no conoce las del módulo. Con ModernUI, el de Providence
+tiene el mismo aspecto.
+
 **Sin historial:** las preferencias tienen versiones, pero no una pantalla de historial. El servicio
 guarda un registro interno de cada guardado y restauración, que usa para confirmar que se aplicaron.
 
@@ -461,8 +486,15 @@ prueba se corte.
 - **Identificadores.** Las dos reglas son por tipo de dato: Providence no tiene reglas por subtipo, y un
   complemento no puede impedir un guardado (sus avisos previos no cancelan nada). Lo que sí es por
   subtipo es el formato (`multipart_id_numbering.conf`), y "identificador válido" exige el formato del
-  subtipo del registro. Con el formato de la distribución (texto libre sin largo mínimo) cualquier
-  identificador es válido, incluso vacío. Los repetidos se buscan en todo el tipo de dato: un subtipo no
+  subtipo del registro. El formato de la distribución es texto libre sin largo mínimo, así que aceptaba un
+  identificador vacío: el tema le suma un largo mínimo de 1
+  (`themes/default/conf/multipart_id_numbering.conf`, con `#!merge`), y con la regla activa el
+  identificador no puede quedar vacío. Sin la regla Providence no revisa el formato y se sigue
+  aceptando vacío, salvo en recorridos, cuyo código siempre es obligatorio. Está fuera de
+  `app/conf/local` para que las versiones no lo incluyan ni lo borre una restauración; un
+  `multipart_id_numbering.conf` propio en `app/conf/local` sin `#!merge` lo reemplaza. De fábrica la regla
+  está activa en entidades, lugares, colecciones y hechos: ahí crear un registro al vuelo o importarlo
+  sin identificador ya no se puede. Los repetidos se buscan en todo el tipo de dato: un subtipo no
   puede repetir el identificador de otro. Activar una regla no revisa los registros que ya existen: uno
   anterior inválido no se puede volver a guardar hasta corregirlo; los repetidos anteriores se
   conservan.
@@ -470,6 +502,16 @@ prueba se corte.
   de lista nunca se guardan sin nombre (el plural es obligatorio), así que esa regla no los incluye.
   Entidades, colecciones y hechos no permiten nombres repetidos de fábrica. El aviso de nombre
   repetido existe solo para entidades: aparece mientras se escribe y no impide guardar.
+- **Borrado automático de conjuntos (preferencias de General).** Un conjunto es una lista de registros
+  armada por un usuario (para un informe, una exposición, una búsqueda), no una colección. Providence
+  borra, en su tarea periódica (complemento `autodeleteSets`), los conjuntos marcados "borrar
+  automáticamente" cuando pasan la antigüedad que eligió su dueño; los marca el botón del inspector del
+  conjunto o, al crearlo, la preferencia "Borrado automático de los conjuntos nuevos". El borrado es
+  lógico (`deleted = 1`) y desaparece también para los usuarios con los que estaba compartido. Lo
+  verifica `Modulo2GeneralPreferencesIntegrationTest`: Providence compara la preferencia como texto, así
+  que "No" no lo desactiva, y en el modo "días desde el último uso" toma la fecha como 0, así que un
+  conjunto marcado vence aunque se haya usado recién. Tampoco mira los permisos de borrar conjuntos.
+  **Decisión pendiente:** qué hacer con estas cuatro preferencias.
 - **Resultados (pendiente: hay que modificar Providence).** Providence tiene cuatro valores: "Siempre
   mostrar" y "Siempre ocultar" se aplican siempre; "Mostrar" y "Ocultar" son solo el valor inicial, el
   usuario elige en los resultados y Providence recuerda su elección. El catálogo ofrece solo los dos que
@@ -540,9 +582,9 @@ tipo de dato, subtipos anidados de objetos, para "Resultados" un objeto con dos 
   letra, botones, tarjetas, tablas, diálogos y listas desplegables). Las demás pantallas de Providence
   (Administration, Nuevo y edición de registros, Encontrar con sus búsquedas avanzada y Exploración,
   Recorridos, Importar y todas las secciones del panel: Mi trabajo, Datos y vocabularios, Usuarios y
-  acceso, Contenido y comunidad, Seguimiento) toman el mismo aspecto con
-  [themes/default/css/native-screens.css](../../themes/default/css/native-screens.css), que importa
-  `local.css`: solo cambia estilos, sin tocar su HTML ni su funcionamiento, y se aplica en todas las
+  acceso, Contenido y comunidad, Seguimiento) toman el mismo aspecto con el tema **CollectiveAccess
+  ModernUI** ([themes/modernui](../../themes/modernui)): su `local.css` importa
+  [native-screens.css](../../themes/modernui/css/native-screens.css). Solo cambia estilos, sin tocar su HTML ni su funcionamiento, y se aplica en todas las
   páginas menos las del módulo, que tienen sus estilos propios (selector `:has` sobre las clases `m2-`).
   La búsqueda avanzada acomoda sus campos en una grilla, para cualquier tipo de dato; las ventanas de
   Descargar, Opciones y Refinar resultados y las facetas de Exploración son tarjetas y botones. En los formularios de edición Providence repite la barra de Guardar/Cancelar/Borrar arriba y
@@ -551,14 +593,21 @@ tipo de dato, subtipos anidados de objetos, para "Resultados" un objeto con dos 
   Las listas desplegables usan `appearance: base-select` para que la lista abierta tenga el mismo
   estilo; un navegador que no lo soporta (Chrome y Edge sí, desde la versión 135) muestra la lista de
   siempre.
+- **Dos temas.** Cada usuario elige en _My preferences → General_ entre el tema de Providence
+  (_CollectiveAccess default theme_, sin cambios) y _CollectiveAccess ModernUI (by Luca Frisoni)_.
+  ModernUI trae solo estilos y scripts (`css/` y `js/`); vistas, gráficos y demás archivos los toma del
+  tema default, porque Providence busca cada archivo primero en el tema elegido y después en default.
+  Quien todavía no eligió usa ModernUI: lo define
+  [themes/default/conf/user_pref_defs.conf](../../themes/default/conf/user_pref_defs.conf) (`#!merge`
+  sobre las definiciones de Providence). Las pantallas del módulo se ven igual con los dos temas.
 - **Salir con cambios sin guardar.** Providence avisa con el cuadro del navegador (`beforeunload`), que
-  no se puede estilizar. [themes/default/js/unsaved-changes.js](../../themes/default/js/unsaved-changes.js)
+  no se puede estilizar. [themes/modernui/js/unsaved-changes.js](../../themes/modernui/js/unsaved-changes.js)
   lo reemplaza, al seguir un enlace (Cancelar, el menú...), por un diálogo con el aspecto del módulo, usando
   el mismo control de cambios de Providence (`caUI.utils`). Al cerrar la pestaña o usar "Atrás" sigue el
   aviso del navegador. Lo carga `pageFooter.php` con sus textos traducidos (`app/locale/user`). Borrar
   no pregunta: lleva a su propia confirmación.
-- **Ajustes de las pantallas nativas.** [themes/default/js/native-ui.js](../../themes/default/js/native-ui.js),
-  cargado también por `pageFooter.php`, agrega lo que no se puede con estilos, sin cambiar qué hace cada
+- **Ajustes de las pantallas nativas.** [themes/modernui/js/native-ui.js](../../themes/modernui/js/native-ui.js),
+  cargado también por `pageFooter.php` (solo con ModernUI: con el tema default no encuentra los scripts), agrega lo que no se puede con estilos, sin cambiar qué hace cada
   pantalla: la ayuda "Escriba * para ver todos los registros" bajo la búsqueda básica; quita los espacios
   con que Providence sangra las opciones de listas jerárquicas (el valor elegido quedaba corrido) y los
   reemplaza por margen; un campo para filtrar las listas largas de la barra lateral (historia, búsquedas
@@ -617,24 +666,68 @@ tipo de dato, subtipos anidados de objetos, para "Resultados" un objeto con dos 
 **Fase 5: panel de gestión**
 
 - [x] Menú Management en el lugar de Manage y panel con todas las secciones
+- [ ] Barra lateral del panel: índice de los grupos, marca el que se está viendo y sigue al buscador.
+      **Pendiente de revisión**
 - [x] My preferences: una pantalla por grupo, cambios pendientes, versiones por usuario
-- [ ] My preferences: ver y probar cada grupo, como las secciones del catálogo en la fase 4, y
-      marcarlo cuando quede aceptado
-    - [ ] General
+- [ ] My preferences: ver y probar cada preferencia. Una se marca cuando su funcionamiento quedó probado
+      en la interfaz y tiene pruebas de los casos de error, los límites y el funcionamiento correcto
+      (pocas y que no se repitan). Todas comparten la prueba de guardado de su grupo (cada campo llega
+      al guardado de Providence y entra en la versión) y la revisión de valores del servidor
+    - [ ] General (`Modulo2GeneralPreferencesIntegrationTest`)
+        - [ ] Idioma de la interfaz (`ui_locale`)
+        - [ ] Tema de la interfaz (`ui_theme`): CollectiveAccess default o ModernUI
+        - [ ] Rastro de navegación (`ui_show_breadcrumbs`): el de Providence y el de las pantallas del
+              módulo, con el aspecto de ModernUI
+        - [ ] Borrar automáticamente la búsqueda rápida anterior (`clear_quicksearch`)
+        - [ ] Recordar la última búsqueda o exploración (`persistent_search`)
+        - [ ] Conjuntos públicos de otros usuarios en la búsqueda (`list_public_sets`)
+        - [ ] Descargar de inmediato lo exportado desde el editor (`immediate_download_of_exports`)
+        - [ ] Visualizaciones en el resumen en PDF (`use_displays_for_pdf_summary_output`)
+        - [ ] Borrado automático de conjuntos (`autodelete_sets`, `autodelete_sets_default`,
+              `autodelete_sets_age_threshold`, `autodelete_sets_age_mode`): **decisión pendiente**, ver
+              "Lo que se verificó de Providence"
     - [ ] Editing (Edición)
+        - [ ] Idioma de catalogación por defecto (`cataloguing_locale`)
+        - [ ] Qué hacer con las referencias al borrar (`cataloguing_delete_reference_handling_default`)
+        - [ ] Interfaz de edición de cada tipo de dato, por subtipo (`cataloguing_<tabla>_editor_ui`)
     - [ ] Batch editing (Edición en masa)
+        - [ ] Interfaz de edición en masa de cada tipo de dato, por subtipo (`batch_<tabla>_editor_ui`)
     - [ ] Search/browse (Búsqueda y exploración)
+        - [ ] Vistas de resultados disponibles de cada tipo de dato (`find_<tabla>_...`)
     - [ ] Quick add (Al vuelo)
+        - [ ] Interfaz del alta al vuelo de cada tipo de dato, por subtipo (`quickadd_<tabla>_editor_ui`)
     - [ ] Units of measurement (Unidades de medida)
-    - [ ] Duplication (Herramientas de duplicación)
+        - [ ] Unidades de las medidas (`units`)
+        - [ ] Moneda (`currency`)
+    - [ ] Duplication (Herramientas de duplicación), por cada tipo de dato
+        - [ ] Nombres alternativos (`<tabla>_duplicate_nonpreferred_labels`)
+        - [ ] Relaciones (`<tabla>_duplicate_relationships`)
+        - [ ] Metadatos de las relaciones (`<tabla>_duplicate_relationship_attributes`)
+        - [ ] Solo las relaciones actuales (`<tabla>_duplicate_current_relationships_only`)
+        - [ ] Registros hijos (`<tabla>_duplicate_children`)
+        - [ ] Archivos de contenido (`<tabla>_duplicate_media`)
+        - [ ] Elementos (`<tabla>_duplicate_subitems`)
+        - [ ] Metadatos (`<tabla>_duplicate_attributes`)
+        - [ ] Elementos de metadatos que se duplican (`<tabla>_duplicate_element_settings`)
     - [ ] Quick search y Search builder (Búsqueda rápida y Constructor de búsquedas): se editan en
           Providence; revisar que sus cambios entren en las versiones
+        - [ ] Ir directo al registro si la búsqueda coincide con un identificador
+              (`quicksearch_redirect_on_idno_match`)
+        - [ ] Qué busca la búsqueda rápida (`quicksearch_search_list`)
+        - [ ] Campos del constructor de búsquedas (`searchbuilder_priority_list`, `searchbuilder_bundle_list`)
     - [ ] User profile (Perfil de usuario)
+        - [ ] Organización, dirección, ciudad, región, país, código postal, teléfono y fax
+              (`user_profile_*`)
     - [ ] Developer (Desarrollo)
-- [ ] Interfaz modernizada, sin cambiar el funcionamiento: las pantallas del módulo (panel, _New
+        - [ ] Detalle de la consulta en el constructor de búsquedas (`show_search_builder_query`)
+        - [ ] Depurador de plantillas (`show_template_debugger`)
+        - [ ] Códigos de los campos en el editor (`show_bundle_codes_in_editor`)
+        - [ ] Por qué coincide cada resultado (`show_search_result_desc`)
+- [x] Interfaz modernizada, sin cambiar el funcionamiento: las pantallas del módulo (panel, _New
       settings_, versiones, historial y My preferences) y todas las de Providence (Administration, Nuevo,
       Encontrar, Exploración, Recorridos, Importar y las secciones del panel), más el diálogo al salir
-      con cambios sin guardar. **Pendiente de revisión**
+      con cambios sin guardar
+- [ ] Interfaz modernizada de la pantalla principal (inicio) y sus widgets
 - [ ] Administration mejorado: resultados del chequeo de configuración y avisos de mantenimiento
 - [ ] (Opcional) Administration: analizar si sus pantallas actuales (interfaces de usuario, elementos
       de metadatos, tipos de relación, idiomas, mantenimiento...) se pueden simplificar u optimizar
