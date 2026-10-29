@@ -51,7 +51,7 @@ $row = fn(string $key, string $label, string $description) => '<tr data-m2-pref=
 	.m2-dialog-field table { border-collapse: collapse; }
 	.m2-dialog-field td { padding: 3px 8px 3px 0; }
 	.m2-elements { width: 100%; }
-	.m2-elements th { text-align: left; color: var(--m2-muted); font-weight: 600; }
+	.m2-elements th { text-align: left; color: #44525a; font-weight: 700; }
 </style>
 <div class="m2-prefs-page" id="m2-panel">
 <h1><?= Modulo2I18n::t('My preferences: %1', $e($this->getVar('group_name'))); ?></h1>

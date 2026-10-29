@@ -4,8 +4,9 @@
  * ----------------------------------------------------------------------
  */
 
-/* Pantallas de Administración con el aspecto del módulo 2 (@import tiene que ir antes que las demás reglas) */
-@import url("administration.css");
+/* Las pantallas de Providence con el aspecto del módulo 2 (@import tiene que ir antes que
+   las demás reglas) */
+@import url("native-screens.css");
 
 /* --- Pie de página: claro, con el color de acento de la interfaz --- */
 /* !important porque Providence pone el fondo en línea con footer_color de app.conf */
@@ -55,4 +56,74 @@ span[style*="#bb0000"]::after {
     font-weight: 700;
     line-height: 1;
     vertical-align: top;
+}
+
+/* --- Diálogo al salir con cambios sin guardar (unsaved-changes.js), con el aspecto del módulo 2 --- */
+dialog.ca-leave-dialog {
+    width: min(460px, 92vw);
+    padding: 0;
+    border: none;
+    border-radius: 14px;
+    box-shadow: 0 12px 32px rgba(16, 24, 40, .18);
+    font: 13px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    color: #1d2b33;
+}
+
+dialog.ca-leave-dialog::backdrop {
+    background: rgba(16, 24, 40, .45);
+    backdrop-filter: blur(2px);
+}
+
+.ca-leave-body {
+    padding: 20px 24px;
+}
+
+.ca-leave-body h2 {
+    margin: 0 0 6px 0;
+    font: 650 18px/1.3 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    color: #1d2b33;
+}
+
+.ca-leave-body p {
+    margin: 0;
+    color: #66757e;
+}
+
+.ca-leave-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    padding: 14px 24px;
+    border-top: 1px solid #e2e8eb;
+    border-radius: 0 0 14px 14px;
+    background: #f5f8f9;
+}
+
+.ca-leave-btn {
+    padding: 8px 16px;
+    border: 1px solid #cfd8dc;
+    border-radius: 8px;
+    background: #fff;
+    color: #1d2b33;
+    font: 600 13px/1.2 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    cursor: pointer;
+}
+
+.ca-leave-btn:hover {
+    background: #f5f8f9;
+}
+
+.ca-leave-btn:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(19, 130, 144, .22);
+}
+
+.ca-leave-btn-danger {
+    border-color: #b42318;
+    background: #b42318;
+    color: #fff;
+}
+
+.ca-leave-btn-danger:hover {
+    background: #912018;
 }

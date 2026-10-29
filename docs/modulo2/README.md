@@ -494,7 +494,11 @@ prueba se corte.
 - **Traducciones.** Providence tiene algunas traducciones al castellano marcadas como dudosas, que no
   usa (por ejemplo "Storage location" en el menú "Nuevo"). `app/locale/user/es_ES/messages.po` (y su
   `.mo`, compilado con `msgfmt`) las completa: es el lugar que Providence prevé para las traducciones
-  propias de la instalación.
+  propias de la instalación. También traduce las pantallas de Mantenimiento y "Data dictionary" en la
+  barra lateral de Administration. Los textos largos de Mantenimiento ocupan varias líneas de la vista:
+  con un checkout en Windows (fin de línea CRLF) ya no coinciden con la traducción de Providence, por eso
+  el `.po` los tiene con los dos finales de línea. Providence guarda las traducciones en caché un día
+  (`app/tmp/ca_translation---*`): reconstruir la imagen o borrar esos archivos para ver un cambio.
 - **Bajas.** Sin edición de registros dados de baja, el editor solo guarda el campo de baja (se puede
   deshacer la baja). "Privado al dar de baja" no funciona: el guardado lee el acceso en lugar de
   cambiarlo (`$this->get('access', 0)`), por eso se quitó del catálogo; una prueba avisa si lo corrigen.
@@ -533,13 +537,36 @@ tipo de dato, subtipos anidados de objetos, para "Resultados" un objeto con dos 
   (`?user=` o en el cuerpo); tablas `m2_preference_versions` y `m2_preference_changes` (registro interno). La prueba de
   integración usa dos usuarios de prueba fijos e inactivos, porque Providence no borra usuarios.
 - **Interfaz modernizada:** las pantallas del módulo comparten los estilos de `Modulo2Ui` (colores,
-  letra, botones, tarjetas, tablas, diálogos y listas desplegables). Las de Administration de
-  Providence toman el mismo aspecto con
-  [themes/default/css/administration.css](../../themes/default/css/administration.css), que importa
-  `local.css`: solo cambia estilos, sin tocar su HTML ni su funcionamiento, y se aplica únicamente en las
-  páginas cuya barra lateral (o formulario) lleva a `/administrate/` (selector `:has`). Las listas
-  desplegables usan `appearance: base-select` para que la lista abierta tenga el mismo estilo; un
-  navegador que no lo soporta (Chrome y Edge sí, desde la versión 135) muestra la lista de siempre.
+  letra, botones, tarjetas, tablas, diálogos y listas desplegables). Las demás pantallas de Providence
+  (Administration, Nuevo y edición de registros, Encontrar con sus búsquedas avanzada y Exploración,
+  Recorridos, Importar y todas las secciones del panel: Mi trabajo, Datos y vocabularios, Usuarios y
+  acceso, Contenido y comunidad, Seguimiento) toman el mismo aspecto con
+  [themes/default/css/native-screens.css](../../themes/default/css/native-screens.css), que importa
+  `local.css`: solo cambia estilos, sin tocar su HTML ni su funcionamiento, y se aplica en todas las
+  páginas menos las del módulo, que tienen sus estilos propios (selector `:has` sobre las clases `m2-`).
+  La búsqueda avanzada acomoda sus campos en una grilla, para cualquier tipo de dato; las ventanas de
+  Descargar, Opciones y Refinar resultados y las facetas de Exploración son tarjetas y botones. En los formularios de edición Providence repite la barra de Guardar/Cancelar/Borrar arriba y
+  abajo: se oculta la de abajo y la de arriba acompaña al bajar (`position: sticky`). Los botones de
+  editar y borrar de las listas y formularios usan el mismo botón cuadrado que las versiones del módulo.
+  Las listas desplegables usan `appearance: base-select` para que la lista abierta tenga el mismo
+  estilo; un navegador que no lo soporta (Chrome y Edge sí, desde la versión 135) muestra la lista de
+  siempre.
+- **Salir con cambios sin guardar.** Providence avisa con el cuadro del navegador (`beforeunload`), que
+  no se puede estilizar. [themes/default/js/unsaved-changes.js](../../themes/default/js/unsaved-changes.js)
+  lo reemplaza, al seguir un enlace (Cancelar, el menú...), por un diálogo con el aspecto del módulo, usando
+  el mismo control de cambios de Providence (`caUI.utils`). Al cerrar la pestaña o usar "Atrás" sigue el
+  aviso del navegador. Lo carga `pageFooter.php` con sus textos traducidos (`app/locale/user`).
+- **Tiempos de carga (medidos el 28/10/2026).** Las páginas del módulo responden como las de Providence
+  (0,2 a 0,6 s; la mayor parte es el arranque de Providence). Los pasos propios del versionado tardan
+  milisegundos: estado actual unos 5 ms (la exportación de la base sale de la caché), consultas al
+  servicio Rust 1 a 10 ms. La excepción es la primera página de versiones después de un cambio en la
+  configuración en base (listas, elementos, interfaces...): exporta el perfil de nuevo, unos 1,8 s, y
+  queda en caché. Por ahora no se cambió nada.
+- **Pie de página sin "Preferencias".** Llevaba a las preferencias nativas de Providence, que el módulo
+  no modifica (las del usuario se editan desde Gestión > Mis preferencias). Se quitó el enlace en
+  `themes/default/views/pageFormat/pageFooter.php`: es un cambio en una vista del tema de Providence,
+  pedido explícitamente, porque con estilos no se puede quitar sin dejar el separador suelto. En la misma
+  vista se carga `unsaved-changes.js`.
 
 ## Tareas por fase
 
@@ -593,8 +620,9 @@ tipo de dato, subtipos anidados de objetos, para "Resultados" un objeto con dos 
     - [ ] User profile (Perfil de usuario)
     - [ ] Developer (Desarrollo)
 - [ ] Interfaz modernizada, sin cambiar el funcionamiento: las pantallas del módulo (panel, _New
-      settings_, versiones, historial y My preferences) y las de Administration de Providence.
-      **Pendiente de revisión**
+      settings_, versiones, historial y My preferences) y todas las de Providence (Administration, Nuevo,
+      Encontrar, Exploración, Recorridos, Importar y las secciones del panel), más el diálogo al salir
+      con cambios sin guardar. **Pendiente de revisión**
 - [ ] Administration mejorado: resultados del chequeo de configuración y avisos de mantenimiento
 - [ ] (Opcional) Administration: analizar si sus pantallas actuales (interfaces de usuario, elementos
       de metadatos, tipos de relación, idiomas, mantenimiento...) se pueden simplificar u optimizar

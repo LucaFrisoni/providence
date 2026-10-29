@@ -30,9 +30,10 @@ $search_text = fn(array $section) => join(' ', array_merge([$section['label'], $
 	.m2-manage-card h3 a:hover { color: var(--m2-accent-dark); }
 	.m2-manage-card h3 a:hover::after { opacity: 1; }
 	.m2-manage-card p { margin: 6px 0 10px 0; color: var(--m2-muted); line-height: 1.5; }
-	/* Páginas de la sección: enlaces en dos columnas, cada uno con una flecha que avanza al pasar el mouse */
-	.m2-manage-card ul { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 2px 12px; margin: auto 0 0 0; padding: 10px 0 0 0;
-		border-top: 1px solid var(--m2-border); list-style: none; }
+	/* Páginas de la sección: enlaces en dos columnas (cada una sigue su propio alto, sin huecos entre filas), cada uno con una
+	   flecha que avanza al pasar el mouse */
+	.m2-manage-card ul { columns: 2 140px; column-gap: 12px; margin: auto 0 0 0; padding: 10px 0 0 0; border-top: 1px solid var(--m2-border); list-style: none; }
+	.m2-manage-card li { break-inside: avoid; padding: 1px 0; }
 	.m2-manage-card li a { display: flex; align-items: center; gap: 8px; margin-left: -6px; padding: 4px 6px; border-radius: 6px; color: var(--m2-accent-dark);
 		font-size: 12.5px; font-weight: 500; text-decoration: none; transition: background .15s, color .15s; }
 	.m2-manage-card li a::before { content: ""; flex: none; width: 5px; height: 5px; border-top: 2px solid currentColor; border-right: 2px solid currentColor;

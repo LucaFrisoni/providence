@@ -173,6 +173,19 @@ final class Modulo2VersioningViewsTest extends TestCase {
 		$this->assertStringContainsString(_t('Between these versions, the configuration stored in the database also changed (lists, metadata elements, user interfaces and other options edited from the Management panel). Restoring only brings back the settings listed above: the database configuration stays as it is now.'), $html, 'Aviso de la configuración en base');
 	}
 	# -------------------------------------------------------
+	// Al restaurar, "Antes" y "Después" no dejaban claro cuál era el valor actual y cuál el que va a quedar
+	#[TestDox('La restauración nombra las columnas "Ahora" y "Después de restaurar"; ver cambios sigue con "Antes" y "Después"')]
+	public function testRestoreColumnsSayNowAndAfterRestoring() : void {
+		$change = $this->found('boolean', true) + ['before' => true, 'after' => false];
+		$vars = ['version' => $this->version(10, 1, 'v1'), 'changes' => [$change], 'csrf_token' => 't', 'form_url' => '/do'];
+
+		$restore = $this->render('versions_restore_html.php', $vars);
+		$changes = Modulo2Ui::settingChanges([$change]);
+
+		$this->assertStringContainsString('<th>'._t('Now').'</th><th>'._t('After restoring').'</th>', $restore);
+		$this->assertStringContainsString('<th>'._t('Before').'</th><th>'._t('After').'</th>', $changes);
+	}
+	# -------------------------------------------------------
 	#[TestDox('Sin configuraciones que cambien, lo dice')]
 	public function testNoChangedSettings() : void {
 		$this->assertStringContainsString(_t('None of these settings change.'), Modulo2Ui::settingChanges([]));

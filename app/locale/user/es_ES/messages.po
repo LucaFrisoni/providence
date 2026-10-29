@@ -10,3 +10,127 @@ msgstr ""
 # Menú "Nuevo" (navigation.conf): la traducción de Providence es dudosa ("Localizaciones")
 msgid "Storage location"
 msgstr "Localización"
+
+# Mantenimiento (Administración): textos sin traducir o con otros espacios que los de Providence
+msgid "Clear search indexing queue lock file"
+msgstr "Liberar el bloqueo de la cola de indexación"
+
+msgid "<p>The search indexing queue is a task run periodically, usually via cron, to process pending indexing tasks. Simultaneous instances of the queue processor are prevented by means of a lock file. The lock file is created when the queue starts and deleted when it completed. While it is present new queue processing instances will refuse to start. In some cases, when a queue processing instance is killed or crashes, the lock file may not be removed and the queue will refuse to re-start. Lingering lock files may be removed by clicking the button below.</p>"
+msgstr "<p>La cola de indexación de búsqueda es una tarea que se ejecuta periódicamente, por lo general con cron, para procesar las indexaciones pendientes. Para que no corran dos procesos de la cola a la vez se usa un archivo de bloqueo: se crea cuando la cola empieza y se borra cuando termina. Mientras existe, no puede empezar otro proceso. A veces, si un proceso se interrumpe o falla, el archivo de bloqueo queda y la cola ya no vuelve a empezar. Con el botón de abajo se puede borrar ese bloqueo.</p>"
+
+msgid "<p>You cannot clear the lock file as <em>it is not writeable by the web server user.</em> Check file permissions and try again.</p>"
+msgstr "<p>No se puede liberar el bloqueo porque <em>el servidor web no tiene permiso para modificar el archivo.</em> Revise los permisos y vuelva a intentarlo.</p>"
+
+msgid "<p>You cannot clear the lock file as <em>no lock file is present at this time.</em></p>"
+msgstr "<p>No se puede liberar el bloqueo porque <em>en este momento no hay ningún bloqueo.</em></p>"
+
+msgid ""
+"\n"
+"\t    The lock file has been removed.\n"
+"\t"
+msgstr "Se liberó el bloqueo."
+
+msgid ""
+"<p>You can export the current configuration of this system as an <em>installation profile</em>. A profile is an XML document fully describing all of the metadata elements, lists, user interfaces, locales, search forms and displays present in your system. The <em>CollectiveAccess</em> installer can use installation profiles to create new, empty instances with specific configurations for use in new projects.</p>\n"
+"\t<p>Click on the \"Export\" button below to export and download the current system configuration as an installation profile.</p> \n"
+"\t<p>Note that for systems with complex configurations, generating the profile may take up to two minutes.</p>\n"
+"\t"
+msgstr ""
+"<p>Puede exportar la configuración actual del sistema como un <em>perfil de instalación</em>: un documento XML que describe todos los elementos de metadatos, listas, interfaces de usuario, idiomas, formularios de búsqueda y visualizaciones del sistema. El instalador de <em>CollectiveAccess</em> puede usar el perfil para crear instalaciones nuevas, vacías, con la misma configuración.</p>\n"
+"<p>Presione el botón de abajo para exportar y descargar la configuración actual como perfil de instalación.</p>\n"
+"<p>En sistemas con configuraciones complejas, generar el perfil puede tardar hasta dos minutos.</p>"
+
+msgid ""
+"<p>CollectiveAccess relies upon special <em>indices</em> to speed retrieval of hierarchical data such as multi-level lists and storage locations. Occasionally these indices can get out of sync with the actual hierarchical structure of your data. When this occurs you may experience odd behavior adding, moving or deleting items in a hierarchy. If you are experiencing issues with hierarchies you can rebuild the indices using this tool.</p> \n"
+"<p>Note that depending upon the size of your database rebuilding can take from a few seconds to several minutes. During the rebuilding process the system will remain usable but hierarchical functions may return inconsistent results.</p>\n"
+"\t"
+msgstr ""
+"<p>CollectiveAccess usa <em>índices</em> especiales para leer más rápido los datos jerárquicos, como listas de varios niveles y ubicaciones. A veces estos índices dejan de coincidir con la estructura real de los datos y aparecen comportamientos raros al agregar, mover o borrar elementos de una jerarquía. Si tiene problemas con las jerarquías, esta herramienta reconstruye los índices.</p>\n"
+"<p>Según el tamaño de la base, puede tardar desde unos segundos hasta varios minutos. Mientras tanto se puede seguir usando el sistema, pero las funciones de jerarquías pueden dar resultados inconsistentes.</p>"
+
+msgid ""
+"<p>CollectiveAccess relies upon <em>indices</em> when searching your data.  Indices are simply summaries of your data designed to speed query processing. The precise form and characteristics of the indices used will vary with the type of search engine you  are using. They may be stored on disk, in a database or on another server, but their purpose is always the same: to make searches execute faster.</p>\n"
+"<p>For search results to be accurate the database and indices must be in sync. CollectiveAccess simultaneously updates both the database and indices as you add, edit and delete data, keeping database and indices in agreement. Occasionally things get out of sync, however. If the basic and advanced searches are consistently returning unexpected results you can use this tool to rebuild the indices from the database and bring things back into alignment.</p> \n"
+"<p>Note that depending upon the size of your database rebuilding can take from a few minutes to several hours. During the rebuilding process the system will remain usable but search functions may return incomplete results. Browse functions, which do not rely upon indices, will not be affected.</p>\n"
+"\t"
+msgstr ""
+"<p>CollectiveAccess usa <em>índices</em> para buscar en sus datos. Los índices son resúmenes de los datos pensados para que las búsquedas sean más rápidas. Su forma depende del motor de búsqueda que se use: pueden estar en disco, en una base de datos o en otro servidor, pero siempre sirven para lo mismo.</p>\n"
+"<p>Para que los resultados sean correctos, la base de datos y los índices tienen que coincidir. CollectiveAccess actualiza ambos cada vez que se agregan, editan o borran datos, pero a veces dejan de coincidir. Si las búsquedas básica y avanzada devuelven resultados inesperados, esta herramienta reconstruye los índices a partir de la base de datos.</p>\n"
+"<p>Según el tamaño de la base, la reconstrucción puede tardar desde unos minutos hasta varias horas. Mientras tanto se puede seguir usando el sistema, pero las búsquedas pueden devolver resultados incompletos. La exploración, que no usa índices, no se ve afectada.</p>"
+
+msgid ""
+"<p>CollectiveAccess relies upon <em>sort values</em> when sorting values that should not sort alphabetically, such as titles with articles (eg. <em>The Man Who Fell to Earth</em> should sort as <em>Man Who Fell to Earth, The</em>) and alphanumeric identifiers (eg. <em>2011.001</em> and <em>2011.2</em> should sort next to each other with leading zeros in the first ignored).</p>\n"
+"<p>Sort values are derived from corresponding values in your database. The internal format of sort values can vary between versions of CollectiveAccess causing erroneous sorting behavior after an upgrade. If you notice values such as titles and identifiers are sorting incorrectly, you may need to reload sort values from your data.</p> \n"
+"<p>Note that depending upon the size of your database reloading sort values can take from a few minutes to an hour or more. During the reloading process the system will remain usable but search and browse functions may return incorrectly sorted results. </p>\n"
+"\t"
+msgstr ""
+"<p>CollectiveAccess usa <em>valores de ordenación</em> para ordenar lo que no debe ordenarse alfabéticamente, como títulos con artículos (por ejemplo, <em>El hombre que cayó a la Tierra</em> debe ordenarse como <em>Hombre que cayó a la Tierra, El</em>) e identificadores alfanuméricos (por ejemplo, <em>2011.001</em> y <em>2011.2</em> deben quedar juntos, sin tener en cuenta los ceros a la izquierda).</p>\n"
+"<p>Los valores de ordenación se calculan a partir de los datos. Su formato puede cambiar entre versiones de CollectiveAccess y, después de una actualización, algunos valores pueden ordenarse mal. Si nota que títulos o identificadores se ordenan mal, puede volver a cargar los valores de ordenación.</p>\n"
+"<p>Según el tamaño de la base, puede tardar desde unos minutos hasta una hora o más. Mientras tanto se puede seguir usando el sistema, pero las búsquedas y exploraciones pueden mostrar resultados mal ordenados.</p>"
+
+msgid "Clear search indexing lock file"
+msgstr "Liberar el bloqueo de indexación"
+
+msgid "Data dictionary"
+msgstr "Diccionario de datos"
+
+
+# Mantenimiento: los mismos textos con fin de línea CRLF (vistas con checkout en Windows)
+msgid ""
+"\r\n"
+"\t    The lock file has been removed.\r\n"
+"\t"
+msgstr "Se liberó el bloqueo."
+
+msgid ""
+"<p>You can export the current configuration of this system as an <em>installation profile</em>. A profile is an XML document fully describing all of the metadata elements, lists, user interfaces, locales, search forms and displays present in your system. The <em>CollectiveAccess</em> installer can use installation profiles to create new, empty instances with specific configurations for use in new projects.</p>\r\n"
+"\t<p>Click on the \"Export\" button below to export and download the current system configuration as an installation profile.</p> \r\n"
+"\t<p>Note that for systems with complex configurations, generating the profile may take up to two minutes.</p>\r\n"
+"\t"
+msgstr ""
+"<p>Puede exportar la configuración actual del sistema como un <em>perfil de instalación</em>: un documento XML que describe todos los elementos de metadatos, listas, interfaces de usuario, idiomas, formularios de búsqueda y visualizaciones del sistema. El instalador de <em>CollectiveAccess</em> puede usar el perfil para crear instalaciones nuevas, vacías, con la misma configuración.</p>\n"
+"<p>Presione el botón de abajo para exportar y descargar la configuración actual como perfil de instalación.</p>\n"
+"<p>En sistemas con configuraciones complejas, generar el perfil puede tardar hasta dos minutos.</p>"
+
+msgid ""
+"<p>CollectiveAccess relies upon special <em>indices</em> to speed retrieval of hierarchical data such as multi-level lists and storage locations. Occasionally these indices can get out of sync with the actual hierarchical structure of your data. When this occurs you may experience odd behavior adding, moving or deleting items in a hierarchy. If you are experiencing issues with hierarchies you can rebuild the indices using this tool.</p> \r\n"
+"<p>Note that depending upon the size of your database rebuilding can take from a few seconds to several minutes. During the rebuilding process the system will remain usable but hierarchical functions may return inconsistent results.</p>\r\n"
+"\t"
+msgstr ""
+"<p>CollectiveAccess usa <em>índices</em> especiales para leer más rápido los datos jerárquicos, como listas de varios niveles y ubicaciones. A veces estos índices dejan de coincidir con la estructura real de los datos y aparecen comportamientos raros al agregar, mover o borrar elementos de una jerarquía. Si tiene problemas con las jerarquías, esta herramienta reconstruye los índices.</p>\n"
+"<p>Según el tamaño de la base, puede tardar desde unos segundos hasta varios minutos. Mientras tanto se puede seguir usando el sistema, pero las funciones de jerarquías pueden dar resultados inconsistentes.</p>"
+
+msgid ""
+"<p>CollectiveAccess relies upon <em>indices</em> when searching your data.  Indices are simply summaries of your data designed to speed query processing. The precise form and characteristics of the indices used will vary with the type of search engine you  are using. They may be stored on disk, in a database or on another server, but their purpose is always the same: to make searches execute faster.</p>\r\n"
+"<p>For search results to be accurate the database and indices must be in sync. CollectiveAccess simultaneously updates both the database and indices as you add, edit and delete data, keeping database and indices in agreement. Occasionally things get out of sync, however. If the basic and advanced searches are consistently returning unexpected results you can use this tool to rebuild the indices from the database and bring things back into alignment.</p> \r\n"
+"<p>Note that depending upon the size of your database rebuilding can take from a few minutes to several hours. During the rebuilding process the system will remain usable but search functions may return incomplete results. Browse functions, which do not rely upon indices, will not be affected.</p>\r\n"
+"\t"
+msgstr ""
+"<p>CollectiveAccess usa <em>índices</em> para buscar en sus datos. Los índices son resúmenes de los datos pensados para que las búsquedas sean más rápidas. Su forma depende del motor de búsqueda que se use: pueden estar en disco, en una base de datos o en otro servidor, pero siempre sirven para lo mismo.</p>\n"
+"<p>Para que los resultados sean correctos, la base de datos y los índices tienen que coincidir. CollectiveAccess actualiza ambos cada vez que se agregan, editan o borran datos, pero a veces dejan de coincidir. Si las búsquedas básica y avanzada devuelven resultados inesperados, esta herramienta reconstruye los índices a partir de la base de datos.</p>\n"
+"<p>Según el tamaño de la base, la reconstrucción puede tardar desde unos minutos hasta varias horas. Mientras tanto se puede seguir usando el sistema, pero las búsquedas pueden devolver resultados incompletos. La exploración, que no usa índices, no se ve afectada.</p>"
+
+msgid ""
+"<p>CollectiveAccess relies upon <em>sort values</em> when sorting values that should not sort alphabetically, such as titles with articles (eg. <em>The Man Who Fell to Earth</em> should sort as <em>Man Who Fell to Earth, The</em>) and alphanumeric identifiers (eg. <em>2011.001</em> and <em>2011.2</em> should sort next to each other with leading zeros in the first ignored).</p>\r\n"
+"<p>Sort values are derived from corresponding values in your database. The internal format of sort values can vary between versions of CollectiveAccess causing erroneous sorting behavior after an upgrade. If you notice values such as titles and identifiers are sorting incorrectly, you may need to reload sort values from your data.</p> \r\n"
+"<p>Note that depending upon the size of your database reloading sort values can take from a few minutes to an hour or more. During the reloading process the system will remain usable but search and browse functions may return incorrectly sorted results. </p>\r\n"
+"\t"
+msgstr ""
+"<p>CollectiveAccess usa <em>valores de ordenación</em> para ordenar lo que no debe ordenarse alfabéticamente, como títulos con artículos (por ejemplo, <em>El hombre que cayó a la Tierra</em> debe ordenarse como <em>Hombre que cayó a la Tierra, El</em>) e identificadores alfanuméricos (por ejemplo, <em>2011.001</em> y <em>2011.2</em> deben quedar juntos, sin tener en cuenta los ceros a la izquierda).</p>\n"
+"<p>Los valores de ordenación se calculan a partir de los datos. Su formato puede cambiar entre versiones de CollectiveAccess y, después de una actualización, algunos valores pueden ordenarse mal. Si nota que títulos o identificadores se ordenan mal, puede volver a cargar los valores de ordenación.</p>\n"
+"<p>Según el tamaño de la base, puede tardar desde unos minutos hasta una hora o más. Mientras tanto se puede seguir usando el sistema, pero las búsquedas y exploraciones pueden mostrar resultados mal ordenados.</p>"
+
+
+# Diálogo al salir de un formulario con cambios sin guardar (themes/default/js/unsaved-changes.js)
+msgid "Leave without saving?"
+msgstr "¿Salir sin guardar?"
+
+msgid "This form has changes that are not saved. If you leave the page, they are discarded."
+msgstr "Este formulario tiene cambios sin guardar. Si sale de la página, se descartan."
+
+msgid "Keep editing"
+msgstr "Seguir editando"
+
+msgid "Leave without saving"
+msgstr "Salir sin guardar"
+

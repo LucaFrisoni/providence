@@ -36,9 +36,7 @@ $footer_color = $this->request->config->get('footer_color');
 <?php
 				if ($this->request->isLoggedIn()) {
 					print _p("User").': '.$this->request->user->getName();
-					if($this->request->user->canDoAction('can_set_preferences')) { 
-						print ' &gt; '.caNavLink($this->request, _t('Preferences'), '', 'system', 'Preferences', 'EditUIPrefs');
-					}
+					// Módulo 2: sin enlace a las preferencias nativas; las del usuario se editan desde Gestión > Mis preferencias
 					print ' &gt; '.caNavLink($this->request, _t('Logout'), '', 'system', 'auth', 'logout');
 				} else {
 					print caNavLink($this->request, _t('Login'), '', 'system', 'auth', 'login');
@@ -165,5 +163,18 @@ $footer_color = $this->request->config->get('footer_color');
 	});
 	</script>
 	<?= AssetLoadManager::getLoadHTML($this->request, ['outputTarget' => 'footer']); ?>
+<?php
+	// Módulo 2: diálogo propio al salir de un formulario con cambios sin guardar
+	if ($unsaved_js_url_path = $this->request->getUrlPathForThemeFile("js/unsaved-changes.js")) {
+		$unsaved_texts = [
+			'title' => _t('Leave without saving?'),
+			'message' => _t('This form has changes that are not saved. If you leave the page, they are discarded.'),
+			'stay' => _t('Keep editing'),
+			'leave' => _t('Leave without saving')
+		];
+		$unsaved_attrs = join(' ', array_map(function($key, $text) { return "data-{$key}='".htmlspecialchars($text, ENT_QUOTES)."'"; }, array_keys($unsaved_texts), $unsaved_texts));
+		print "<script src='{$unsaved_js_url_path}' {$unsaved_attrs}></script>\n";
+	}
+?>
 	</body>
 </html>

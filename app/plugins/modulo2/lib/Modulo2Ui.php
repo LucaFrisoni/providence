@@ -146,7 +146,7 @@ class Modulo2Ui {
 	.m2-dialog-actions .m2-left { margin-right: auto; }
 	.m2-review { width: 100%; border-collapse: collapse; margin: 12px 0 16px 0; }
 	.m2-review th, .m2-review td { padding: 8px 10px; border-bottom: 1px solid var(--m2-border); text-align: left; vertical-align: middle; }
-	.m2-review th { color: var(--m2-muted); font-size: 11px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; background: var(--m2-soft); }
+	.m2-review th { color: #44525a; font-size: 11px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; background: var(--m2-soft); }
 	.m2-review .m2-arrow { color: #9aa7ad; }
 	.m2-dialog form label { display: block; margin: 12px 0 4px 0; color: var(--m2-text); font-weight: 600; }
 	.m2-previous { margin: 4px 0 10px 0; padding: 12px 14px; border: 1px solid #f3dc9b; border-radius: 10px; background: var(--m2-warn-soft); }
@@ -177,7 +177,7 @@ class Modulo2Ui {
 	.m2-tag-error { background: var(--m2-danger-soft); color: var(--m2-danger); }
 	.m2-table { width: 100%; border-collapse: separate; border-spacing: 0; table-layout: fixed; background: #fff; border: 1px solid var(--m2-border); border-radius: var(--m2-radius); overflow: hidden; }
 	.m2-table th, .m2-table td { padding: 10px 12px; border-bottom: 1px solid var(--m2-border); text-align: left; vertical-align: top; overflow-wrap: anywhere; }
-	.m2-table thead th { background: var(--m2-soft); color: var(--m2-muted); font-size: 11px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; }
+	.m2-table thead th { background: var(--m2-soft); color: #44525a; font-size: 11px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; }
 	.m2-table tbody tr:last-child td { border-bottom: none; }
 	.m2-table tbody tr:hover td { background: #fafcfc; }
 	.m2-icons { display: inline-flex; gap: 6px; justify-content: flex-end; align-items: center; }
@@ -214,7 +214,7 @@ class Modulo2Ui {
 	 * Tabla de configuraciones que cambian (ver Modulo2SettingsDiff): cuál, antes y después.
 	 * $database_differs agrega un aviso si también cambió la configuración en la base
 	 */
-	public static function settingChanges(array $changes, array $table_names = [], ?bool $database_differs = false) : string {
+	public static function settingChanges(array $changes, array $table_names = [], ?bool $database_differs = false, ?array $columns = null) : string {
 		$e = fn($text) => htmlspecialchars((string)$text, ENT_QUOTES, 'UTF-8');
 		$database = $database_differs ? '<p class="m2-card m2-card-highlight">'.Modulo2I18n::t('Between these versions, the configuration stored in the database also changed (lists, metadata elements, user interfaces and other options edited from the Management panel). Restoring only brings back the settings listed above: the database configuration stays as it is now.').'</p>' : '';
 		if (!$changes) { return '<p class="m2-card m2-card-ok">'.Modulo2I18n::t('None of these settings change.').'</p>'.$database; }
@@ -224,12 +224,11 @@ class Modulo2Ui {
 			$rows .= '<tr><td><strong>'.$e(Modulo2ValueFormatter::entryLabel($change['setting'], $change['entry'], $table_names)).'</strong><br/><span class="m2-muted">'.$e($change['section']['name']).'</span></td>'
 				.'<td>'.$value($change['before']).'</td><td>'.$value($change['after']).'</td></tr>';
 		}
-		$head = '<thead><tr><th style="width:40%">'.Modulo2I18n::t('Setting').'</th><th>'.Modulo2I18n::t('Before').'</th><th>'.Modulo2I18n::t('After').'</th></tr></thead>';
-		return '<table class="m2-table">'.$head.'<tbody>'.$rows.'</tbody></table>'.$database;
+		return '<table class="m2-table">'.self::changesHead(Modulo2I18n::t('Setting'), $columns).'<tbody>'.$rows.'</tbody></table>'.$database;
 	}
 	# -------------------------------------------------------
 	/** Tabla de preferencias que cambian: [['label', 'group', 'before', 'after']] */
-	public static function preferenceChanges(array $rows) : string {
+	public static function preferenceChanges(array $rows, ?array $columns = null) : string {
 		$e = fn($text) => htmlspecialchars((string)$text, ENT_QUOTES, 'UTF-8');
 		if (!$rows) { return '<p class="m2-card m2-card-ok">'.Modulo2I18n::t('None of your preferences change.').'</p>'; }
 		$html = '';
@@ -237,8 +236,13 @@ class Modulo2Ui {
 			$html .= '<tr><td><strong>'.$e($row['label']).'</strong>'.($row['group'] ? '<br/><span class="m2-muted">'.$e($row['group']).'</span>' : '').'</td>'
 				.'<td><span class="m2-change-value">'.$e($row['before']).'</span></td><td><span class="m2-change-value">'.$e($row['after']).'</span></td></tr>';
 		}
-		$head = '<thead><tr><th style="width:40%">'.Modulo2I18n::t('Preference').'</th><th>'.Modulo2I18n::t('Before').'</th><th>'.Modulo2I18n::t('After').'</th></tr></thead>';
-		return '<table class="m2-table">'.$head.'<tbody>'.$html.'</tbody></table>';
+		return '<table class="m2-table">'.self::changesHead(Modulo2I18n::t('Preference'), $columns).'<tbody>'.$html.'</tbody></table>';
+	}
+	# -------------------------------------------------------
+	/** Encabezado de una tabla de cambios; $columns da otros nombres a "Antes" y "Después" (por ejemplo, al restaurar) */
+	private static function changesHead(string $first, ?array $columns) : string {
+		[$before, $after] = $columns ?? [Modulo2I18n::t('Before'), Modulo2I18n::t('After')];
+		return '<thead><tr><th style="width:40%">'.$first.'</th><th>'.$before.'</th><th>'.$after.'</th></tr></thead>';
 	}
 	# -------------------------------------------------------
 	/** Filas `<tr>` del historial (ver Modulo2ChangeLog). Los textos largos se cortan y se ven enteros al pasar el mouse */

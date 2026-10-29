@@ -1,0 +1,1484 @@
+/* ----------------------------------------------------------------------
+ * themes/default/css/native-screens.css : aspecto moderno, igual al del módulo 2, para las pantallas
+ * nativas de Providence (Administración, Nuevo, Encontrar, Exploración, Gestión, Importar...).
+ * Solo cambia la apariencia. Lo carga local.css.
+ * ----------------------------------------------------------------------
+ */
+
+/* En todas las pantallas de Providence menos las del módulo 2, que tienen sus propios estilos (clases m2-) */
+#providenceApp:not(:has(#mainContent [class*="m2-"])) {
+    --adm-accent: #138290;
+    --adm-accent-dark: #0e6b75;
+    --adm-accent-soft: #e8f5f6;
+    --adm-ring: rgba(19, 130, 144, .22);
+    --adm-text: #1d2b33;
+    --adm-heading: #44525a;
+    --adm-muted: #66757e;
+    --adm-border: #e2e8eb;
+    --adm-soft: #f5f8f9;
+    --adm-danger: #b42318;
+    --adm-danger-border: #f3d3cf;
+    --adm-shadow: 0 1px 2px rgba(16, 24, 40, .05), 0 1px 3px rgba(16, 24, 40, .07);
+    --adm-shadow-lg: 0 12px 32px rgba(16, 24, 40, .18);
+    --adm-font: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+
+    & #mainContent {
+        font-family: var(--adm-font);
+        color: var(--adm-text);
+    }
+
+    /* --- Barra lateral --- */
+    & #leftNav, & #leftNav h3, & #leftNav h4, & #leftNav #widgets :is(h3, div) {
+        font-family: var(--adm-font);
+    }
+
+    & #leftNav h3, & #leftNav h4 {
+        color: var(--adm-text);
+    }
+
+    & #leftNav h2 a {
+        margin: 1px 8px;
+        padding: 8px 12px;
+        border-right: none;
+        border-radius: 6px;
+        font: 500 13px/1.3 var(--adm-font);
+        text-transform: none;
+        color: var(--adm-heading);
+        transition: background .15s, color .15s;
+    }
+
+    & #leftNav h2 a:hover {
+        background: var(--adm-soft);
+        color: var(--adm-accent-dark);
+    }
+
+    /* Registro nuevo: las pantallas se habilitan después de guardarlo */
+    & #leftNav h2 :is(a.sf-menu-disabled, a.sf-menu-disabled-selected) {
+        background: none;
+        color: #9aa7ad;
+        opacity: 1;
+        cursor: default;
+    }
+
+    & #leftNav h2 :is(a.sf-menu-selected, a.sf-menu-disabled-selected) {
+        background: var(--adm-accent-soft);
+        color: var(--adm-accent-dark);
+        font-weight: 600;
+        box-shadow: inset 3px 0 0 var(--adm-accent);
+    }
+
+    & #leftNav ul.arrow {
+        border: none;
+    }
+
+    & #leftNav ul.arrow li a {
+        margin: 1px 8px;
+        padding: 7px 10px 6px 24px;
+        border-radius: 6px;
+        font-family: var(--adm-font);
+        text-transform: none;
+    }
+
+    & #leftNav ul.arrow li a:hover {
+        background: var(--adm-soft);
+    }
+
+    /* Subpágina abierta (por ejemplo, en Mantenimiento) */
+    & #leftNav ul.arrow li.sf-menu-selected {
+        background: none;
+    }
+
+    & #leftNav ul.arrow :is(li.sf-menu-selected a, li a.sf-menu-selected) {
+        background: var(--adm-accent-soft);
+        color: var(--adm-accent-dark);
+        font-weight: 600;
+    }
+
+    /* Listas de la barra lateral de Encontrar (historia, búsquedas memorizadas) y su botón "ir" */
+    & #leftNav select {
+        max-width: 150px;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+        padding: 4px 8px;
+        border: 1px solid #cfd8dc;
+        border-radius: 8px;
+        background: #fff none;
+        font: 12px var(--adm-font);
+        color: var(--adm-text);
+    }
+
+    & #leftNav input[type="text"] {
+        box-sizing: border-box !important;
+        max-width: 100%;
+        padding: 5px 8px;
+        border: 1px solid #cfd8dc;
+        border-radius: 8px;
+        font: 12px var(--adm-font);
+        color: var(--adm-text);
+    }
+
+    & #leftNav #widgets form a.button:has(> i) {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 28px;
+        height: 28px;
+        margin-left: 4px;
+        border-radius: 8px;
+        background: var(--adm-accent);
+        color: #fff;
+        vertical-align: middle;
+    }
+
+    /* Botón con texto (por ejemplo, "Crear ›" en Mis elementos bajo vigilancia) */
+    & #leftNav #widgets form a.button:not(:has(> i)) {
+        display: inline-flex;
+        width: auto;
+        margin-top: 6px;
+        padding: 6px 12px;
+        border-radius: 8px;
+        background: var(--adm-accent);
+        color: #fff;
+        font: 600 12px var(--adm-font);
+        text-decoration: none;
+    }
+
+    & #leftNav #widgets form a.button:hover {
+        background: var(--adm-accent-dark);
+    }
+
+    & #leftNav #widgets form a.button .caIcon {
+        font-size: 12px !important;
+        color: #fff;
+    }
+
+    & #leftNav #widgets form a.button .fa-chevron-circle-right::before {
+        content: "\f054";
+    }
+
+    & #leftNav div.setTools .caIcon {
+        font-size: 15px !important;
+        vertical-align: -2px;
+    }
+
+    /* Herramientas de conjuntos de Encontrar */
+    & #leftNav div.setTools {
+        margin: 10px;
+        padding: 10px 12px;
+        border: 1px solid var(--adm-border);
+        border-radius: 10px;
+        background: #fff;
+        font: 600 13px var(--adm-font);
+        text-transform: none;
+    }
+
+    /* --- Inspector: el recuadro con el registro abierto --- */
+    & #leftNav h3.nextPrevious {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 6px;
+        height: auto;
+        margin: 10px 8px 0 8px;
+        font: 600 12px/1.3 var(--adm-font);
+        text-transform: none;
+    }
+
+    & #leftNav h3.nextPrevious :is(a.prev, a.next, span.prev, span.next) {
+        display: inline-flex;
+        flex: none;
+        align-items: center;
+        justify-content: center;
+        float: none;
+        width: 30px;
+        height: 30px;
+        padding: 0;
+        border: 1px solid var(--adm-border);
+        border-radius: 8px;
+        background: #fff;
+        color: var(--adm-accent);
+        transition: background .15s, color .15s, border-color .15s;
+    }
+
+    & #leftNav h3.nextPrevious :is(a.prev, a.next):hover {
+        border-color: var(--adm-accent);
+        background: var(--adm-accent);
+        color: #fff;
+    }
+
+    & #leftNav h3.nextPrevious :is(span.prev, span.next) {
+        opacity: .4;
+    }
+
+    & #leftNav h3.nextPrevious .caIcon {
+        font-size: 13px !important;
+        color: inherit;
+    }
+
+    & #leftNav h3.nextPrevious .resultCount {
+        flex: 1;
+        width: auto;
+        padding: 0;
+        color: var(--adm-muted);
+        text-align: center;
+    }
+
+    & #leftNav h3.nextPrevious .resultCount a, & #leftNav .resultLink {
+        width: auto;
+        color: var(--adm-accent-dark);
+        text-decoration: none;
+    }
+
+    & #leftNav #widgets > h4 {
+        margin: 10px 8px;
+        padding: 0;
+    }
+
+    /* El borde de color lo pone Providence en línea (color del tipo); acá se reemplaza por una tarjeta */
+    & #caColorbox {
+        padding: 12px 14px;
+        border: 1px solid var(--adm-border) !important;
+        border-radius: 10px;
+        background: #fff;
+        box-shadow: var(--adm-shadow);
+        font: 13px/1.45 var(--adm-font);
+        text-transform: none;
+        color: var(--adm-text);
+    }
+
+    & #caColorbox > strong:first-child {
+        display: block;
+        margin-bottom: 2px;
+        font: 600 11px var(--adm-font);
+        letter-spacing: .04em;
+        text-transform: uppercase;
+        color: var(--adm-muted);
+    }
+
+    & #caColorbox strong {
+        font-family: var(--adm-font);
+    }
+
+    & #caColorbox .recordTitle {
+        width: auto !important;
+        font-size: 14px;
+        font-weight: 600;
+        overflow-wrap: anywhere;
+    }
+
+    & #leftNav #toolIcons {
+        justify-content: flex-start;
+        gap: 6px;
+        margin: 10px 0 4px 0;
+    }
+
+    /* Providence cambia el botón de información por el ícono solo (sin enlace) al abrirlo */
+    & #leftNav .inspectorActionButton :is(a, #inspectorMoreInfoButton:not(:has(a))) {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 30px;
+        height: 30px;
+        border: 1px solid var(--adm-border);
+        border-radius: 8px;
+        background: #fff;
+        color: var(--adm-accent);
+        transition: background .15s, color .15s, border-color .15s;
+    }
+
+    & #leftNav .inspectorActionButton :is(a, #inspectorMoreInfoButton:not(:has(a))):hover {
+        border-color: var(--adm-accent);
+        background: var(--adm-accent);
+        color: #fff;
+    }
+
+    & #leftNav .inspectorActionButton .caIcon {
+        font-size: 14px !important;
+        color: inherit;
+    }
+
+    & #leftNav #inspectorInfo {
+        width: auto;
+        margin: 6px 0;
+        padding: 8px 10px;
+        border-radius: 8px;
+        background: var(--adm-soft);
+    }
+
+    & #leftNav .inspectorChangeDateList {
+        font: 12px var(--adm-font);
+        color: var(--adm-muted);
+    }
+
+    & #leftNav .creatingNew {
+        margin: 0 8px;
+        font: 600 14px/1.4 var(--adm-font);
+    }
+
+    /* --- Barra de acciones (filtro, nuevo, guardar, cancelar, borrar) --- */
+    & div.control-box {
+        display: flow-root;
+        float: none;
+        box-sizing: border-box;
+        width: auto;
+        margin-bottom: 14px;
+        padding: 8px 12px;
+        border: 1px solid var(--adm-border);
+        border-radius: 10px !important;
+        background: #fff;
+        box-shadow: var(--adm-shadow);
+    }
+
+    /* En los formularios de edición, Providence repite la barra abajo: queda solo la de arriba, que
+       acompaña al bajar por el formulario */
+    & #mainContent :is(.control-box ~ form, .control-box ~ .sectionBox form) > div.control-box {
+        display: none;
+    }
+
+    & #mainContent div.control-box:has(.fa-check-circle) {
+        position: sticky;
+        top: 8px;
+        z-index: 50;
+    }
+
+    & div.control-box-middle-content {
+        font: 600 13px var(--adm-font);
+    }
+
+    & div.control-box-right-content {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-family: var(--adm-font);
+        font-size: 12px;
+    }
+
+    & div.list-filter, & div.simple-search-box {
+        font-size: 12px;
+        color: var(--adm-muted);
+    }
+
+    & div.control-box select {
+        flex: none;
+        width: auto;
+        white-space: nowrap;
+    }
+
+    /* --- Botones --- */
+    & a.form-button {
+        height: auto;
+        margin: 2px 8px 2px 0;
+        padding: 0;
+        line-height: normal;
+    }
+
+    & a.form-button span.form-button {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        height: auto;
+        margin: 0;
+        padding: 7px 14px 7px 10px;
+        border: 1px solid #cfd8dc;
+        border-radius: 8px;
+        background: #fff;
+        box-shadow: 0 1px 2px rgba(16, 24, 40, .05);
+        color: var(--adm-text);
+        font: 600 13px/1.2 var(--adm-font) !important;
+        transition: background .15s, border-color .15s, color .15s;
+    }
+
+    & a.form-button:hover span.form-button {
+        background: var(--adm-soft);
+        border-color: #b8c4ca;
+    }
+
+    & a.form-button span.form-button i.caIcon {
+        float: none;
+        margin: 0 !important;
+        padding: 0 !important;
+        font-size: 16px !important;
+        color: var(--adm-accent);
+    }
+
+    /* Guardar es el botón principal; Borrar, el peligroso */
+    & a.form-button:has(.fa-check-circle) span.form-button {
+        border-color: var(--adm-accent);
+        background: var(--adm-accent);
+        color: #fff;
+    }
+
+    & a.form-button:has(.fa-check-circle) span.form-button i.caIcon {
+        color: #fff;
+    }
+
+    & a.form-button:has(.fa-check-circle):hover span.form-button {
+        border-color: var(--adm-accent-dark);
+        background: var(--adm-accent-dark);
+    }
+
+    & a.form-button:has(.deleteIcon) span.form-button {
+        border-color: #f0c4bf;
+        color: var(--adm-danger);
+    }
+
+    & a.form-button:has(.deleteIcon) span.form-button i.caIcon {
+        color: var(--adm-danger);
+    }
+
+    /* "Nuevo" y el "+" junto a una lista: botón principal */
+    & div.form-header-button {
+        padding: 0;
+        border: none;
+        background: none;
+    }
+
+    & .control-box :is(a.form-header-button, a:has(> i.fa-plus-circle):not(.inline-button-small)) {
+        display: inline-flex;
+        flex: none;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        min-width: 34px;
+        height: 34px;
+        box-sizing: border-box;
+        padding: 0 12px;
+        border-radius: 8px;
+        background: var(--adm-accent);
+        color: #fff;
+        font: 600 13px var(--adm-font);
+        text-decoration: none;
+        transition: background .15s;
+    }
+
+    & .control-box a:has(> i.fa-plus-circle):not(.inline-button-small):not(.form-header-button) {
+        padding: 0;
+    }
+
+    & .control-box :is(a.form-header-button, a:has(> i.fa-plus-circle):not(.inline-button-small)):hover {
+        background: var(--adm-accent-dark);
+    }
+
+    & .control-box :is(a.form-header-button, a:has(> i.fa-plus-circle):not(.inline-button-small)) i.caIcon {
+        margin: 0 !important;
+        padding: 0 !important;
+        font-size: 15px !important;
+        color: #fff;
+    }
+
+    /* Los "+" de las barras se dibujan sin el círculo: solo la cruz */
+    & .control-box :is(a.form-header-button, a:has(> i.fa-plus-circle):not(.inline-button-small)) i.fa-plus-circle::before {
+        content: "\f067";
+    }
+
+    /* "Añadir …" dentro de los formularios: botón secundario */
+    & :is(.caAddItemButton, .caAddLabelButton) a {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        margin: 4px 0;
+        padding: 5px 12px 5px 9px;
+        border: 1px dashed #b9dde1;
+        border-radius: 8px;
+        background: #fff;
+        color: var(--adm-accent-dark);
+        font: 600 12px var(--adm-font);
+        text-decoration: none;
+        transition: background .15s, border-color .15s;
+    }
+
+    & :is(.caAddItemButton, .caAddLabelButton) a:hover {
+        border-color: var(--adm-accent);
+        background: var(--adm-accent-soft);
+    }
+
+    & :is(.caAddItemButton, .caAddLabelButton) a i.caIcon {
+        font-size: 12px !important;
+        color: var(--adm-accent);
+    }
+
+    & :is(.caAddItemButton, .caAddLabelButton) a i.fa-plus-circle::before {
+        content: "\f067";
+    }
+
+    /* Editar (la página) y borrar (la cruz): botones cuadrados, como los de las versiones del módulo */
+    & #mainContent :is(a:has(> i.caIcon.editIcon), a:has(> i.caIcon.deleteIcon), a[class*="caDelete"][class$="Button"]) {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 32px;
+        height: 32px;
+        box-sizing: border-box;
+        margin: 0 2px;
+        padding: 0;
+        border: 1px solid var(--adm-border);
+        border-radius: 8px;
+        background: #fff;
+        color: var(--adm-accent);
+        text-decoration: none;
+        vertical-align: middle;
+        transition: background .15s, color .15s, border-color .15s;
+    }
+
+    & #mainContent :is(a:has(> i.caIcon.editIcon), a:has(> i.caIcon.deleteIcon), a[class*="caDelete"][class$="Button"]) i.caIcon {
+        margin: 0 !important;
+        padding: 0 !important;
+        font-size: 13px !important;
+        line-height: 1 !important;
+        color: inherit !important;
+    }
+
+    & #mainContent a:has(> i.caIcon.editIcon):hover {
+        border-color: var(--adm-accent);
+        background: var(--adm-accent);
+        color: #fff;
+    }
+
+    & #mainContent :is(a:has(> i.caIcon.deleteIcon), a[class*="caDelete"][class$="Button"]) {
+        border-color: var(--adm-danger-border);
+        color: var(--adm-danger);
+    }
+
+    & #mainContent :is(a:has(> i.caIcon.deleteIcon), a[class*="caDelete"][class$="Button"]):hover {
+        border-color: var(--adm-danger);
+        background: var(--adm-danger);
+        color: #fff;
+    }
+
+    /* La cruz de borrar, sin círculo y la misma que en el módulo (papelera) */
+    & #mainContent :is(a:has(> i.caIcon.deleteIcon), a[class*="caDelete"][class$="Button"]) i.caIcon::before {
+        content: "\f2ed";
+    }
+
+    /* --- Listas --- */
+    & table.listtable {
+        border-collapse: separate;
+        border-spacing: 0;
+        margin: 12px 0 18px 0;
+        overflow: hidden;
+        border: 1px solid var(--adm-border);
+        border-radius: 10px;
+        background: #fff;
+        box-shadow: var(--adm-shadow);
+        font: 12.5px/1.45 var(--adm-font);
+    }
+
+    & table.listtable tr, & table.listtable tr td, & table.listtable tr th {
+        border: none;
+    }
+
+    & table.listtable thead tr th {
+        padding: 11px 24px 11px 12px;
+        border-bottom: 1px solid var(--adm-border);
+        background-color: var(--adm-soft);
+        color: var(--adm-heading);
+        font: 700 11px var(--adm-font) !important;
+        letter-spacing: .04em;
+        text-transform: uppercase;
+        white-space: normal;
+    }
+
+    & table.listtable thead th a {
+        color: inherit;
+        text-decoration: none;
+    }
+
+    & table.listtable tbody td {
+        padding: 9px 12px;
+        border-bottom: 1px solid var(--adm-border);
+        background-color: #fff;
+        color: var(--adm-text);
+        vertical-align: middle;
+    }
+
+    & table.listtable tbody tr:last-child td {
+        border-bottom: none;
+    }
+
+    & table.listtable tbody tr:hover td {
+        background-color: #f6fafb;
+    }
+
+    & table.listtable tbody td:has(> a > i.caIcon) {
+        white-space: nowrap;
+    }
+
+    /* --- Encontrar: búsqueda, cantidad de resultados y herramientas --- */
+    & #mainContent div.simple-search-box input {
+        width: min(520px, 100%);
+    }
+
+    & #mainContent div.simple-search-box:not(:has(.searchFormLineModeContainer)) {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    & #mainContent a.inline-button-small {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        margin-top: 6px;
+        color: var(--adm-accent-dark);
+        font: 600 12px var(--adm-font);
+        text-decoration: none;
+    }
+
+    & #mainContent a.inline-button-small i.caIcon {
+        font-size: 11px !important;
+        color: inherit;
+    }
+
+    & #mainContent a.inline-button-small i.fa-plus-circle::before {
+        content: "\f067";
+    }
+
+    & #mainContent .searchNav {
+        font: 13px var(--adm-font);
+        color: var(--adm-muted);
+    }
+
+    & #mainContent .divide {
+        border-color: var(--adm-border);
+    }
+
+    & #mainContent a:is(#showTools, #showOptions, #showRefine, #showResultsEditor) {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 34px;
+        height: 34px;
+        margin: 8px 0 0 8px;
+        border: 1px solid var(--adm-border);
+        border-radius: 8px;
+        background: #fff;
+        color: var(--adm-accent);
+        transition: background .15s, color .15s, border-color .15s;
+    }
+
+    & #mainContent a:is(#showTools, #showOptions, #showRefine, #showResultsEditor):hover {
+        border-color: var(--adm-accent);
+        background: var(--adm-accent);
+        color: #fff;
+    }
+
+    & #mainContent a:is(#showTools, #showOptions, #showRefine, #showResultsEditor) .caIcon {
+        font-size: 15px !important;
+        color: inherit;
+    }
+
+    & :is(#searchOptionsBox, #searchToolsBox, #searchRefineBox) .bg {
+        border: 1px solid var(--adm-border);
+        border-radius: 10px;
+        background: #fff;
+        box-shadow: var(--adm-shadow);
+        font-family: var(--adm-font);
+    }
+
+    /* --- Formularios de edición: cada campo es una tarjeta --- */
+    & .bundleLabel {
+        margin-bottom: 14px;
+        padding-top: 0;
+        border: 1px solid var(--adm-border);
+        border-radius: 10px;
+        background: #fff;
+        box-shadow: var(--adm-shadow);
+        font-family: var(--adm-font);
+    }
+
+    & .bundleLabel > .formLabelText {
+        padding: 12px 14px 10px 14px;
+        font: 600 14px var(--adm-font);
+        color: var(--adm-text);
+    }
+
+    & .bundleLabel .iconButton {
+        top: 10px;
+        margin-right: 12px;
+    }
+
+    & .bundleLabel .iconButton .caIcon {
+        font-size: 16px !important;
+        color: #9aa7ad;
+        transition: color .15s;
+    }
+
+    & .bundleLabel .iconButton a:hover .caIcon {
+        color: var(--adm-accent);
+    }
+
+    & .bundleLabel .bundleContainer {
+        border-top: 1px solid var(--adm-border);
+        border-radius: 0 0 10px 10px;
+    }
+
+    & .bundleContainer, & .labelInfo, & .bundleSubLabel {
+        background-color: #fff;
+    }
+
+    & .labelInfo {
+        padding: 10px 14px;
+        border-bottom: 1px solid var(--adm-border);
+    }
+
+    & .formLabel {
+        font: 600 12px var(--adm-font);
+        color: var(--adm-text);
+    }
+
+    & div.formSettings {
+        padding: 12px 14px;
+        border: 1px solid var(--adm-border);
+        border-radius: 10px;
+        background: var(--adm-soft);
+    }
+
+    /* --- Campos --- */
+    & #mainContent :is(input[type="text"], input[type="password"], textarea, select) {
+        padding: 6px 9px;
+        border: 1px solid #cfd8dc;
+        border-radius: 8px;
+        background-color: #fff;
+        background-image: none;
+        box-shadow: none;
+        font: 13px var(--adm-font);
+        color: var(--adm-text);
+        transition: border-color .15s, box-shadow .15s;
+    }
+
+    & #mainContent :is(input[type="text"], input[type="password"], textarea, select):focus {
+        outline: none;
+        border-color: var(--adm-accent);
+        box-shadow: 0 0 0 3px var(--adm-ring);
+    }
+
+    & #mainContent input[type="checkbox"], & #mainContent input[type="radio"] {
+        accent-color: var(--adm-accent);
+    }
+
+    /* Seleccionar archivo: el botón del campo con el aspecto de los botones secundarios */
+    & #mainContent input[type="file"] {
+        max-width: 100%;
+        font: 13px var(--adm-font);
+        color: var(--adm-muted);
+    }
+
+    & #mainContent input[type="file"]::file-selector-button {
+        margin-right: 10px;
+        padding: 7px 14px;
+        border: 1px solid #b9dde1;
+        border-radius: 8px;
+        background: var(--adm-accent-soft);
+        color: var(--adm-accent-dark);
+        font: 600 13px var(--adm-font);
+        cursor: pointer;
+        transition: background .15s, border-color .15s;
+    }
+
+    & #mainContent input[type="file"]::file-selector-button:hover {
+        border-color: var(--adm-accent);
+        background: #d6eef0;
+    }
+
+    /* Botón "ir" (flecha en un círculo) junto a listas y campos: cuadrado de color, como en la barra lateral */
+    & #mainContent a:has(> i.caIcon.fa-chevron-circle-right) {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 30px;
+        height: 30px;
+        margin-left: 4px;
+        border-radius: 8px;
+        background: var(--adm-accent);
+        color: #fff;
+        text-decoration: none;
+        vertical-align: middle;
+        transition: background .15s;
+    }
+
+    & #mainContent a:has(> i.caIcon.fa-chevron-circle-right):hover {
+        background: var(--adm-accent-dark);
+    }
+
+    & #mainContent a:has(> i.caIcon.fa-chevron-circle-right) i.caIcon {
+        font-size: 12px !important;
+        color: #fff;
+    }
+
+    & #mainContent a > i.caIcon.fa-chevron-circle-right::before {
+        content: "\f054";
+    }
+
+    /* "Añadir …" sueltos con un "+" (por ejemplo, Añadir lista nueva): botón principal con la cruz simple */
+    & #mainContent a:has(> i.caIcon.fa-plus-circle):not(.control-box a, .caAddItemButton a, .caAddLabelButton a, .inline-button-small) {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        min-width: 30px;
+        height: 30px;
+        box-sizing: border-box;
+        padding: 0 10px;
+        border-radius: 8px;
+        background: var(--adm-accent);
+        color: #fff;
+        font: 600 12px var(--adm-font);
+        text-decoration: none;
+        vertical-align: middle;
+    }
+
+    & #mainContent a:has(> i.caIcon.fa-plus-circle):not(.control-box a, .caAddItemButton a, .caAddLabelButton a, .inline-button-small):hover {
+        background: var(--adm-accent-dark);
+    }
+
+    & #mainContent a:not(.control-box a, .caAddItemButton a, .caAddLabelButton a, .inline-button-small) > i.caIcon.fa-plus-circle {
+        font-size: 12px !important;
+        color: #fff;
+    }
+
+    & #mainContent a:not(.control-box a, .caAddItemButton a, .caAddLabelButton a, .inline-button-small) > i.caIcon.fa-plus-circle::before {
+        content: "\f067";
+    }
+
+    /* "Borrar seleccionados" (Búsquedas memorizadas): botón de peligro */
+    & a.form-button > span.delete {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 7px 14px 7px 10px;
+        border: 1px solid #f0c4bf;
+        border-radius: 8px;
+        background: #fff;
+        color: var(--adm-danger);
+        font: 600 13px/1.2 var(--adm-font);
+    }
+
+    & a.form-button > span.delete i.caIcon {
+        font-size: 14px !important;
+        color: inherit;
+    }
+
+    & a.form-button > span.delete i.caIcon::before {
+        content: "\f2ed";
+    }
+
+    /* Listas para arrastrar elementos (formularios de búsqueda, visualizaciones, pantallas) */
+    & div.bundleDisplayEditorPlacementList {
+        box-sizing: border-box !important;
+        padding: 6px;
+        border: 1px solid var(--adm-border);
+        border-radius: 10px;
+        background: var(--adm-soft);
+    }
+
+    & div.bundleDisplayEditorPlacementList div.bundleDisplayEditorPlacement {
+        margin: 0 0 6px 0;
+        padding: 7px 10px;
+        border: 1px solid var(--adm-border);
+        border-radius: 8px;
+        background: #fff;
+        box-shadow: 0 1px 2px rgba(16, 24, 40, .05);
+        font: 12.5px var(--adm-font);
+        color: var(--adm-text);
+        cursor: grab;
+    }
+
+    & div.bundleDisplayEditorPlacementList div.bundleDisplayEditorPlacement:hover {
+        border-color: var(--adm-accent);
+    }
+
+    & span.bundleDisplayEditorPlacementListItemTitle {
+        color: var(--adm-muted);
+    }
+
+    & div.bundleDisplayElementSettingsControl .caIcon {
+        font-size: 13px !important;
+        color: var(--adm-accent);
+    }
+
+    & .elementSettingsUI {
+        border: 1px solid var(--adm-border);
+        border-radius: 12px;
+        box-shadow: var(--adm-shadow-lg);
+        font-family: var(--adm-font);
+    }
+
+    & div.bundleDisplayEditorSearchForm input {
+        padding-right: 26px;
+    }
+
+    & div.bundleDisplayEditorSearchForm i.caIcon {
+        top: 9px;
+        right: 9px;
+        color: var(--adm-muted);
+    }
+
+    /* Árbol de listas y vocabularios */
+    & #browse.hierarchyWindow {
+        padding: 14px 16px;
+        border: 1px solid var(--adm-border);
+        border-radius: 10px;
+        background: #fff;
+        box-shadow: var(--adm-shadow);
+        font-family: var(--adm-font);
+    }
+
+    & #browse.hierarchyWindow .subTitle {
+        margin-bottom: 10px;
+        border-bottom: 1px solid var(--adm-border);
+        font: 600 14px var(--adm-font);
+        color: var(--adm-text);
+    }
+
+    & #browse.hierarchyWindow #browseTypeMenu form > div:last-child {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font: 12px var(--adm-font);
+        color: var(--adm-muted);
+    }
+
+    & #browse.hierarchyWindow .hierarchyBrowser {
+        border: 1px solid var(--adm-border);
+        border-radius: 8px;
+    }
+
+    /* --- Avisos de Providence (sin formulario de búsqueda, sin resultados...) --- */
+    & #mainContent div:is(.notification-warning-box, .notification-info-box) {
+        margin: 6px 0 14px 0;
+        padding: 12px 16px;
+        border: 1px solid #f1dfae;
+        border-radius: 10px;
+        background: #fff8e6;
+        font: 13px/1.5 var(--adm-font);
+        color: #6b4a00;
+    }
+
+    & #mainContent div.notification-info-box {
+        border-color: #cce7ea;
+        background: var(--adm-accent-soft);
+        color: #22404a;
+    }
+
+    & #mainContent :is(ul, li):is(.notification-warning-box, .notification-info-box) {
+        margin: 0;
+        padding: 0;
+        border: none;
+        background: none;
+        list-style: none;
+        font: inherit;
+        color: inherit;
+    }
+
+    & #mainContent .notification-info-box i.fa-info-circle {
+        font-size: 22px !important;
+        color: var(--adm-accent);
+    }
+
+    & #mainContent :is(.notification-warning-box, .notification-info-box) a {
+        color: var(--adm-accent-dark);
+        font-weight: 600;
+    }
+
+    /* --- Resultados: el número de fila (y la casilla para conjuntos) centrados en su celda --- */
+    & #mainContent :is(td, th):is(.addItemToSetControl, .addItemToBatchControl) {
+        width: 34px;
+        padding-right: 4px;
+        text-align: center;
+    }
+
+    & #mainContent td:is(.addItemToSetControl, .addItemToBatchControl) div {
+        position: static;
+        font: 600 11px var(--adm-font);
+        color: #9aa7ad;
+    }
+
+    & #mainContent input:is(.addItemToSetControl, .addItemToBatchControl) {
+        position: static;
+        width: 14px;
+        height: 14px;
+        margin: 0 auto 3px auto;
+    }
+
+    /* Pie de los resultados: "Saltar a página" y la paginación */
+    & #mainContent .searchNav {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 8px 16px;
+    }
+
+    & #mainContent .searchNav form {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        order: -1;
+    }
+
+    & #mainContent .searchNav input[type="text"] {
+        width: 52px;
+        text-align: center;
+    }
+
+    & #mainContent .searchNav .nav a {
+        font-weight: 600;
+        color: var(--adm-accent-dark);
+        text-decoration: none;
+    }
+
+    /* --- Ventanas de Descargar, Opciones y Refinar resultados --- */
+    & :is(#searchToolsBox, #searchOptionsBox) {
+        width: 420px;
+        font-family: var(--adm-font);
+    }
+
+    & :is(#searchToolsBox, #searchOptionsBox, #searchRefineBox) .bg {
+        position: relative;
+        padding: 18px 20px 14px 20px;
+        border: 1px solid var(--adm-border);
+        border-radius: 12px;
+        background: #fff;
+        box-shadow: var(--adm-shadow-lg);
+        font: 13px/1.4 var(--adm-font);
+        color: var(--adm-text);
+    }
+
+    & :is(#searchToolsBox, #searchOptionsBox) .col {
+        float: none;
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 6px 8px;
+        margin: 0;
+        padding: 0 0 14px 0;
+        font: 600 12px var(--adm-font);
+        color: var(--adm-heading);
+    }
+
+    & #searchToolsBox .col br, & :is(#searchToolsBox, #searchOptionsBox) br.clear {
+        display: none;
+    }
+
+    & #searchToolsBox .col form {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 6px;
+        width: 100%;
+    }
+
+    & #searchToolsBox .col select {
+        flex: 1;
+        width: auto !important;
+        font-weight: 400;
+    }
+
+    /* Opciones extra de un formato (por ejemplo, bordes de etiquetas) */
+    & #searchToolsBox :is(.caLabelsDownloadOptionsPanelOptions, .caResultsDownloadOptionsPanelOptions) {
+        width: 100%;
+    }
+
+    & #searchToolsBox ul.caPrintOptions {
+        margin: 2px 0 0 0;
+        padding: 8px 12px;
+        border-radius: 8px;
+        background: var(--adm-soft);
+        list-style: none;
+        font: 12px var(--adm-font);
+    }
+
+    & #searchToolsBox li.caPrintOptionItem {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 6px;
+        padding: 3px 0;
+    }
+
+    & #searchToolsBox li.caPrintOptionItem br {
+        display: none;
+    }
+
+    /* La cruz de cerrar, arriba a la derecha */
+    & :is(a#hideTools, a#hideOptions, a#hideRefine, a#hideSets) {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 28px;
+        height: 28px;
+        margin: 0;
+        padding: 0;
+        border-radius: 8px;
+        color: var(--adm-muted);
+        transition: background .15s, color .15s;
+    }
+
+    & :is(a#hideTools, a#hideOptions, a#hideRefine, a#hideSets):hover {
+        background: var(--adm-soft);
+        color: var(--adm-text);
+    }
+
+    & :is(a#hideTools, a#hideOptions, a#hideRefine, a#hideSets) i.caIcon {
+        font-size: 15px !important;
+        color: inherit;
+    }
+
+    & :is(a#hideTools, a#hideOptions, a#hideRefine, a#hideSets) i.fa-minus-circle::before {
+        content: "\f00d";
+    }
+
+    /* El botón "aplicar" de Opciones va abajo a la derecha, junto a la cruz que ahora está arriba */
+    & #searchOptionsBox .bg > form > a:last-of-type:has(> i.caIcon) {
+        float: right;
+    }
+
+    & #searchRefineBox {
+        margin: 10px 0 14px 0;
+        padding: 0;
+        background: none;
+    }
+
+    & :is(#searchRefineBox .startBrowsingBy, #browse .startBrowsingBy, #refineBrowse .refineHeading) {
+        margin: 0 0 10px 0;
+        padding: 0;
+        font: 600 15px var(--adm-font);
+        text-transform: none;
+        color: var(--adm-text);
+    }
+
+    /* Facetas para filtrar: botones en grilla, en Refinar resultados y en Exploración */
+    & :is(#searchRefineContent, #facetList, #refineBrowse) {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 8px;
+    }
+
+    & :is(#searchRefineContent, #facetList, #refineBrowse) > :is(.startBrowsingBy, .refineHeading, div[style*="clear"]) {
+        grid-column: 1 / -1;
+    }
+
+    & :is(#searchRefineContent > a, #facetList .facetHeadingLink a, #refineBrowse a.facetLink) {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        float: none;
+        box-sizing: border-box;
+        width: auto;
+        margin: 0;
+        padding: 9px 12px;
+        border: 1px solid var(--adm-border);
+        border-radius: 8px;
+        background: #fff;
+        box-shadow: 0 1px 2px rgba(16, 24, 40, .05);
+        font: 600 13px var(--adm-font);
+        text-transform: none;
+        text-decoration: none;
+        color: var(--adm-text);
+        transition: background .15s, border-color .15s, color .15s;
+    }
+
+    & :is(#searchRefineContent > a, #facetList .facetHeadingLink a, #refineBrowse a.facetLink):hover {
+        border-color: var(--adm-accent);
+        background: var(--adm-accent-soft);
+        color: var(--adm-accent-dark);
+    }
+
+    & :is(#facetList .facetHeadingLink.active a, #refineBrowse a.facetLink.active) {
+        border-color: var(--adm-accent);
+        background: var(--adm-accent);
+        color: #fff;
+    }
+
+    & #facetList .facetHeadingLink {
+        float: none;
+        width: auto;
+        margin: 0;
+        padding: 0;
+        background: none;
+    }
+
+    & :is(#facetList, #refineBrowse) .caIcon {
+        top: 0;
+        font-size: 12px !important;
+        color: var(--adm-accent);
+    }
+
+    & :is(#facetList .facetHeadingLink.active, #refineBrowse a.facetLink.active) .caIcon {
+        color: #fff;
+    }
+
+    & :is(#facetList, #refineBrowse) .fa-plus-circle::before {
+        content: "\f067";
+    }
+
+    /* Criterios elegidos en Exploración: etiquetas con su cruz para quitarlas */
+    & #browseCriteria {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 8px;
+        float: none;
+        width: auto;
+        padding: 4px 0 12px 0;
+        font: 13px var(--adm-font);
+    }
+
+    & #browseCriteria .criteriaHeading {
+        font: 600 13px var(--adm-font);
+        color: var(--adm-heading);
+    }
+
+    & .criteriaLink {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        margin: 0;
+        padding: 4px 4px 4px 10px;
+        border: 1px solid #b9dde1;
+        border-radius: 999px;
+        background: var(--adm-accent-soft);
+        font: 600 12px/1.4 var(--adm-font);
+        text-transform: none;
+        color: var(--adm-accent-dark);
+    }
+
+    & .criteriaLink a {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 20px;
+        height: 20px;
+        margin: 0;
+        padding: 0;
+        border-radius: 50%;
+        background: #fff;
+        color: var(--adm-accent-dark);
+        line-height: 1;
+    }
+
+    & .criteriaLink a:hover {
+        background: var(--adm-danger);
+        color: #fff;
+    }
+
+    & #browseCriteria a.startOver {
+        padding: 5px 12px;
+        border: 1px solid #cfd8dc;
+        border-radius: 8px;
+        background: #fff;
+        font: 600 12px var(--adm-font);
+        text-transform: none;
+        line-height: 1.4;
+        color: var(--adm-text);
+    }
+
+    & #browseCriteria a.startOver:hover {
+        border-color: var(--adm-accent);
+        color: var(--adm-accent-dark);
+        text-decoration: none;
+    }
+
+    /* Valores de una faceta (al abrir una en Exploración o en Refinar) */
+    & #splashBrowsePanel {
+        float: none;
+        margin: 4px 0 16px 0;
+    }
+
+    & .browseSelectPanelContentArea {
+        padding: 16px 18px;
+        border: 1px solid var(--adm-border);
+        border-radius: 12px;
+        background: #fff;
+        box-shadow: var(--adm-shadow-lg);
+        font: 13px var(--adm-font);
+    }
+
+    & h2.browse {
+        float: none;
+        padding: 0 0 8px 0;
+        font: 600 15px var(--adm-font);
+        text-transform: none;
+        color: var(--adm-text);
+    }
+
+    & table.browseSelectPanelListTable {
+        border-spacing: 6px;
+    }
+
+    & td.browseSelectPanelListCell {
+        padding: 7px 10px;
+        border: 1px solid var(--adm-border);
+        border-radius: 8px;
+        color: var(--adm-muted);
+    }
+
+    & td.browseSelectPanelListCell:hover {
+        border-color: var(--adm-accent);
+        background: var(--adm-accent-soft);
+    }
+
+    & td.browseSelectPanelListCell a {
+        font-weight: 600;
+        color: var(--adm-accent-dark);
+        text-decoration: none;
+    }
+
+    & div.browseSelectPanelListGroupHeading {
+        margin: 10px 0 2px 0;
+        padding: 4px 8px;
+        border-radius: 6px;
+        background: var(--adm-soft);
+        font: 700 12px var(--adm-font);
+        color: var(--adm-heading);
+    }
+
+    & :is(.jumpToGroup, #browseFacetGroupingControls) {
+        font-family: var(--adm-font);
+    }
+
+    & :is(.jumpToGroup, #browseFacetGroupingControls) a {
+        color: var(--adm-accent-dark);
+    }
+
+    /* --- Búsqueda avanzada: los campos en una grilla que se acomoda al ancho, para cualquier tipo de dato --- */
+    & #advancedSearchFormContainerToggle {
+        display: inline-flex;
+        margin-bottom: 8px;
+        font: 600 12px var(--adm-font);
+        color: var(--adm-accent-dark);
+        text-decoration: none;
+    }
+
+    & #advancedSearchFormContainerFormSelector {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font: 12px var(--adm-font);
+        color: var(--adm-muted);
+    }
+
+    & #mainContent div.simple-search-box:has(.searchFormLineModeContainer) {
+        float: none;
+        width: 100%;
+    }
+
+    & div.searchFormLineModeContainer {
+        overflow: visible;
+    }
+
+    & .searchFormLineModeContainer > table {
+        display: block;
+        width: 100%;
+    }
+
+    & .searchFormLineModeContainer > table > tbody {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+        gap: 14px 16px;
+    }
+
+    & .searchFormLineModeContainer > table > tbody > tr {
+        display: contents;
+    }
+
+    /* contain: así una lista con opciones largas no ensancha su columna */
+    & .searchFormLineModeContainer > table > tbody > tr > td {
+        display: block;
+        contain: inline-size;
+        min-width: 0;
+        padding: 0;
+    }
+
+    & .searchFormLineModeContainer > table > tbody > tr > td:empty {
+        display: none;
+    }
+
+    & div.searchFormLineModeElementLabel {
+        margin-bottom: 5px;
+        font: 600 12px var(--adm-font);
+        color: var(--adm-heading);
+    }
+
+    & .searchFormLineModeElementSubLabel {
+        font: 11px var(--adm-font);
+        color: var(--adm-muted);
+    }
+
+    & .searchFormLineModeContainer :is(input[type="text"], textarea, select) {
+        box-sizing: border-box !important;
+        width: 100% !important;
+        max-width: 100%;
+    }
+
+    & .searchFormLineModeContainer :is(input[type="checkbox"], input[type="radio"]) {
+        margin-right: 5px;
+    }
+
+    & #advancedSearchFormContainer .saveAs {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        margin-top: 4px;
+        font: 12px var(--adm-font);
+        color: var(--adm-muted);
+    }
+
+    & #advancedSearchFormContainer .saveAs input {
+        width: 150px;
+    }
+}
+
+/* Listas desplegables con el mismo estilo abiertas que cerradas. Las reglas con ::picker van aparte: un
+   navegador que no las conoce descarta solo esas y muestra la lista de siempre */
+#providenceApp:not(:has(#mainContent [class*="m2-"])) :is(#mainContent, #leftNav) select:not([multiple]):not([size]) {
+    appearance: base-select;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+}
+
+#providenceApp:not(:has(#mainContent [class*="m2-"])) :is(#mainContent, #leftNav) select:not([multiple]):not([size])::picker(select) {
+    appearance: base-select;
+    margin-top: 4px;
+    padding: 4px;
+    max-height: 320px;
+    border: 1px solid #e2e8eb;
+    border-radius: 10px;
+    background: #fff;
+    box-shadow: 0 12px 32px rgba(16, 24, 40, .18);
+}
+
+#providenceApp:not(:has(#mainContent [class*="m2-"])) :is(#mainContent, #leftNav) select::picker-icon {
+    color: #66757e;
+    transition: rotate .2s;
+}
+
+#providenceApp:not(:has(#mainContent [class*="m2-"])) :is(#mainContent, #leftNav) select:open::picker-icon {
+    rotate: 180deg;
+}
+
+#providenceApp:not(:has(#mainContent [class*="m2-"])) :is(#mainContent, #leftNav) select option {
+    padding: 7px 10px;
+    border-radius: 6px;
+    font: 13px system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    color: #1d2b33;
+}
+
+#providenceApp:not(:has(#mainContent [class*="m2-"])) :is(#mainContent, #leftNav) select option:is(:hover, :focus-visible) {
+    background: #f5f8f9;
+    outline: none;
+}
+
+#providenceApp:not(:has(#mainContent [class*="m2-"])) :is(#mainContent, #leftNav) select option:checked {
+    background: #e8f5f6;
+    color: #0e6b75;
+    font-weight: 600;
+}
+
+#providenceApp:not(:has(#mainContent [class*="m2-"])) :is(#mainContent, #leftNav) select option::checkmark {
+    color: #138290;
+}

@@ -17,8 +17,8 @@ $e = fn($text) => htmlspecialchars((string)$text, ENT_QUOTES, 'UTF-8');
 <?php return; } ?>
 <h1><?= Modulo2I18n::t('Restore version %1', (int)$version['number']); ?></h1>
 <p class="m2-muted"><?= $e($version['name']); ?> · <?= $e(Modulo2Dates::friendly((int)$version['created_at'])); ?></p>
-<p><?= Modulo2I18n::t('When it is restored, these preferences go back to how they were in that version:'); ?></p>
-<?= Modulo2Ui::preferenceChanges($this->getVar('changes') ?? []); ?>
+<p><?= Modulo2Ui::emphasis(Modulo2I18n::t('When it is restored, these preferences go back to how they were in that version. **Now** is the current value and **After restoring** is how it will be:')); ?></p>
+<?= Modulo2Ui::preferenceChanges($this->getVar('changes') ?? [], [Modulo2I18n::t('Now'), Modulo2I18n::t('After restoring')]); ?>
 
 <form method="post" action="<?= $e($this->getVar('form_url')); ?>">
 	<input type="hidden" name="csrfToken" value="<?= $e($this->getVar('csrf_token')); ?>"/>
