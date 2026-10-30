@@ -42,6 +42,7 @@ $search_text = function(array $section) {
 	#leftNav .m2-sidebar ul.arrow li.m2-current a { background: #e8f5f6; color: #0e6b75; font-weight: 600; box-shadow: inset 3px 0 0 #138290; }
 	.m2-search-hidden { display: none; }
 </style>
+<?= Modulo2Ui::themeStyles(); ?>
 <div class="m2-sidebar" id="m2-sidebar">
 	<div class="m2-division"><?= Modulo2I18n::t('Settings'); ?></div>
 	<div class="m2-search"><input type="search" id="m2-search" placeholder="<?= $e(Modulo2I18n::t('Search settings…')); ?>" aria-label="<?= $e(Modulo2I18n::t('Search settings')); ?>"/></div>

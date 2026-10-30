@@ -111,7 +111,7 @@ class modulo2Plugin extends BaseApplicationPlugin {
 			],
 			Modulo2Constants::PERMISSION_EDIT_MEDIUM => [
 				'label' => Modulo2I18n::t('Module 2: edit medium risk settings'),
-				'description' => Modulo2I18n::t('The user can change the medium risk settings of the catalog (data types, identifiers, hierarchies, deaccession...).')
+				'description' => Modulo2I18n::t('The user can change the medium risk settings of the catalog (data types, identifiers, deaccession...).')
 			],
 			Modulo2Constants::PERMISSION_EDIT_HIGH => [
 				'label' => Modulo2I18n::t('Module 2: edit critical risk settings'),

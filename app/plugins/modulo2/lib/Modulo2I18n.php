@@ -65,10 +65,16 @@ final class Modulo2I18n {
 	# -------------------------------------------------------
 	/** Primero los reemplazos de la institución (translations.conf), después el módulo y por último Providence */
 	private static function translate(string $text) : string {
-		global $g_translation_strings;
 		$providence = fn() => (function_exists('_t') && !self::$forced_locale) ? _t($text) : $text;
-		if (is_array($g_translation_strings) && isset($g_translation_strings[$text])) { return $providence(); }
+		if (self::replacedByInstitution($text)) { return $providence(); }
 		return self::table(self::locale())[$text] ?? $providence();
+	}
+	# -------------------------------------------------------
+	/** Si translations.conf reemplaza el texto en el idioma actual (como lo decide _t) */
+	private static function replacedByInstitution(string $text) : bool {
+		global $g_translation_strings;
+		$replacement = is_array($g_translation_strings) ? ($g_translation_strings[$text] ?? null) : null;
+		return is_string($replacement) || (is_array($replacement) && isset($replacement[(string)self::locale()]));
 	}
 	# -------------------------------------------------------
 	private static function translatedFields(array $item, array $fields) : array {

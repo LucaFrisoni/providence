@@ -29,3 +29,155 @@ msgstr "Der Datensatz wurde aus Ihren beobachteten Elementen entfernt."
 
 msgid "Filter…"
 msgstr "Filtern…"
+
+# Textos de Providence con datos (%1) que su traducción no tiene
+
+msgid "%1 available to you"
+msgstr "%1 für Sie verfügbar"
+
+msgid "%1 created by users"
+msgstr "%1 von Benutzern erstellt"
+
+msgid "%1 created by the public"
+msgstr "%1 von der Öffentlichkeit erstellt"
+
+msgid "%1 %2 are available"
+msgstr "%1 %2 verfügbar"
+
+msgid "%1 displays are available"
+msgstr "%1 Anzeigen verfügbar"
+
+msgid "%1 rules are available for editing"
+msgstr "%1 Regeln zur Bearbeitung verfügbar"
+
+msgid "%1 forms are available for editing"
+msgstr "%1 Formulare zur Bearbeitung verfügbar"
+
+msgid "%1 elements are defined"
+msgstr "%1 Elemente definiert"
+
+msgid "%1 user interfaces are defined"
+msgstr "%1 Benutzeroberflächen definiert"
+
+msgid "%1 teams are available"
+msgstr "%1 Teams verfügbar"
+
+msgid "%1 comments need moderation"
+msgstr "%1 Kommentare müssen moderiert werden"
+
+msgid "%1 comments total"
+msgstr "%1 Kommentare insgesamt"
+
+msgid "%1 moderated comments"
+msgstr "%1 moderierte Kommentare"
+
+msgid "%1 taggings need moderation"
+msgstr "%1 Verschlagwortungen müssen moderiert werden"
+
+msgid "%1 total taggings"
+msgstr "%1 Verschlagwortungen insgesamt"
+
+msgid "%1 total unique tags"
+msgstr "%1 eindeutige Schlagwörter insgesamt"
+
+msgid "Lot contains %1 objects"
+msgstr "Das Los enthält %1 Objekte"
+
+msgid "Maximum upload size is %1"
+msgstr "Maximale Uploadgröße: %1"
+
+msgid "Number of %1 in hierarchy: %2"
+msgstr "Anzahl in der Hierarchie (%1): %2"
+
+msgid "Click %1 names to explore. Click on an arrow icon to open a %1 for editing."
+msgstr "Klicken Sie auf die Namen (%1), um sie zu erkunden. Klicken Sie auf einen Pfeil, um einen Datensatz (%1) zu bearbeiten."
+
+msgid "Use the controls below to create new %1 relative to this record in the hierarchy."
+msgstr "Mit den Bedienelementen unten erstellen Sie neue %1 relativ zu diesem Datensatz in der Hierarchie."
+
+msgid "Use the controls below to create new %1 relative to this %2 in the hierarchy."
+msgstr "Mit den Bedienelementen unten erstellen Sie neue %1 relativ zu diesem Datensatz (%2) in der Hierarchie."
+
+msgid "Create child record under this %1"
+msgstr "Untergeordneten Datensatz unter diesem Datensatz (%1) erstellen"
+
+msgid "Change %1 type"
+msgstr "Typ ändern (%1)"
+
+msgid "Your search found no %1"
+msgstr "Ihre Suche ergab keine Treffer (%1)"
+
+msgid "Creating new %1"
+msgstr "Neu erstellen: %1"
+
+msgid "Quick add %1"
+msgstr "Schnell hinzufügen: %1"
+
+msgid "Deaccessioned %1"
+msgstr "Abgegangene %1"
+
+msgid "%1 public pages"
+msgstr "%1 öffentliche Seiten"
+
+msgid "A tool for extraction of embedded metadata from audio and video files. See %1 for additional information."
+msgstr "Ein Werkzeug zum Auslesen eingebetteter Metadaten aus Audio- und Videodateien. Weitere Informationen unter %1."
+
+msgid "A tool for extraction of embedded metadata in images, documents and other media. See %1 for additional information."
+msgstr "Ein Werkzeug zum Auslesen eingebetteter Metadaten aus Bildern, Dokumenten und anderen Medien. Weitere Informationen unter %1."
+
+msgid "LibreOffice cannot be found: conversion to PDF and generation of page previews will not be performed; you can obtain LibreOffice at %1"
+msgstr "LibreOffice wurde nicht gefunden: Es erfolgt keine PDF-Konvertierung und keine Erstellung von Seitenvorschauen. LibreOffice erhalten Sie unter %1"
+
+msgid "MeshLab cannot be found: you will not be able to process 3D files; you can obtain MeshLab at %1"
+msgstr "MeshLab wurde nicht gefunden: 3D-Dateien können nicht verarbeitet werden. MeshLab erhalten Sie unter %1"
+
+msgid "To fully index Chinese-language content the Jieba PHP word segmenter (%1) should be installed."
+msgstr "Um chinesische Inhalte vollständig zu indizieren, sollte der Wortsegmentierer Jieba PHP (%1) installiert werden."
+
+msgid "Try installing Jieba PHP. See See %1"
+msgstr "Installieren Sie Jieba PHP. Siehe %1"
+
+msgid "%1 Statistics"
+msgstr "%1-Statistik"
+
+msgid "Show %1"
+msgstr "Anzeigen: %1"
+
+msgid "Your %1"
+msgstr "Ihre %1"
+
+msgid "1 %1 is available"
+msgstr "1 %1 verfügbar"
+
+msgid "%1 page"
+msgstr "%1 Seite"
+
+msgid "%1 pages"
+msgstr "%1 Seiten"
+
+msgid "%1 public page"
+msgstr "%1 öffentliche Seite"
+
+msgid "%1 exporters are available"
+msgstr "%1 Exporteure verfügbar"
+
+msgid "Outstanding items: %1"
+msgstr "Ausstehende Objekte: %1"
+
+msgid "Checkout for %1 (%2)"
+msgstr "Ausleihe für %1 (%2)"
+
+msgid "Items out (all users): %1"
+msgstr "Ausgeliehene Objekte (alle Benutzer): %1"
+
+msgid "%1 importers are available"
+msgstr "%1 Importeure verfügbar"
+
+msgid "%1 rules are defined"
+msgstr "%1 Regeln definiert"
+
+msgid "%1 mappings are defined"
+msgstr "%1 Zuordnungen definiert"
+
+msgid "%1 saved searches"
+msgstr "%1 gespeicherte Suchen"

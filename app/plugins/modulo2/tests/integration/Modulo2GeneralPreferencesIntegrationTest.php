@@ -110,6 +110,78 @@ final class Modulo2GeneralPreferencesIntegrationTest extends Modulo2BehaviorTest
 		$this->assertFalse(ca_sets::getAutoDeleteInfo($set, $user)['should_autodelete'], 'Por fecha de creación sí respeta la antigüedad');
 	}
 	# -------------------------------------------------------
+	// La caja de búsqueda rápida de arriba conserva el texto buscado; "borrar" lo vacía al hacer clic en ella
+	#[TestDox('Búsqueda rápida: con "borrar" la caja se vacía al hacer clic en ella; con "editables" el texto queda')]
+	public function testQuickSearchBoxFollowsAutoclear() : void {
+		$this->assertStringContainsString("onfocus=\"this.value='';\"", $this->quickSearchBox('auto_clear'));
+		$this->assertStringNotContainsString('onfocus', $this->quickSearchBox('is_editable'));
+	}
+	# -------------------------------------------------------
+	// Providence decide en cada enlace de "Encontrar" si la búsqueda empieza de cero (reset/clear) o retoma la anterior
+	#[TestDox('Recordar la última búsqueda: los enlaces del menú Encontrar empiezan de cero o retoman la anterior según la preferencia')]
+	public function testFindMenuFollowsRememberLastSearch() : void {
+		$this->assertStringContainsString('find/SearchEntities/Index/reset/clear', $this->menuBar('clear'));
+		$this->assertStringContainsString('find/SearchEntities/Index/reset/save', $this->menuBar('save'));
+		$this->assertStringNotContainsString('reset/clear', $this->menuBar('save'));
+	}
+	# -------------------------------------------------------
+	// La lista "Búsqueda por conjunto" de las herramientas de búsqueda: los públicos de otro usuario solo con "mostrar",
+	// y nunca los que no son públicos
+	#[TestDox('Conjuntos públicos de otros usuarios: aparecen en la búsqueda por conjunto solo con "mostrar"; los privados nunca')]
+	public function testPublicSetsOfOtherUsersFollowThePreference() : void {
+		$owner = $this->createUser();
+		$owner->set('userclass', 0);	// Providence solo ofrece los conjuntos de usuarios del área de catalogación
+		$owner->update();
+		$public = $this->setOf($owner, 1);
+		$private = $this->setOf($owner, 0);
+
+		$this->assertContains($public, $this->searchSets('show'));
+		$this->assertNotContains($private, $this->searchSets('show'));
+		$this->assertNotContains($public, $this->searchSets('hide'));
+	}
+	# -------------------------------------------------------
+	/** Conjunto de entidades de un usuario, con acceso público (1) o no (0); devuelve su código */
+	private function setOf(ca_users $owner, int $access) : string {
+		$code = 'm2-set-'.uniqid();
+		$set = $this->newRecord('ca_sets', $code);
+		$set->set(['user_id' => $owner->getPrimaryKey(), 'access' => $access, 'table_num' => Datamodel::getTableNum('ca_entities')]);
+		$this->assertTrue((bool)$set->insert(), join('; ', $set->getErrors()));
+		$this->track($set);
+		return $code;
+	}
+	# -------------------------------------------------------
+	/** Códigos de los conjuntos que ofrece "Búsqueda por conjunto" en la búsqueda de entidades */
+	private function searchSets(string $mode) : array {
+		require_once(__CA_APP_DIR__.'/controllers/find/SearchEntitiesController.php');
+		$controller = new SearchEntitiesController($this->adminWith('list_public_sets', $mode), new ResponseHTTP(), [__CA_THEMES_DIR__.'/default/views/find']);
+		$controller->Tools([]);
+		return array_column($controller->getView()->getVar('available_sets'), 'set_code');
+	}
+	# -------------------------------------------------------
+	/** Usuario administrador con una preferencia cambiada solo en memoria (no se guarda) */
+	private function adminWith(string $pref, string $value) : RequestHTTP {
+		$user = new ca_users(self::ADMIN_ID);
+		$user->setPreference($pref, $value);
+		$request = new RequestHTTP(new ResponseHTTP());
+		$request->user = $user;
+		return $request;
+	}
+	# -------------------------------------------------------
+	/** Campo de la búsqueda rápida tal como lo arma la barra de menú del tema default */
+	private function quickSearchBox(string $mode) : string {
+		$view = new View($this->adminWith('clear_quicksearch', $mode), [__CA_THEMES_DIR__.'/default/views']);
+		$view->setVar('nav', new class { public function getHTMLMenuBar(...$args) { return ''; } });
+		preg_match('/<input[^>]+id="caQuickSearchFormText"[^>]*>/', $view->render('pageFormat/menuBar.php'), $input);
+		$this->assertNotEmpty($input, 'La barra de menú tiene la búsqueda rápida');
+		return $input[0];
+	}
+	# -------------------------------------------------------
+	/** Barra de menú de Providence (sin la copia que guarda en la sesión) */
+	private function menuBar(string $mode) : string {
+		Session::setVar('ca_nav_menubar_cache', null);
+		return (new AppNavigation($this->adminWith('persistent_search', $mode), new ResponseHTTP()))->getHTMLMenuBar('menuBar');
+	}
+	# -------------------------------------------------------
 	/** Preferencias del grupo General que muestra la pantalla */
 	private function generalPreferences(ca_users $user) : array {
 		return array_merge(...array_column(Modulo2PreferenceGroups::sections($user, 'ui'), 'prefs'));

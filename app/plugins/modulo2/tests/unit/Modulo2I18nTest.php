@@ -37,6 +37,22 @@ final class Modulo2I18nTest extends TestCase {
 		$this->assertSame('Save changes', Modulo2I18n::t('Save changes'));
 	}
 	# -------------------------------------------------------
+	// Regresión: un reemplazo de translations.conf para otro idioma dejaba el texto en inglés (en griego, "Versions")
+	#[TestDox('Un reemplazo de translations.conf solo desplaza la traducción del módulo en su propio idioma')]
+	public function testInstitutionReplacementsOnlyApplyToTheirLocale() : void {
+		global $g_translation_strings;
+		$saved = $g_translation_strings;
+		$g_translation_strings = ['Save changes' => ['de_DE' => 'Änderungen sichern']];
+		try {
+			Modulo2I18n::forceLocale('es_ES');
+			$this->assertSame('Guardar los cambios', Modulo2I18n::t('Save changes'));
+			Modulo2I18n::forceLocale('de_DE');
+			$this->assertSame('Save changes', Modulo2I18n::t('Save changes'), 'En alemán decide Providence (_t), que usa el reemplazo');
+		} finally {
+			$g_translation_strings = $saved;
+		}
+	}
+	# -------------------------------------------------------
 	// Los mensajes del servicio llegan en inglés y algunos tienen datos (un número, un nombre)
 	#[TestDox('Los mensajes del servicio se traducen, también los que tienen datos variables')]
 	public function testServiceMessagesAreTranslated() : void {

@@ -17,6 +17,7 @@ $e = fn($text) => htmlspecialchars((string)$text, ENT_QUOTES, 'UTF-8');
 	#leftNav .m2-sidebar h2 { margin: 16px 14px 4px 14px; width: auto; font-family: inherit; font-size: 10.5px; font-weight: 700; letter-spacing: .08em; color: #138290; }
 	#leftNav .m2-sidebar h2:first-child { margin-top: 6px; }
 </style>
+<?= Modulo2Ui::themeStyles(); ?>
 <div class="m2-sidebar">
 	<h2><?= Modulo2I18n::t('My preferences'); ?></h2>
 	<ul class="arrow" style="display:block">

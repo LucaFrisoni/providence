@@ -173,25 +173,10 @@ const DUPLICATE_LABEL_TYPES: &[&str] = &[
     "ca_sets",
     "ca_tours",
 ];
-const STRICT_HIERARCHY_TYPES: &[&str] = &[
-    "ca_objects",
-    "ca_entities",
-    "ca_places",
-    "ca_occurrences",
-    "ca_collections",
-    "ca_storage_locations",
-    "ca_loans",
-    "ca_list_items",
-];
 /// Los que se pueden dar de baja (tienen is_deaccessioned)
 const DEACCESSION_TYPES: &[&str] = &["ca_objects", "ca_object_lots", "ca_collections"];
 // ---------------------------------------------------------------- Opciones
 
-const STRICT_HIERARCHY_OPTIONS: &[ChoiceOption] = &[
-    ChoiceOption::new("0", "No restriction"),
-    ChoiceOption::new("~", "Partial"),
-    ChoiceOption::new("1", "Strict"),
-];
 /// Niveles de acceso a campos, subtipos y orígenes (`__CA_BUNDLE_ACCESS_*__` en Providence)
 const BUNDLE_ACCESS_OPTIONS: &[ChoiceOption] = &[
     ChoiceOption::new("0", "No access"),
@@ -413,33 +398,6 @@ const LABEL_SETTINGS: &[Setting] = &[
     ),
 ];
 
-const HIERARCHY_SETTINGS: &[Setting] = &[
-    Setting::per_type(
-        "enforce_strict_type_hierarchy",
-        "Type hierarchy",
-        "Restricts which types a child record can have according to the type of its parent.",
-        Kind::Choice(STRICT_HIERARCHY_OPTIONS),
-        STRICT_HIERARCHY_TYPES,
-    )
-    .risk(Risk::Medium),
-    Setting::per_type(
-        "hierarchy_browser_hide_root",
-        "Root shown",
-        "Shows the root of the hierarchy in the \"New\" and \"Find\" screens.",
-        Kind::Boolean,
-        &["ca_storage_locations", "ca_places"],
-    )
-    .inverted(),
-    Setting::per_type(
-        "x_collections_hierarchy_enabled",
-        "Single hierarchy with collections",
-        "Shows collections and objects as a single hierarchy.",
-        Kind::Boolean,
-        &["ca_objects"],
-    )
-    .risk(Risk::Medium),
-];
-
 const RESULTS_SETTINGS: &[Setting] = &[
     Setting::per_type(
         "children_display_mode_in_results",
@@ -629,14 +587,6 @@ pub const SECTIONS: &[Section] = &[
         APP_CONF,
         Scope::DataType,
         LABEL_SETTINGS,
-    ),
-    section(
-        "hierarchies",
-        "Hierarchies",
-        "How records nested under other records are organized.",
-        APP_CONF,
-        Scope::DataType,
-        HIERARCHY_SETTINGS,
     ),
     section(
         "results",

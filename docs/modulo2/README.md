@@ -93,7 +93,8 @@ cambios de Providence (`ca_change_log`).
       las ordena, las describe y las enlaza.
 - **Interfaz en el idioma del usuario:** los textos se escriben en inglés (el idioma por defecto de
   Providence) y se muestran en el idioma que el usuario elige en My preferences, en todos los idiomas
-  que trae Providence. Las traducciones propias están en dos lugares:
+  que trae Providence. Las traducciones propias están en tres lugares (detalle en
+  [Idiomas](#idiomas)):
     - `app/plugins/modulo2/locale/<idioma>.php`: los textos del módulo (`Modulo2I18n::t()`), el catálogo,
       los mensajes del servicio y los nombres de preferencias que Providence no tiene traducidos. Un
       archivo por idioma (`de.php` sirve para `de_DE` y `de_AT`) o por locale cuando la variante cambia
@@ -102,11 +103,15 @@ cambios de Providence (`ca_change_log`).
     - `app/locale/user/<locale>/messages.po` (y su `.mo` compilado): los textos de Providence que su
       traducción no tiene (en `es_ES`, copiado a `es_MX`) y los del tema ModernUI (diálogo al salir sin
       guardar, ayuda de la búsqueda, avisos). Providence los carga junto con los suyos, pero los suyos
-      tienen prioridad: un texto que Providence ya traduce no se puede cambiar desde acá.
-  Las traducciones a otros idiomas se hicieron siguiendo los términos que ya usa la traducción de
-  Providence de cada idioma (menús, conjuntos, visualizaciones…); conviene que las revise alguien que
-  hable el idioma. Las pruebas fallan si a un texto le falta su traducción en algún idioma o si una
-  traducción pierde un dato (`%1`) o un resaltado (`**`).
+      tienen prioridad: un texto que Providence ya traduce no se puede cambiar desde acá. También los
+      textos con datos (`%1`) que la traducción de Providence no tiene.
+    - `app/plugins/modulo2/locale/providence/<idioma>.php`: los textos de Providence (sin datos) que su
+      traducción deja en inglés o que se cambian ("locale" por "idioma"). `locale/providence/build.php` los escribe en
+      `themes/default/conf/translations.conf`, que Providence usa antes que su traducción.
+      Las traducciones a otros idiomas se hicieron siguiendo los términos que ya usa la traducción de
+      Providence de cada idioma (menús, conjuntos, visualizaciones…); conviene que las revise alguien que
+      hable el idioma. Las pruebas fallan si a un texto le falta su traducción en algún idioma o si una
+      traducción pierde un dato (`%1`) o un resaltado (`**`).
 - **Trabaja con una lista blanca:** solo muestra y modifica las configuraciones del catálogo.
 - **Escribe solo en `app/conf/local/`:** es el lugar que Providence prevé para los cambios de cada
   instalación. Los archivos de `app/conf/` quedan como vienen, así que volver al valor original es sacar
@@ -148,12 +153,11 @@ se marcan en la interfaz.
 | 4   | Menú "Buscar"               | `*_dont_show_in_find_menu`, `*_breakout_find_by_type_in_menu`, `*_breakout_find_by_type_in_submenu`, `*_navigation_find_menu_limit_types_to`, `*_navigation_find_menu_exclude_types` |
 | 5   | Identificadores             | `require_valid_id_number_for_*`, `allow_duplicate_id_number_for_*`                                                                                                                   |
 | 6   | Nombres                     | `require_preferred_label_for_*`, `allow_duplicate_labels_for_*`, `ca_entities_warn_when_preferred_label_exists`                                                                      |
-| 7   | Jerarquías                  | `*_enforce_strict_type_hierarchy`, `*_hierarchy_browser_hide_root`, `ca_objects_x_collections_hierarchy_enabled`                                                                     |
-| 8   | Resultados                  | `ca_objects_children_display_mode_in_results`, `*_deaccession_display_mode_in_results` (objetos, lotes y colecciones; solo "Mostrar" y "Ocultar")                                    |
-| 9   | Descargas                   | `excel_report_show_search_term` + `excel_report_header_enabled` (una sola), `excel_report_footer_enabled`, `report_include_labels_in_docx_output`                                    |
-| 10  | Bajas                       | `deaccession_dont_allow_editing`; además, el campo de baja en las pantallas de edición (configuración de la base, ver abajo)                                                         |
-| 11  | Módulos opcionales          | `enable_library_services` + `enable_object_checkout` (una sola: "Biblioteca"), `enable_user_generated_content`                                                                       |
-| 12  | Control de acceso (crítico) | `perform_*_access_checking`, `default_*_access_level`                                                                                                                                |
+| 7   | Resultados                  | `ca_objects_children_display_mode_in_results`, `*_deaccession_display_mode_in_results` (objetos, lotes y colecciones; solo "Mostrar" y "Ocultar")                                    |
+| 8   | Descargas                   | `excel_report_show_search_term` + `excel_report_header_enabled` (una sola), `excel_report_footer_enabled`, `report_include_labels_in_docx_output`                                    |
+| 9   | Bajas                       | `deaccession_dont_allow_editing`; además, el campo de baja en las pantallas de edición (configuración de la base, ver abajo)                                                         |
+| 10  | Módulos opcionales          | `enable_library_services` + `enable_object_checkout` (una sola: "Biblioteca"), `enable_user_generated_content`                                                                       |
+| 11  | Control de acceso (crítico) | `perform_*_access_checking`, `default_*_access_level`                                                                                                                                |
 
 **Quitadas del catálogo** (se pueden volver a evaluar más adelante): el formato de los identificadores
 (`multipart_id_numbering.conf`, sin un formato de edición simple), el orden de los menús
@@ -162,7 +166,9 @@ instalación dejaría de recibir los cambios de menú de Providence), los textos
 (`translations.conf`), los colores, la plantilla del texto de las miniaturas, la búsqueda rápida, el
 autocompletado, el inspector (el panel lateral del editor de un registro), "privado al dar de baja"
 (`deaccession_force_access_private`, que Providence no aplica: ver abajo), el pie de los PDF
-(`report_header_enabled`: la descarga de PDF tiene sus propias opciones) y las etapas de los recorridos (la
+(`report_header_enabled`: la descarga de PDF tiene sus propias opciones), las jerarquías (tipos de los
+registros hijos, raíz visible, jerarquía única con colecciones: no las pide el módulo y no se habían
+probado) y las etapas de los recorridos (la
 pantalla de recorridos de Providence no permite crearlas). Eran difíciles de entender o de editar sin conocer Providence.
 
 **Etiquetas en positivo:** muchas claves de Providence son negativas (`ca_places_disable`,
@@ -350,19 +356,24 @@ preferencias actuales no están guardadas y permite guardarlas.
 
 ## Plan de trabajo
 
-| Fase                            | Qué se hace                                                            | Estado     |
-| ------------------------------- | ---------------------------------------------------------------------- | ---------- |
-| 0. Infraestructura              | Plugin, servicio Rust, base de la extensión y pruebas                  | Hecha      |
-| 1. Catálogo y lectura           | Definir el catálogo y mostrar los valores actuales                     | Hecha      |
-| 2. Edición                      | Modificar configuraciones, con validación y registro de cambios        | Hecha      |
-| 3. Versionado                   | Crear versiones, ver sus cambios y restaurarlas                        | Hecha (\*) |
-| 4. Cierre de cada configuración | Probar cada sección del catálogo en Providence y documentarla          | En curso   |
-| 5. Panel de gestión             | Manage mejorado y centralizado: My preferences, Administration y demás | En curso   |
+| Fase                            | Qué se hace                                                         | Estado       |
+| ------------------------------- | ------------------------------------------------------------------- | ------------ |
+| 0. Infraestructura              | Plugin, servicio Rust, base de la extensión y pruebas               | Hecha        |
+| 1. Catálogo y lectura           | Definir el catálogo y mostrar los valores actuales                  | Hecha        |
+| 2. Edición                      | Modificar configuraciones, con validación y registro de cambios     | Hecha        |
+| 3. Versionado                   | Crear versiones, ver sus cambios y restaurarlas                     | Hecha (\*)   |
+| 4. Cierre de cada configuración | Probar cada sección del catálogo en Providence y documentarla       | Hecha (\*\*) |
+| 5. Panel de gestión             | Management en lugar de Manage: todas las secciones en un panel      | Hecha        |
+| 6. Interfaz modernizada y temas | Mismo aspecto en el módulo y en Providence; tema ModernUI o default | Hecha        |
+| 7. Mis preferencias             | Preferencias de cada usuario con versiones, idiomas y temas         | Hecha        |
 
 (\*) Salvo la restauración de la configuración en base, que queda como
 [decisión pendiente](#versionado-registro-y-permisos).
+(\*\*) Salvo el control de acceso, que espera la lógica del módulo 3.
 
-Lo próximo: seguir mejorando My preferences y cerrar las secciones del catálogo que faltan.
+Lo que queda depende de otros: el control de acceso y los permisos (módulo 3) y la decisión sobre la
+restauración de la configuración en base. Ver [Alcance del módulo](#alcance-del-módulo) y
+[Tareas por fase](#tareas-por-fase).
 
 ## Implementación
 
@@ -511,8 +522,8 @@ prueba se corte.
   verifica `Modulo2GeneralPreferencesIntegrationTest`: Providence compara la preferencia como texto, así
   que "No" no lo desactiva, y en el modo "días desde el último uso" toma la fecha como 0, así que un
   conjunto marcado vence aunque se haya usado recién. Tampoco mira los permisos de borrar conjuntos.
-  **Decisión pendiente:** qué hacer con estas cuatro preferencias.
-- **Resultados (pendiente: hay que modificar Providence).** Providence tiene cuatro valores: "Siempre
+  **Pendiente para el módulo 3:** ocultarlas y dejarlas solo para los administradores.
+- **Resultados (la búsqueda rápida no lo aplica: haría falta modificar Providence).** Providence tiene cuatro valores: "Siempre
   mostrar" y "Siempre ocultar" se aplican siempre; "Mostrar" y "Ocultar" son solo el valor inicial, el
   usuario elige en los resultados y Providence recuerda su elección. El catálogo ofrece solo los dos que
   se aplican siempre y muestra los otros como estos (opciones equivalentes, `also` en el JSON). Los dados
@@ -573,11 +584,15 @@ tipo de dato, subtipos anidados de objetos, para "Resultados" un objeto con dos 
   `navigation.conf`, así el panel sigue a Providence y cada usuario ve solo lo que puede usar
   (`Modulo2NavRequirements` evalúa los requisitos como Providence). Grupos, descripciones y módulo
   dueño están en `Modulo2ManageMap`.
-- **My preferences:** `Modulo2PreferenceEditor` (guardado), `Modulo2PreferenceRestorer`
-  (restauración) y `Modulo2PreferenceValues` (texto de cada valor). API bajo
-  `/api/modulo2/preferences`, con las mismas rutas que las versiones de configuración más el usuario
-  (`?user=` o en el cuerpo); tablas `m2_preference_versions` y `m2_preference_changes` (registro interno). La prueba de
-  integración usa dos usuarios de prueba fijos e inactivos, porque Providence no borra usuarios.
+- **Barra lateral:** índice de los grupos del panel (`manage_info_html.php`). Marca el grupo que se está
+  viendo al bajar, el último al llegar al final de la página, y sigue al buscador (oculta los grupos
+  sin resultados). Al elegir un grupo, su título queda justo debajo de la barra de menú, que Providence
+  deja fija arriba (sin contarla, el título quedaba tapado). Providence vuelve a armar la barra lateral después de cargar la página, por eso el
+  script la busca cada vez y escucha los clics en el documento: con la barra guardada al cargar, el
+  índice quedaba fijo en el primer grupo.
+
+### Fase 6: interfaz modernizada y temas
+
 - **Interfaz modernizada:** las pantallas del módulo comparten los estilos de `Modulo2Ui` (colores,
   letra, botones, tarjetas, tablas, diálogos y listas desplegables). Las demás pantallas de Providence
   (Administration, Nuevo y edición de registros, Encontrar con sus búsquedas avanzada y Exploración,
@@ -599,7 +614,15 @@ tipo de dato, subtipos anidados de objetos, para "Resultados" un objeto con dos 
   tema default, porque Providence busca cada archivo primero en el tema elegido y después en default.
   Quien todavía no eligió usa ModernUI: lo define
   [themes/default/conf/user_pref_defs.conf](../../themes/default/conf/user_pref_defs.conf) (`#!merge`
-  sobre las definiciones de Providence). Las pantallas del módulo se ven igual con los dos temas.
+  sobre las definiciones de Providence): un usuario nuevo arranca con ModernUI.
+- **Las pantallas del módulo en los dos temas.** Con ModernUI usan los estilos de `Modulo2Ui`; con el
+  tema default, `Modulo2Ui::themeStyles` les pone el aspecto clásico de Providence (sus colores, letra
+  Helvetica, botones grises en mayúsculas, encabezados de tabla y listas desplegables de siempre) y el
+  rastro de navegación usa el HTML y las flechas de Providence (`Modulo2Ui::breadcrumbs`). El tema se
+  toma del usuario conectado (`Modulo2Ui::modernTheme`).
+- **Botones que crecen con el texto.** Los textos cambian de largo según el idioma (en alemán o húngaro
+  son más largos): los botones, chips y ventanas no tienen ancho fijo y pasan a dos líneas si hace
+  falta. Las ventanas de Descargar y Opciones crecen hasta 640 px.
 - **Salir con cambios sin guardar.** Providence avisa con el cuadro del navegador (`beforeunload`), que
   no se puede estilizar. [themes/modernui/js/unsaved-changes.js](../../themes/modernui/js/unsaved-changes.js)
   lo reemplaza, al seguir un enlace (Cancelar, el menú...), por un diálogo con el aspecto del módulo, usando
@@ -608,7 +631,7 @@ tipo de dato, subtipos anidados de objetos, para "Resultados" un objeto con dos 
   no pregunta: lleva a su propia confirmación.
 - **Ajustes de las pantallas nativas.** [themes/modernui/js/native-ui.js](../../themes/modernui/js/native-ui.js),
   cargado también por `pageFooter.php` (solo con ModernUI: con el tema default no encuentra los scripts), agrega lo que no se puede con estilos, sin cambiar qué hace cada
-  pantalla: la ayuda "Escriba * para ver todos los registros" bajo la búsqueda básica; quita los espacios
+  pantalla: la ayuda "Escriba \* para ver todos los registros" bajo la búsqueda básica; quita los espacios
   con que Providence sangra las opciones de listas jerárquicas (el valor elegido quedaba corrido) y los
   reemplaza por margen; un campo para filtrar las listas largas de la barra lateral (historia, búsquedas
   memorizadas; Providence guarda hasta 100 búsquedas en la historia y ya están todas en la página, así
@@ -628,6 +651,103 @@ tipo de dato, subtipos anidados de objetos, para "Resultados" un objeto con dos 
   `themes/default/views/pageFormat/pageFooter.php`: es un cambio en una vista del tema de Providence,
   pedido explícitamente, porque con estilos no se puede quitar sin dejar el separador suelto. En la misma
   vista se cargan `unsaved-changes.js` y `native-ui.js`.
+
+### Fase 7: Mis preferencias
+
+Qué ve el usuario y cómo se guarda: ver [My preferences](#my-preferences).
+
+- **Código:** `Modulo2PreferenceEditor` (guardado), `Modulo2PreferenceRestorer` (restauración),
+  `Modulo2PreferenceValues` (texto de cada valor) y `Modulo2PreferenceValidator` (valores que la
+  pantalla no ofrece). API bajo `/api/modulo2/preferences`, con las mismas rutas que las versiones de
+  configuración más el usuario (`?user=` o en el cuerpo); tablas `m2_preference_versions` y
+  `m2_preference_changes` (registro interno).
+- **Pruebas de General** (`Modulo2GeneralPreferencesIntegrationTest`): cada preferencia llega al
+  guardado de Providence y entra en la versión; se rechazan valores que la pantalla no ofrece; la
+  antigüedad del borrado automático; el tema decide qué archivos de ModernUI carga Providence; el borrado
+  automático de Providence; la caja de búsqueda rápida con "borrar automáticamente" (se vacía al hacer
+  clic) o no; los enlaces del menú Encontrar con "recordar la última búsqueda" (empiezan de cero o
+  retoman la anterior); y los conjuntos públicos de otros usuarios en la búsqueda por conjunto (solo con
+  "mostrar"; los privados nunca). Usan dos usuarios de prueba fijos e inactivos, porque Providence no
+  borra usuarios, y dejan las preferencias como estaban.
+- **Datos para probar a mano:** `tests/support/seed_preference_demo.php --confirm` crea un usuario
+  inactivo `demo-conjuntos` con el conjunto público "demo_conjunto_publico" (3 entidades), la plantilla
+  de exportación "demo_entidades_xml" (XML con identificador y nombre de cada entidad) y la
+  visualización "demo_resumen_entidades" (nombre, identificador y tipo). Se puede correr varias veces.
+- **Temas:** cada usuario elige el suyo en General; ver [Fase 6](#fase-6-interfaz-modernizada-y-temas).
+
+#### Idiomas
+
+La interfaz tiene que verse completa en cualquiera de los 19 idiomas de Providence. Hay tres fuentes
+de textos, y cada una se traduce en un lugar distinto:
+
+1. **Textos del módulo.** `Modulo2I18n` los toma de `locale/<idioma>.php` (16 archivos: uno por idioma y
+   `pt_BR` aparte; las variantes como `es_MX` o `de_AT` usan el de su idioma). `Modulo2I18nTest`
+   verifica que cada texto del módulo tenga traducción en todos.
+2. **Textos de Providence que su traducción deja en inglés.** Se buscaron recorriendo unas 230 pantallas
+   (menús, barras laterales, listas, editores, Administration, Encontrar, Gestión) y comparando, idioma
+   por idioma, cada texto visible con la traducción de Providence: un texto cuenta como faltante si no
+   está traducido o si su "traducción" es igual al inglés. Así salieron unos 1.400 textos (desde 260 en
+   checo hasta 1.270 en serbio). Sus traducciones están en `locale/providence/<idioma>.php` ([inglés =>
+   traducción]) y `locale/providence/build.php` arma con ellas `themes/default/conf/translations.conf`, el archivo
+   que Providence prevé para cambiar sus textos (tiene prioridad sobre su traducción). Solo se escribe
+   un texto en los idiomas que lo necesitan, así no se pisa una traducción de Providence que ya está.
+   `Modulo2TranslationOverridesTest` prueba el armado y que Providence lee el archivo generado.
+3. **Textos con datos (`%1`).** `translations.conf` no sirve para estos: Providence devuelve el
+   reemplazo sin poner los datos. Van en `app/locale/user/<locale>/messages.po` (con su `.mo`), que
+   Providence carga además de su traducción y usa para lo que a ella le falta; por ejemplo, la barra
+   lateral de los conjuntos ("0 disponibles para usted, 1 creados por usuarios").
+
+**"Locale" se dice "idioma".** `locale/providence/forced.php` lista los textos de Providence con "locale"
+(49): se reemplazan en todos los idiomas aunque Providence ya los traduzca, por ejemplo "Idioma de la
+interfaz" en lugar de "Configuración regional de la interfaz de usuario".
+
+**Después de cambiar una traducción:** regenerar el archivo (el tema no está montado en el contenedor,
+se escribe en la copia local) y reconstruir la imagen o copiarlo, y borrar la caché de traducciones:
+
+```
+docker compose exec -T -u www-data providence php app/plugins/modulo2/locale/providence/build.php > themes/default/conf/translations.conf
+docker compose up -d --build providence
+```
+
+**Lo que no se traduce así:**
+
+- **Datos de la instalación.** Los nombres de listas y sus ítems (por ejemplo los subtipos de hechos),
+  de las pantallas de edición, de los campos y de los tipos de relación están en la base, en los idiomas
+  que les cargó el perfil (casi siempre solo inglés). Se traducen en Providence, en cada lista o
+  interfaz, agregando el nombre en el idioma. Los nombres de las versiones también son datos: "Versión
+  del 29/10/2026" quedó en castellano porque se guardó con la interfaz en castellano.
+- **Textos escritos en las vistas de Providence sin pasar por la traducción** (por ejemplo "selected
+  sets" o "Layout:" en las listas): cambiarlos exige modificar Providence.
+- **Textos con datos que la traducción de Providence tiene en inglés.** La traducción de Providence
+  gana sobre la de `app/locale/user`, así que si trae el texto igual al inglés no se puede corregir sin
+  modificar sus archivos de traducción. Pasa en alemán con nueve textos de las barras laterales (por
+  ejemplo "%1 rules are available for editing").
+
+Las traducciones de los puntos 2 y 3 siguen el vocabulario de la traducción de Providence de cada
+idioma.
+
+## Alcance del módulo
+
+Lo que pide el módulo 2 y dónde está:
+
+| Pedido                                           | Cómo se cumple                                                                                                                   |
+| ------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------- |
+| Activar o desactivar entidades o funcionalidades | Catálogo: tipos de dato, funciones por tipo de dato, módulos opcionales                                                          |
+| Ordenamiento de entidades, listas y sublistas    | Orden de los tipos de dato en los menús "Nuevo" y "Buscar"; el de listas y sublistas lo da Providence en el editor de cada lista |
+| Presentación y navegación                        | Catálogo: menús, resultados, descargas; panel de gestión; interfaz modernizada y temas                                           |
+| Textos y traducciones                            | La interfaz completa en los 19 idiomas de Providence, "idioma" en lugar de "locale" ([Idiomas](#idiomas))                        |
+| Automatización de identificadores                | Catálogo: identificador obligatorio y válido, sin repetidos                                                                      |
+| Consultar, modificar y validar antes de aplicar  | _New settings_ y Mis preferencias, con validación en el servidor                                                                 |
+| Registrar quién, cuándo y qué                    | Historial de cambios                                                                                                             |
+| Versionar y recuperar versiones anteriores       | Versiones de la configuración y de las preferencias de cada usuario                                                              |
+| Restringir a usuarios autorizados                | Permisos por nivel de riesgo                                                                                                     |
+| Versión recuperable antes de un cambio crítico   | Al guardar se ofrece guardar antes la configuración actual                                                                       |
+
+**Fuera del alcance:** mejorar Administration, la pantalla principal y sus widgets, y funciones nuevas
+para las preferencias (por ejemplo, más monedas). Las preferencias de Mis preferencias son funciones de
+Providence: el módulo las muestra, las guarda con el guardado de Providence y las versiona (lo prueban
+las pruebas de guardado de cada grupo), pero no prueba qué hace Providence con cada una. Si una no
+funciona, corregirla exige modificar Providence.
 
 ## Tareas por fase
 
@@ -653,82 +773,51 @@ tipo de dato, subtipos anidados de objetos, para "Resultados" un objeto con dos 
 - [x] #4 Menú "Buscar"
 - [x] #5 Identificadores
 - [x] #6 Nombres
-- [ ] #7 Jerarquías
-- [ ] #8 Resultados: pendiente; la búsqueda rápida no aplica la configuración y para eso hay que
-      modificar Providence (ver arriba)
-- [x] #9 Descargas
-- [x] #10 Bajas
-- [x] #11 Módulos opcionales
-- [ ] #12 Control de acceso: pendiente hasta que esté la lógica del módulo 3
-- [ ] Configuración en la base: se quitó de _New settings_; está en el panel de gestión (sobre todo en
-      Administration). Queda ver más adelante si se mejora o simplifica la interfaz de esas secciones
+- [x] #7 Resultados: la búsqueda rápida no aplica la configuración; corregirlo exige modificar
+      Providence (ver "Lo que se verificó de Providence")
+- [x] #8 Descargas
+- [x] #9 Bajas
+- [x] #10 Módulos opcionales
+- [ ] #11 Control de acceso: pendiente hasta que esté la lógica del módulo 3
 
 **Fase 5: panel de gestión**
 
 - [x] Menú Management en el lugar de Manage y panel con todas las secciones
-- [ ] Barra lateral del panel: índice de los grupos, marca el que se está viendo y sigue al buscador.
-      **Pendiente de revisión**
-- [x] My preferences: una pantalla por grupo, cambios pendientes, versiones por usuario
-- [ ] My preferences: ver y probar cada preferencia. Una se marca cuando su funcionamiento quedó probado
-      en la interfaz y tiene pruebas de los casos de error, los límites y el funcionamiento correcto
-      (pocas y que no se repitan). Todas comparten la prueba de guardado de su grupo (cada campo llega
-      al guardado de Providence y entra en la versión) y la revisión de valores del servidor
-    - [ ] General (`Modulo2GeneralPreferencesIntegrationTest`)
-        - [ ] Idioma de la interfaz (`ui_locale`)
-        - [ ] Tema de la interfaz (`ui_theme`): CollectiveAccess default o ModernUI
-        - [ ] Rastro de navegación (`ui_show_breadcrumbs`): el de Providence y el de las pantallas del
-              módulo, con el aspecto de ModernUI
-        - [ ] Borrar automáticamente la búsqueda rápida anterior (`clear_quicksearch`)
-        - [ ] Recordar la última búsqueda o exploración (`persistent_search`)
-        - [ ] Conjuntos públicos de otros usuarios en la búsqueda (`list_public_sets`)
-        - [ ] Descargar de inmediato lo exportado desde el editor (`immediate_download_of_exports`)
-        - [ ] Visualizaciones en el resumen en PDF (`use_displays_for_pdf_summary_output`)
-        - [ ] Borrado automático de conjuntos (`autodelete_sets`, `autodelete_sets_default`,
-              `autodelete_sets_age_threshold`, `autodelete_sets_age_mode`): **decisión pendiente**, ver
-              "Lo que se verificó de Providence"
-    - [ ] Editing (Edición)
-        - [ ] Idioma de catalogación por defecto (`cataloguing_locale`)
-        - [ ] Qué hacer con las referencias al borrar (`cataloguing_delete_reference_handling_default`)
-        - [ ] Interfaz de edición de cada tipo de dato, por subtipo (`cataloguing_<tabla>_editor_ui`)
-    - [ ] Batch editing (Edición en masa)
-        - [ ] Interfaz de edición en masa de cada tipo de dato, por subtipo (`batch_<tabla>_editor_ui`)
-    - [ ] Search/browse (Búsqueda y exploración)
-        - [ ] Vistas de resultados disponibles de cada tipo de dato (`find_<tabla>_...`)
-    - [ ] Quick add (Al vuelo)
-        - [ ] Interfaz del alta al vuelo de cada tipo de dato, por subtipo (`quickadd_<tabla>_editor_ui`)
-    - [ ] Units of measurement (Unidades de medida)
-        - [ ] Unidades de las medidas (`units`)
-        - [ ] Moneda (`currency`)
-    - [ ] Duplication (Herramientas de duplicación), por cada tipo de dato
-        - [ ] Nombres alternativos (`<tabla>_duplicate_nonpreferred_labels`)
-        - [ ] Relaciones (`<tabla>_duplicate_relationships`)
-        - [ ] Metadatos de las relaciones (`<tabla>_duplicate_relationship_attributes`)
-        - [ ] Solo las relaciones actuales (`<tabla>_duplicate_current_relationships_only`)
-        - [ ] Registros hijos (`<tabla>_duplicate_children`)
-        - [ ] Archivos de contenido (`<tabla>_duplicate_media`)
-        - [ ] Elementos (`<tabla>_duplicate_subitems`)
-        - [ ] Metadatos (`<tabla>_duplicate_attributes`)
-        - [ ] Elementos de metadatos que se duplican (`<tabla>_duplicate_element_settings`)
-    - [ ] Quick search y Search builder (Búsqueda rápida y Constructor de búsquedas): se editan en
-          Providence; revisar que sus cambios entren en las versiones
-        - [ ] Ir directo al registro si la búsqueda coincide con un identificador
-              (`quicksearch_redirect_on_idno_match`)
-        - [ ] Qué busca la búsqueda rápida (`quicksearch_search_list`)
-        - [ ] Campos del constructor de búsquedas (`searchbuilder_priority_list`, `searchbuilder_bundle_list`)
-    - [ ] User profile (Perfil de usuario)
-        - [ ] Organización, dirección, ciudad, región, país, código postal, teléfono y fax
-              (`user_profile_*`)
-    - [ ] Developer (Desarrollo)
-        - [ ] Detalle de la consulta en el constructor de búsquedas (`show_search_builder_query`)
-        - [ ] Depurador de plantillas (`show_template_debugger`)
-        - [ ] Códigos de los campos en el editor (`show_bundle_codes_in_editor`)
-        - [ ] Por qué coincide cada resultado (`show_search_result_desc`)
+- [x] Barra lateral del panel: índice de los grupos, marca el que se está viendo y sigue al buscador.
+
+**Fase 6: interfaz modernizada y temas**
+
 - [x] Interfaz modernizada, sin cambiar el funcionamiento: las pantallas del módulo (panel, _New
       settings_, versiones, historial y My preferences) y todas las de Providence (Administration, Nuevo,
       Encontrar, Exploración, Recorridos, Importar y las secciones del panel), más el diálogo al salir
-      con cambios sin guardar
-- [ ] Interfaz modernizada de la pantalla principal (inicio) y sus widgets
-- [ ] Administration mejorado: resultados del chequeo de configuración y avisos de mantenimiento
-- [ ] (Opcional) Administration: analizar si sus pantallas actuales (interfaces de usuario, elementos
-      de metadatos, tipos de relación, idiomas, mantenimiento...) se pueden simplificar u optimizar
-- [ ] Revisar el resto de las secciones y decidir cuáles se mejoran
+      con cambios sin guardar y la ventana de descarga del resumen
+- [x] Dos temas: ModernUI (el de un usuario nuevo) y el default de Providence; las pantallas del módulo
+      tienen versión con el aspecto clásico
+- [x] Botones y ventanas que crecen con el texto en cada idioma
+
+**Fase 7: Mis preferencias**
+
+- [x] Una pantalla por grupo, cambios pendientes, versiones por usuario y prueba de guardado de cada
+      grupo (cada campo llega al guardado de Providence y entra en la versión)
+- [x] Valores revisados en el servidor (`Modulo2PreferenceValidator`) y rastro de navegación en las
+      pantallas del módulo (`Modulo2Breadcrumbs`)
+- [x] Idiomas: módulo en 16 archivos de idioma y textos de Providence que quedaban en inglés
+      completados en todos los idiomas, con "locale" dicho "idioma" (ver [Idiomas](#idiomas))
+- [x] General: tema, búsqueda rápida, última búsqueda, conjuntos públicos de otros usuarios, descarga
+      de lo exportado y visualizaciones en el resumen en PDF, probados en la interfaz y con pruebas
+      (`Modulo2GeneralPreferencesIntegrationTest`)
+- [x] Búsqueda y exploración: las casillas de las vistas de resultados muestran el nombre de cada vista
+      (Providence mostraba su código, `list_with_thumbnail`) y no se desbordan
+
+**Pendiente para el módulo 3 (usuarios y permisos)**
+
+- [ ] Borrado automático de conjuntos (`autodelete_sets` y sus tres preferencias): ocultarlo y dejarlo
+      solo para los administradores. Borra conjuntos, también compartidos (ver "Lo que se verificó de
+      Providence")
+- [ ] Herramientas de duplicación: decidir quién puede duplicar. Duplicar ya exige el permiso de
+      Providence `can_duplicate_<tipo de dato>` y se puede apagar por tipo de dato en el catálogo (#2); las
+      preferencias solo eligen qué se copia, pero algunas multiplican el efecto en la base: los registros
+      hijos (copia toda la rama) y los archivos de contenido (ocupan disco). Propuesta: dar
+      `can_duplicate_*` solo a los roles de catalogación de confianza y, si hace falta, ocultar esas dos
+      preferencias a los demás
+- [ ] #11 Control de acceso del catálogo

@@ -1036,8 +1036,11 @@
     }
 
     /* --- Ventanas de Descargar, Opciones y Refinar resultados --- */
+    /* El ancho crece con los textos: en alemán o húngaro son más largos */
     & :is(#searchToolsBox, #searchOptionsBox) {
-        width: 420px;
+        width: auto;
+        min-width: 420px;
+        max-width: min(640px, 92vw);
         font-family: var(--adm-font);
     }
 
@@ -1106,6 +1109,125 @@
 
     & #searchToolsBox li.caPrintOptionItem br {
         display: none;
+    }
+
+    /* --- Ventana de descarga del resumen de un registro y de un conjunto (ícono PDF): tarjeta con los
+       campos uno debajo del otro y las opciones del formato como casillas con su texto al lado --- */
+    & #caSummaryDownloadOptionsPanel {
+        width: min(480px, 92vw);
+        overflow: hidden;
+        border: 1px solid var(--adm-border);
+        border-radius: 12px;
+        box-shadow: var(--adm-shadow-lg);
+        font-family: var(--adm-font);
+    }
+
+    & #caSummaryDownloadOptionsPanel div.dialogHeader {
+        padding: 14px 20px;
+        border-bottom: 1px solid var(--adm-border);
+        background: #fff;
+        font: 700 15px var(--adm-font) !important;
+        color: var(--adm-heading);
+    }
+
+    & #caSummaryDownloadOptionsPanelContentArea {
+        padding: 16px 20px 18px 20px;
+        font: 13px/1.4 var(--adm-font);
+        color: var(--adm-text);
+    }
+
+    /* Providence le da un alto fijo (35 px) al recuadro y a su tabla: con los campos uno debajo del otro
+       se encimaban */
+    & #caSummaryDownloadOptionsPanel .caSummaryDownloadOptionsPanelAlertControls {
+        height: auto;
+        margin: 0;
+    }
+
+    & #caSummaryDownloadOptionsPanel table.caSummaryDownloadOptionsPanelAlertControls,
+    & #caSummaryDownloadOptionsPanel table.caSummaryDownloadOptionsPanelAlertControls :is(tbody, tr) {
+        display: block;
+        width: 100%;
+    }
+
+    & #caSummaryDownloadOptionsPanel td.caSummaryDownloadOptionsPanelAlertControl {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        padding: 0 0 14px 0;
+        font: 600 12px var(--adm-font);
+        color: var(--adm-heading);
+    }
+
+    & #caSummaryDownloadOptionsPanel td.caSummaryDownloadOptionsPanelAlertControl br {
+        display: none;
+    }
+
+    & #caSummaryDownloadOptionsPanel td.caSummaryDownloadOptionsPanelAlertControl select {
+        box-sizing: border-box;
+        width: 100% !important;
+        max-width: none;
+        font-weight: 400;
+    }
+
+    & #caSummaryDownloadOptionsPanel td.caSummaryDownloadOptionsPanelAlertControl > div {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-weight: 400;
+    }
+
+    & #caSummaryDownloadOptionsPanelOptions {
+        margin: 0;
+        padding: 0;
+        background: none;
+    }
+
+    & #caSummaryDownloadOptionsPanelOptions ul.caPrintOptions {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        margin: 0;
+        padding: 10px 14px;
+        border-radius: 8px;
+        background: var(--adm-soft);
+        list-style: none;
+        font: 13px var(--adm-font);
+    }
+
+    /* La casilla primero y el texto al lado */
+    & #caSummaryDownloadOptionsPanelOptions li.caPrintOptionItem {
+        display: flex;
+        flex-direction: row-reverse;
+        justify-content: flex-end;
+        align-items: center;
+        gap: 8px;
+        padding: 4px 0;
+    }
+
+    & #caSummaryDownloadOptionsPanelOptions li.caPrintOptionItem br {
+        display: none;
+    }
+
+    & #caSummaryDownloadOptionsPanelOptions li.caPrintOptionItem input[type="checkbox"] {
+        width: 16px;
+        height: 16px;
+        margin: 0;
+        accent-color: var(--adm-accent);
+    }
+
+    & #caSummaryDownloadOptionsPanelControlButtons {
+        width: auto;
+        margin-top: 16px;
+    }
+
+    & #caSummaryDownloadOptionsPanelControlButtons table {
+        margin-left: auto;
+    }
+
+    & #caSummaryDownloadOptionsPanelControlButtons tr {
+        display: flex;
+        flex-direction: row-reverse;
+        gap: 8px;
     }
 
     /* La cruz de cerrar, arriba a la derecha */
@@ -1946,8 +2068,11 @@
 #providenceApp:not(:has(#mainContent [class*="m2-"])) #leftNav select:not([multiple]):not([size])::picker-icon {
     position: absolute;
     top: 50%;
-    right: 9px;
+    right: 1px;
+    padding: 0 8px 0 6px;
     translate: 0 -50%;
+    /* Tapa el final de un texto largo, que el navegador deja correr por debajo de la flecha */
+    background: #fff;
 }
 
 #providenceApp:not(:has(#mainContent [class*="m2-"])) #leftNav select:not([multiple]):not([size])::picker(select) {

@@ -11,8 +11,49 @@ require_once(__DIR__.'/Modulo2Dates.php');
 
 class Modulo2Ui {
 	# -------------------------------------------------------
+	/** Tema con el aspecto moderno; los demás (el default de Providence) ven las pantallas del módulo como las de Providence */
+	const MODERN_THEME = 'modernui';
+	# -------------------------------------------------------
+	/** Si el usuario usa el tema ModernUI (sin petición o sin usuario, como en las pruebas, se toma el moderno) */
+	public static function modernTheme() : bool {
+		global $g_request;
+		if (!is_object($g_request) || !method_exists($g_request, 'isLoggedIn') || !$g_request->isLoggedIn()) { return true; }
+		return basename((string)$g_request->getThemeDirectoryPath()) === self::MODERN_THEME;
+	}
+	# -------------------------------------------------------
+	/**
+	 * Con el tema default de Providence: las pantallas y barras laterales del módulo con su letra, sus colores, sus
+	 * tablas y sus botones (base.css), sin sombras ni bordes redondeados. Vacío con ModernUI
+	 */
+	public static function themeStyles() : string {
+		if (self::modernTheme()) { return ''; }
+		return '<style>
+	:root { --m2-accent: #107784; --m2-accent-dark: #0b5a63; --m2-accent-soft: #eef5f6; --m2-accent-ring: rgba(16, 119, 132, .25);
+		--m2-text: #222; --m2-muted: #666; --m2-border: #ccc; --m2-soft: #eee; --m2-radius: 4px; --m2-shadow: none; --m2-shadow-lg: 0 2px 10px rgba(0, 0, 0, .25);
+		--m2-font: "Helvetica Neue", Arial, Helvetica, sans-serif; }
+	.m2-page, .m2-panel, .m2-manage, .m2-prefs-page, dialog.m2-dialog, dialog.m2-rename-dialog, .m2-toasts, #leftNav .m2-sidebar { font-size: 12px; font-family: var(--m2-font) !important; }
+	:is(.m2-page, .m2-panel, .m2-manage, .m2-prefs-page) h1 { font: normal 20px "DIN-Regular", Arial, sans-serif !important; letter-spacing: 0 !important; }
+	.m2-btn { padding: 4px 8px; border-color: #ccc; color: #757575; font: 11px var(--m2-font); text-transform: uppercase; box-shadow: none; }
+	.m2-btn-primary { background: #eee; border-color: #aaa; color: #222; font-weight: bold; }
+	.m2-btn-primary:hover { background: #ddd; color: #222; }
+	.m2-table thead th, .m2-prefs td, .m2-table td { font-size: 11px; }
+	.m2-table thead th { background: #eee; color: #222; letter-spacing: 0; text-transform: none; font-size: 9pt; }
+	.m2-table, .m2-prefs, .m2-manage-card, .m2-card, :is(.m2-version-list, .m2-history) { border-color: #ccc; border-radius: 0 !important; box-shadow: none !important; }
+	.m2-manage-card:hover { transform: none !important; }
+	.m2-lead, .m2-intro { border-color: #ddd; background: #f7f7f7; color: #333; }
+	:is(.m2-page, .m2-panel, .m2-manage, .m2-prefs-page, .m2-dialog) select:not([multiple]):not([size]) { appearance: auto !important; }
+	#leftNav .m2-sidebar ul.arrow li a { border-radius: 0; text-transform: uppercase; font-size: 11px; }
+	#leftNav .m2-sidebar ul.arrow li.m2-current a { background: #eee; color: #222; box-shadow: none; }
+	#leftNav .m2-sidebar :is(h2, .m2-division) { color: #333; }
+</style>';
+	}
+	# -------------------------------------------------------
 	/** Colores, letra y botones de todas las pantallas del módulo, con el color de acento de Providence */
 	public static function buttonStyles() : string {
+		return self::buttonStylesModern().self::themeStyles();
+	}
+	# -------------------------------------------------------
+	private static function buttonStylesModern() : string {
 		return '<style>
 	:root { --m2-accent: #138290; --m2-accent-dark: #0e6b75; --m2-accent-soft: #e8f5f6; --m2-accent-ring: rgba(19, 130, 144, .22);
 		--m2-text: #1d2b33; --m2-muted: #66757e; --m2-border: #e2e8eb; --m2-soft: #f5f8f9;
@@ -207,6 +248,7 @@ class Modulo2Ui {
 	# -------------------------------------------------------
 	/** Rastro de navegación (ver Modulo2Breadcrumbs::trail), con el mismo aspecto que el del tema ModernUI */
 	public static function breadcrumbs(array $trail) : string {
+		if (!self::modernTheme()) { return self::classicBreadcrumbs($trail); }
 		$e = fn($text) => htmlspecialchars((string)$text, ENT_QUOTES, 'UTF-8');
 		$items = array_map(fn($crumb) => $crumb['url'] ? '<li><a href="'.$e($crumb['url']).'">'.$e($crumb['label']).'</a></li>' : '<li>'.$e($crumb['label']).'</li>', $trail);
 		$items[sizeof($items) - 1] = str_replace('<li>', '<li aria-current="page">', end($items));
@@ -220,6 +262,19 @@ class Modulo2Ui {
 	.m2-breadcrumbs a:hover { text-decoration: underline; }
 	.m2-breadcrumbs li[aria-current] { color: #1d2b33; font-weight: 600; }
 </style><nav class="m2-breadcrumbs" aria-label="'.$e(Modulo2I18n::t('Current location')).'"><span>'.$e(Modulo2I18n::t('Current location')).'</span><ol>'.join('', $items).'</ol></nav>';
+	}
+	# -------------------------------------------------------
+	/** El rastro con el marcado y las flechas del tema default de Providence (pageFormat/sideBar.php), con enlaces */
+	private static function classicBreadcrumbs(array $trail) : string {
+		global $g_request;
+		$e = fn($text) => htmlspecialchars((string)$text, ENT_QUOTES, 'UTF-8');
+		$arrow = fn($file) => '<img src="'.$e($g_request->getUrlPathForThemeFile('graphics/arrows/'.$file)).'" width="16" height="19" border="0" alt="">';
+		$html = '<div class="crumb"><div class="crumbtext navBreadCrumbLabel">'.$e(Modulo2I18n::t('Current location')).'</div>'.$arrow('breadcrumbloc.png').'</div>';
+		foreach ($trail as $i => $crumb) {
+			$text = $crumb['url'] ? '<a href="'.$e($crumb['url']).'">'.$e($crumb['label']).'</a>' : $e($crumb['label']);
+			$html .= '<div class="'.($i === sizeof($trail) - 1 ? 'lastcrumb' : 'crumb').'"><nobr><div class="crumbtext">'.$text.'</div>'.$arrow('breadcrumb.png').'</nobr></div>';
+		}
+		return "<div class='navBreadCrumbContainer'><div class='navBreadCrumbs'>{$html}</div></div>";
 	}
 	# -------------------------------------------------------
 	/** Pide en segundo plano, con la página ya cargada, que se prepare la lista de versiones (Versions/Prepare) */

@@ -51,6 +51,11 @@ $row = fn(string $key, string $label, string $description) => '<tr data-m2-pref=
 	.m2-pref-fields { display: none; }
 	.m2-dialog-field table { border-collapse: collapse; }
 	.m2-dialog-field td { padding: 3px 8px 3px 0; }
+	/* Casillas por subtipo (vistas de resultados): una fila por subtipo, las casillas una al lado de la otra y
+	   pasan a la línea siguiente sin cortar los nombres */
+	.m2-dialog-field tr:has(.preferenceCheckBoxList) td { padding: 8px 8px 8px 0; border-bottom: 1px solid var(--m2-border); vertical-align: middle; }
+	.m2-dialog-field .preferenceCheckBoxList { display: flex; flex-wrap: wrap; gap: 6px 18px; overflow-wrap: normal; }
+	.m2-dialog-field .preferenceCheckBoxList label { display: inline-flex; align-items: center; gap: 6px; margin: 0; white-space: nowrap; cursor: pointer; }
 	.m2-elements { width: 100%; }
 	.m2-elements th { text-align: left; color: #44525a; font-weight: 700; }
 </style>

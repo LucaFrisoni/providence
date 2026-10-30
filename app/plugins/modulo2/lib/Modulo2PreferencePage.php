@@ -29,7 +29,18 @@ final class Modulo2PreferencePage {
 		if (stripos(ltrim($html), '<tr') === 0) { $html = '<table class="m2-pref-rows">'.$html.'</table>'; }
 		$info = $user->getPreferenceInfo($pref) ?: [];
 		return ['key' => $pref, 'label' => Modulo2I18n::t((string)($info['label'] ?? $pref)), 'description' => Modulo2I18n::t((string)($info['description'] ?? '')),
-			'html' => self::translatedOptions($html)];
+			'html' => self::namedCheckboxes(self::translatedOptions($html))];
+	}
+	# -------------------------------------------------------
+	/**
+	 * Las casillas de las vistas de resultados: Providence pone el código al lado de cada una
+	 * ("list_with_thumbnail") y el nombre en el valor ("lista + miniaturas"). Se muestra el nombre, y el
+	 * texto queda dentro de la etiqueta para marcar la casilla con un clic en él
+	 */
+	private static function namedCheckboxes(string $html) : string {
+		return preg_replace_callback("/(<input type='checkbox'[^>]*value='([^']*)'[^>]*>)\s*([a-z0-9_]+)\s*(?=<\/div>)/", function($match) {
+			return '<label>'.$match[1].' '.$match[2].'</label>';
+		}, $html);
 	}
 	# -------------------------------------------------------
 	/**

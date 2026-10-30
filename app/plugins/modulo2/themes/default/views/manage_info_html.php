@@ -19,6 +19,7 @@ $e = fn($text) => htmlspecialchars((string)$text, ENT_QUOTES, 'UTF-8');
 	#leftNav .m2-sidebar .m2-count { min-width: 14px; padding: 0 6px; border-radius: 999px; background: #eef2f4; color: #66757e; font-size: 10px; font-weight: 600; text-align: center; }
 	#leftNav .m2-sidebar li.m2-manage-hidden { display: none; }
 </style>
+<?= Modulo2Ui::themeStyles(); ?>
 <div class="m2-sidebar" id="m2-manage-sidebar">
 	<h2><?= Modulo2I18n::t('Management panel'); ?></h2>
 	<ul class="arrow" style="display:block">
@@ -29,16 +30,22 @@ $e = fn($text) => htmlspecialchars((string)$text, ENT_QUOTES, 'UTF-8');
 </div>
 <script>
 	(function() {
-		var sidebar = document.getElementById('m2-manage-sidebar');
-		var items = Array.prototype.slice.call(sidebar.querySelectorAll('li[data-m2-group]'));
-		var item = function(block) { return sidebar.querySelector('li[data-m2-group="' + block.id.replace('m2-manage-', '') + '"]'); };
-		var mark = function(current) { items.forEach(function(li) { li.classList.toggle('m2-current', li === current); }); };
+		// Providence vuelve a armar la barra lateral después de cargarla: se busca cada vez, sin guardar sus nodos
+		var sidebar = function() { return document.getElementById('m2-manage-sidebar'); };
+		var item = function(block) { return sidebar() && sidebar().querySelector('li[data-m2-group="' + block.id.replace('m2-manage-', '') + '"]'); };
+		var mark = function(current) { if (sidebar()) { sidebar().querySelectorAll('li[data-m2-group]').forEach(function(li) { li.classList.toggle('m2-current', li === current); }); } };
 		var blocks = function() { return Array.prototype.slice.call(document.querySelectorAll('.m2-manage-block')); };
+		var target = null;
+		// La barra de menú de Providence queda fija arriba y tapa lo que pasa por debajo
+		var navBottom = function() { var nav = document.getElementById('topNav'); return nav ? Math.max(0, nav.getBoundingClientRect().bottom) : 0; };
 
-		// El grupo actual es el último cuyo título ya pasó la parte de arriba de la ventana
+		// El grupo actual es el último cuyo título ya pasó la barra de menú; al llegar al final de la página, el
+		// último grupo (los de abajo no pueden subir hasta arriba)
 		var update = function() {
 			var visible = blocks().filter(function(block) { return !block.classList.contains('m2-manage-hidden'); });
-			var current = visible.filter(function(block) { return block.getBoundingClientRect().top < 120; }).pop() || visible[0];
+			var atEnd = window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 2;
+			var limit = navBottom() + 40;
+			var current = target || (atEnd ? visible[visible.length - 1] : visible.filter(function(block) { return block.getBoundingClientRect().top < limit; }).pop()) || visible[0];
 			mark(current ? item(current) : null);
 		};
 		// El buscador de la página oculta grupos: el índice los oculta también
@@ -46,19 +53,22 @@ $e = fn($text) => htmlspecialchars((string)$text, ENT_QUOTES, 'UTF-8');
 			blocks().forEach(function(block) { var li = item(block); if (li) { li.classList.toggle('m2-manage-hidden', block.classList.contains('m2-manage-hidden')); } });
 			update();
 		};
-		sidebar.addEventListener('click', function(event) {
-			var link = event.target.closest('a[href^="#"]'), target = link && document.querySelector(link.getAttribute('href'));
-			if (!target) { return; }
+		document.addEventListener('click', function(event) {
+			var link = event.target.closest('#m2-manage-sidebar a[href^="#"]');
+			var block = link && document.querySelector(link.getAttribute('href'));
+			if (!block) { return; }
 			event.preventDefault();
-			target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+			// Mientras baja, queda marcado el grupo elegido aunque no llegue arriba de todo
+			target = block;
+			// El título del grupo queda justo debajo de la barra de menú, no tapado por ella
+			window.scrollTo({ top: block.getBoundingClientRect().top + window.scrollY - navBottom() - 16, behavior: 'smooth' });
 			history.replaceState(null, '', link.getAttribute('href'));
-			mark(link.parentNode);
-		});
-		window.addEventListener('scroll', update, { passive: true });
-		document.addEventListener('DOMContentLoaded', function() {
-			var search = document.getElementById('m2-manage-search');
-			if (search) { search.addEventListener('input', function() { setTimeout(sync, 0); }); }
 			update();
 		});
+		// Al mover la página a mano (rueda, teclado, barra de desplazamiento) vuelve a marcar lo que se ve
+		['wheel', 'keydown', 'touchmove', 'mousedown'].forEach(function(type) { window.addEventListener(type, function() { target = null; }, { passive: true }); });
+		window.addEventListener('scroll', update, { passive: true });
+		document.addEventListener('input', function(event) { if (event.target.id === 'm2-manage-search') { setTimeout(sync, 0); } });
+		window.addEventListener('load', update);
 	})();
 </script>
