@@ -25,8 +25,7 @@ los lee en cadena, y cada nivel sobrescribe al anterior:
 
 El orden es el real, verificado en `Configuration::__construct` ([app/lib/Configuration.php](../../app/lib/Configuration.php)):
 arma la lista local → tema → appname → distribución y la carga al revés, así que
-`app/conf/local/<archivo>.conf` se carga último y gana (los comentarios del código dicen lo
-contrario). La prueba `Modulo2EditIntegrationTest` lo verifica para `app_<appname>.conf`.
+`app/conf/local/<archivo>.conf` se carga último y gana .
 
 Providence solo los lee: no tiene una pantalla ni un mecanismo para modificarlos. Se editan a mano.
 
@@ -75,10 +74,8 @@ cambios de Providence (`ca_change_log`).
 ## Cómo trabaja el módulo
 
 - **Todo centralizado en el Panel de gestión.** El módulo no es solo un lugar para configuraciones
-  nuevas, sino una versión mejorada de Manage. Para los usuarios con el permiso del módulo, el menú
-  **Management** (Gestión) ocupa el lugar de Manage en la barra principal y abre el **Management
-  panel**: todas las secciones de Manage agrupadas por tema, con buscador, una descripción de cada
-  una y enlaces a sus páginas. Las que completa otro módulo del proyecto lo indican con una nota.
+  nuevas, sino una versión mejorada de Manage.
+  **Management panel**: todas las secciones de Manage agrupadas por tema, con buscador, una descripción de cada una y enlaces a sus páginas. Las que completa otro módulo del proyecto lo indican con una nota.
 - **Tres niveles de mejora**, según lo que necesita cada sección:
     - **Interfaz modernizada y funcionamiento ampliado:** _My preferences_ conserva los grupos y las
       reglas de Providence, pero cada preferencia muestra su valor, los cambios quedan pendientes hasta
@@ -86,9 +83,7 @@ cambios de Providence (`ca_change_log`).
       ([My preferences](#my-preferences)).
     - **Funcionamiento nuevo:** _New settings_ permite cambiar desde la interfaz configuraciones que
       Providence solo deja cambiar editando archivos, con validación, registro y versiones
-      ([catálogo](#catálogo-de-configuraciones)). _Configuration versions_ y _Change history_ completan
-      el versionado. Las tres pantallas comparten la barra lateral, con sus tres partes:
-      configuraciones, versiones e historial (fuera de _New settings_, cada sección lleva a esa página).
+      ([catálogo](#catálogo-de-configuraciones)). _Configuration versions_ y _Change history_ completan el versionado. Las tres pantallas comparten la barra lateral, con sus tres partes: configuraciones, versiones e historial (fuera de _New settings_, cada sección lleva a esa página).
     - **Pantalla de Providence:** el resto de las secciones funcionan tal cual en Providence; el panel
       las ordena, las describe y las enlaza.
 - **Interfaz en el idioma del usuario:** los textos se escriben en inglés (el idioma por defecto de
@@ -109,9 +104,7 @@ cambios de Providence (`ca_change_log`).
       traducción deja en inglés o que se cambian ("locale" por "idioma"). `locale/providence/build.php` los escribe en
       `themes/default/conf/translations.conf`, que Providence usa antes que su traducción.
       Las traducciones a otros idiomas se hicieron siguiendo los términos que ya usa la traducción de
-      Providence de cada idioma (menús, conjuntos, visualizaciones…); conviene que las revise alguien que
-      hable el idioma. Las pruebas fallan si a un texto le falta su traducción en algún idioma o si una
-      traducción pierde un dato (`%1`) o un resaltado (`**`).
+      Providence de cada idioma (menús, conjuntos, visualizaciones…)
 - **Trabaja con una lista blanca:** solo muestra y modifica las configuraciones del catálogo.
 - **Escribe solo en `app/conf/local/`:** es el lugar que Providence prevé para los cambios de cada
   instalación. Los archivos de `app/conf/` quedan como vienen, así que volver al valor original es sacar
@@ -158,18 +151,6 @@ se marcan en la interfaz.
 | 9   | Bajas                       | `deaccession_dont_allow_editing`; además, el campo de baja en las pantallas de edición (configuración de la base, ver abajo)                                                         |
 | 10  | Módulos opcionales          | `enable_library_services` + `enable_object_checkout` (una sola: "Biblioteca"), `enable_user_generated_content`                                                                       |
 | 11  | Control de acceso (crítico) | `perform_*_access_checking`, `default_*_access_level`                                                                                                                                |
-
-**Quitadas del catálogo** (se pueden volver a evaluar más adelante): el formato de los identificadores
-(`multipart_id_numbering.conf`, sin un formato de edición simple), el orden de los menús
-(`navigation.conf`: cambiarlo obliga a copiar todo el bloque de navegación en `app/conf/local/`, y la
-instalación dejaría de recibir los cambios de menú de Providence), los textos y traducciones
-(`translations.conf`), los colores, la plantilla del texto de las miniaturas, la búsqueda rápida, el
-autocompletado, el inspector (el panel lateral del editor de un registro), "privado al dar de baja"
-(`deaccession_force_access_private`, que Providence no aplica: ver abajo), el pie de los PDF
-(`report_header_enabled`: la descarga de PDF tiene sus propias opciones), las jerarquías (tipos de los
-registros hijos, raíz visible, jerarquía única con colecciones: no las pide el módulo y no se habían
-probado) y las etapas de los recorridos (la
-pantalla de recorridos de Providence no permite crearlas). Eran difíciles de entender o de editar sin conocer Providence.
 
 **Etiquetas en positivo:** muchas claves de Providence son negativas (`ca_places_disable`,
 `*_dont_show_in_new_menu`, `*_hierarchy_browser_hide_root`). El catálogo las marca como invertidas
@@ -356,24 +337,16 @@ preferencias actuales no están guardadas y permite guardarlas.
 
 ## Plan de trabajo
 
-| Fase                            | Qué se hace                                                         | Estado       |
-| ------------------------------- | ------------------------------------------------------------------- | ------------ |
-| 0. Infraestructura              | Plugin, servicio Rust, base de la extensión y pruebas               | Hecha        |
-| 1. Catálogo y lectura           | Definir el catálogo y mostrar los valores actuales                  | Hecha        |
-| 2. Edición                      | Modificar configuraciones, con validación y registro de cambios     | Hecha        |
-| 3. Versionado                   | Crear versiones, ver sus cambios y restaurarlas                     | Hecha (\*)   |
-| 4. Cierre de cada configuración | Probar cada sección del catálogo en Providence y documentarla       | Hecha (\*\*) |
-| 5. Panel de gestión             | Management en lugar de Manage: todas las secciones en un panel      | Hecha        |
-| 6. Interfaz modernizada y temas | Mismo aspecto en el módulo y en Providence; tema ModernUI o default | Hecha        |
-| 7. Mis preferencias             | Preferencias de cada usuario con versiones, idiomas y temas         | Hecha        |
-
-(\*) Salvo la restauración de la configuración en base, que queda como
-[decisión pendiente](#versionado-registro-y-permisos).
-(\*\*) Salvo el control de acceso, que espera la lógica del módulo 3.
-
-Lo que queda depende de otros: el control de acceso y los permisos (módulo 3) y la decisión sobre la
-restauración de la configuración en base. Ver [Alcance del módulo](#alcance-del-módulo) y
-[Tareas por fase](#tareas-por-fase).
+| Fase                            | Qué se hace                                                         | Estado |
+| ------------------------------- | ------------------------------------------------------------------- | ------ |
+| 0. Infraestructura              | Plugin, servicio Rust, base de la extensión y pruebas               | Hecha  |
+| 1. Catálogo y lectura           | Definir el catálogo y mostrar los valores actuales                  | Hecha  |
+| 2. Edición                      | Modificar configuraciones, con validación y registro de cambios     | Hecha  |
+| 3. Versionado                   | Crear versiones, ver sus cambios y restaurarlas                     | Hecha  |
+| 4. Cierre de cada configuración | Probar cada sección del catálogo en Providence y documentarla       | Hecha  |
+| 5. Panel de gestión             | Management en lugar de Manage: todas las secciones en un panel      | Hecha  |
+| 6. Interfaz modernizada y temas | Mismo aspecto en el módulo y en Providence; tema ModernUI o default | Hecha  |
+| 7. Mis preferencias             | Preferencias de cada usuario con versiones, idiomas y temas         | Hecha  |
 
 ## Implementación
 
@@ -603,7 +576,8 @@ tipo de dato, subtipos anidados de objetos, para "Resultados" un objeto con dos 
   páginas menos las del módulo, que tienen sus estilos propios (selector `:has` sobre las clases `m2-`).
   La búsqueda avanzada acomoda sus campos en una grilla, para cualquier tipo de dato; las ventanas de
   Descargar, Opciones y Refinar resultados y las facetas de Exploración son tarjetas y botones. En los formularios de edición Providence repite la barra de Guardar/Cancelar/Borrar arriba y
-  abajo: se oculta la de abajo y la de arriba acompaña al bajar (`position: sticky`). Los botones de
+  abajo (registros, grupos y roles de usuarios, usuarios, equipos de proyecto, preferencias,
+  Administration...): se oculta la de abajo y la de arriba acompaña al bajar (`position: sticky`). Los botones de
   editar y borrar de las listas y formularios usan el mismo botón cuadrado que las versiones del módulo.
   Las listas desplegables usan `appearance: base-select` para que la lista abierta tenga el mismo
   estilo; un navegador que no lo soporta (Chrome y Edge sí, desde la versión 135) muestra la lista de
@@ -644,14 +618,6 @@ tipo de dato, subtipos anidados de objetos, para "Resultados" un objeto con dos 
   que no hace falta cargarlas de a poco); abre Descargar y Opciones junto a su botón; avisa con un
   mensaje al vigilar o dejar de vigilar un registro; y cierra el menú de arriba si el navegador lo
   restaura abierto al volver con "Atrás".
-- **Tiempos de carga (medidos el 28/10/2026).** Las páginas del módulo responden como las de Providence
-  (0,2 a 0,6 s; la mayor parte es el arranque de Providence). Los pasos propios del versionado tardan
-  milisegundos: estado actual unos 5 ms (la exportación de la base sale de la caché), consultas al
-  servicio Rust 1 a 10 ms. La excepción es la primera página de versiones después de un cambio en la
-  configuración en base (listas, elementos, interfaces...): exporta el perfil de nuevo, unos 1,8 s, y
-  queda en caché. El panel de gestión y Configuraciones piden esa exportación en segundo plano
-  (`Versions/Prepare`) apenas se abren, así al llegar a las versiones ya está lista (29/10/2026: 1,8 s
-  en frío, 0,2 s después de prepararla).
 - **Pie de página sin "Preferencias".** Llevaba a las preferencias nativas de Providence, que el módulo
   no modifica (las del usuario se editan desde Gestión > Mis preferencias). Se quitó el enlace en
   `themes/default/views/pageFormat/pageFooter.php`: es un cambio en una vista del tema de Providence,
@@ -735,99 +701,15 @@ docker compose up -d --build providence
 Las traducciones de los puntos 2 y 3 siguen el vocabulario de la traducción de Providence de cada
 idioma.
 
-## Alcance del módulo
-
-Lo que pide el módulo 2 y dónde está:
-
-| Pedido                                           | Cómo se cumple                                                                                                                   |
-| ------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------- |
-| Activar o desactivar entidades o funcionalidades | Catálogo: tipos de dato, funciones por tipo de dato, módulos opcionales                                                          |
-| Ordenamiento de entidades, listas y sublistas    | Orden de los tipos de dato en los menús "Nuevo" y "Buscar"; el de listas y sublistas lo da Providence en el editor de cada lista |
-| Presentación y navegación                        | Catálogo: menús, resultados, descargas; panel de gestión; interfaz modernizada y temas                                           |
-| Textos y traducciones                            | La interfaz completa en los 19 idiomas de Providence, "idioma" en lugar de "locale" ([Idiomas](#idiomas))                        |
-| Automatización de identificadores                | Catálogo: identificador obligatorio y válido, sin repetidos                                                                      |
-| Consultar, modificar y validar antes de aplicar  | _New settings_ y Mis preferencias, con validación en el servidor                                                                 |
-| Registrar quién, cuándo y qué                    | Historial de cambios                                                                                                             |
-| Versionar y recuperar versiones anteriores       | Versiones de la configuración y de las preferencias de cada usuario                                                              |
-| Restringir a usuarios autorizados                | Permisos por nivel de riesgo                                                                                                     |
-| Versión recuperable antes de un cambio crítico   | Al guardar se ofrece guardar antes la configuración actual                                                                       |
-
-**Fuera del alcance:** mejorar Administration y agregar funciones nuevas
-para las preferencias (por ejemplo, más monedas). Las preferencias de Mis preferencias son funciones de
-Providence: el módulo las muestra, las guarda con el guardado de Providence y las versiona (lo prueban
-las pruebas de guardado de cada grupo), pero no prueba qué hace Providence con cada una. Si una no
-funciona, corregirla exige modificar Providence.
-
-## Tareas por fase
-
-`[x]` hecho, `[ ]` pendiente. Los números `#N` refieren al [catálogo](#configuraciones-del-catálogo).
-
-**Fases 0 a 3**
-
-- [x] Plugin, menú, permiso, volumen `conf_local`, base de la extensión y migraciones
-- [x] Catálogo, lectura del valor efectivo y del de Providence, vista con índice y buscador
-- [x] Edición validada en el servidor (catálogo, valor, riesgo, conflicto), escritura atómica y
-      verificación con vuelta atrás, registro de cambios y permisos por nivel de riesgo
-- [x] Versiones manuales, sin repetidas (por hash), con número sin saltos, renombrar y borrar
-- [x] Ver los cambios de una versión y restaurarla con detección de conflictos
-- [x] Exportación de la configuración en base en cada versión
-- [ ] Restaurar la configuración en base: **decisión pendiente** (ver
-      [Versionado](#versionado-registro-y-permisos))
-
-**Fase 4: cierre de cada sección**
-
-- [x] #1 Tipos de dato
-- [x] #2 Funciones por tipo de dato
-- [x] #3 Menú "Nuevo"
-- [x] #4 Menú "Buscar"
-- [x] #5 Identificadores
-- [x] #6 Nombres
-- [x] #7 Resultados: la búsqueda rápida no aplica la configuración; corregirlo exige modificar
-      Providence (ver "Lo que se verificó de Providence")
-- [x] #8 Descargas
-- [x] #9 Bajas
-- [x] #10 Módulos opcionales
-- [ ] #11 Control de acceso: pendiente hasta que esté la lógica del módulo 3
-
-**Fase 5: panel de gestión**
-
-- [x] Menú Management en el lugar de Manage y panel con todas las secciones
-- [x] Barra lateral del panel: índice de los grupos, marca el que se está viendo y sigue al buscador.
-
-**Fase 6: interfaz modernizada y temas**
-
-- [x] Interfaz modernizada, sin cambiar el funcionamiento: las pantallas del módulo (panel, _New
-      settings_, versiones, historial y My preferences) y todas las de Providence (Administration, Nuevo,
-      Encontrar, Exploración, Recorridos, Importar y las secciones del panel), más el diálogo al salir
-      con cambios sin guardar y la ventana de descarga del resumen
-- [x] Dos temas: ModernUI (el de un usuario nuevo) y el default de Providence; las pantallas del módulo
-      tienen versión con el aspecto clásico
-- [x] Botones y ventanas que crecen con el texto en cada idioma
-- [x] Pantalla de inicio y sus widgets, con sus textos traducidos
-
-**Fase 7: Mis preferencias**
-
-- [x] Una pantalla por grupo, cambios pendientes, versiones por usuario y prueba de guardado de cada
-      grupo (cada campo llega al guardado de Providence y entra en la versión)
-- [x] Valores revisados en el servidor (`Modulo2PreferenceValidator`) y rastro de navegación en las
-      pantallas del módulo (`Modulo2Breadcrumbs`)
-- [x] Idiomas: módulo en 16 archivos de idioma y textos de Providence que quedaban en inglés
-      completados en todos los idiomas, con "locale" dicho "idioma" (ver [Idiomas](#idiomas))
-- [x] General: tema, búsqueda rápida, última búsqueda, conjuntos públicos de otros usuarios, descarga
-      de lo exportado y visualizaciones en el resumen en PDF, probados en la interfaz y con pruebas
-      (`Modulo2GeneralPreferencesIntegrationTest`)
-- [x] Búsqueda y exploración: las casillas de las vistas de resultados muestran el nombre de cada vista
-      (Providence mostraba su código, `list_with_thumbnail`) y no se desbordan
-
-**Pendiente para el módulo 3 (usuarios y permisos)**
+## Pendiente para el módulo 3 (usuarios y permisos)
 
 - [ ] Borrado automático de conjuntos (`autodelete_sets` y sus tres preferencias): ocultarlo y dejarlo
       solo para los administradores. Borra conjuntos, también compartidos (ver "Lo que se verificó de
       Providence")
 - [ ] Herramientas de duplicación: decidir quién puede duplicar. Duplicar ya exige el permiso de
-      Providence `can_duplicate_<tipo de dato>` y se puede apagar por tipo de dato en el catálogo (#2); las
+      Providence `can_duplicate_<tipo de dato>` y se puede apagar por tipo de dato en el catálogo (sección 2); las
       preferencias solo eligen qué se copia, pero algunas multiplican el efecto en la base: los registros
       hijos (copia toda la rama) y los archivos de contenido (ocupan disco). Propuesta: dar
       `can_duplicate_*` solo a los roles de catalogación de confianza y, si hace falta, ocultar esas dos
       preferencias a los demás
-- [ ] #11 Control de acceso del catálogo
+- [ ] Control de acceso del catálogo (sección 11): queda pendiente hasta que esté la lógica del módulo 3

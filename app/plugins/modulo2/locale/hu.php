@@ -89,7 +89,6 @@ return [
 	'Pages and texts of the public site (Pawtucket), if the institution uses it.' => 'A nyilvános webhely (Pawtucket) oldalai és szövegei, ha az intézmény használja.',
 	'Logs of changes, events, searches and downloads.' => 'Módosítások, események, keresések és letöltések naplói.',
 	'System usage statistics.' => 'A rendszer használati statisztikái.',
-	'Improvement planned' => 'Tervezett fejlesztés',
 	'Everything that is managed in Providence, grouped by topic. Only what your user can use is shown.' => 'Minden, amit a Providence-ben kezelni lehet, témák szerint csoportosítva. Csak az látszik, amit az Ön felhasználója használhat.',
 	'Search…' => 'Keresés…',
 	'Search' => 'Keresés',

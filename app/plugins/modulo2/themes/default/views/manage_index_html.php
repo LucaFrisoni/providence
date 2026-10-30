@@ -10,8 +10,6 @@ $groups = $this->getVar('groups') ?? [];
 $module_names = $this->getVar('module_names') ?? [];
 
 $e = fn($text) => htmlspecialchars((string)$text, ENT_QUOTES, 'UTF-8');
-// Solo se marcan las mejoras previstas: las demás secciones se ven todas iguales
-$status_labels = [Modulo2ManageMap::STATUS_PLANNED => Modulo2I18n::t('Improvement planned')];
 // Texto en el que busca el filtro: nombre, descripción y nombres de las páginas de la sección
 $search_text = fn(array $section) => join(' ', array_merge([$section['label'], $section['description']], array_column($section['links'], 'label')));
 ?>
@@ -41,8 +39,6 @@ $search_text = fn(array $section) => join(' ', array_merge([$section['label'], $
 		transform: rotate(45deg); opacity: .6; transition: transform .15s, opacity .15s; }
 	.m2-manage-card li a:hover { background: var(--m2-soft); color: var(--m2-accent); }
 	.m2-manage-card li a:hover::before { opacity: 1; transform: translateX(2px) rotate(45deg); }
-	.m2-manage-status { align-self: flex-start; display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 10.5px; font-weight: 600; letter-spacing: .03em; text-transform: uppercase; }
-	.m2-manage-status-planned { background: var(--m2-warn-soft); color: var(--m2-warn); }
 	.m2-manage-owner { margin-top: 10px; padding: 6px 10px; border-radius: 8px; background: var(--m2-info-soft); font-size: 11.5px; color: var(--m2-info); }
 	.m2-manage-hidden { display: none; }
 	.m2-manage-none { display: none; }
@@ -64,9 +60,6 @@ $search_text = fn(array $section) => join(' ', array_merge([$section['label'], $
 <?php 	foreach ($group['sections'] as $section) { ?>
 		<div class="m2-manage-card" data-m2-search="<?= $e($search_text($section)); ?>">
 			<h3><a href="<?= $e($section['url']); ?>"><?= $e($section['label']); ?></a></h3>
-<?php 		if (isset($status_labels[$section['status']])) { ?>
-			<span class="m2-manage-status m2-manage-status-<?= $e($section['status']); ?>"><?= $e($status_labels[$section['status']]); ?></span>
-<?php 		} ?>
 			<p><?= $e($section['description']); ?></p>
 <?php 		if ($section['links']) { ?>
 			<ul>

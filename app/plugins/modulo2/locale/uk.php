@@ -89,7 +89,6 @@ return [
 	'Pages and texts of the public site (Pawtucket), if the institution uses it.' => 'Сторінки й тексти публічного сайту (Pawtucket), якщо установа ним користується.',
 	'Logs of changes, events, searches and downloads.' => 'Журнали змін, подій, пошуків і завантажень.',
 	'System usage statistics.' => 'Статистика використання системи.',
-	'Improvement planned' => 'Заплановано покращення',
 	'Everything that is managed in Providence, grouped by topic. Only what your user can use is shown.' => 'Усе, чим керують у Providence, згруповане за темами. Показано лише те, чим може користуватися ваш користувач.',
 	'Search…' => 'Пошук…',
 	'Search' => 'Пошук',

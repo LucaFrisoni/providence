@@ -89,7 +89,6 @@ return [
 	'Pages and texts of the public site (Pawtucket), if the institution uses it.' => 'דפים וטקסטים של האתר הציבורי (Pawtucket), אם המוסד משתמש בו.',
 	'Logs of changes, events, searches and downloads.' => 'יומני שינויים, אירועים, חיפושים והורדות.',
 	'System usage statistics.' => 'סטטיסטיקות שימוש במערכת.',
-	'Improvement planned' => 'שיפור מתוכנן',
 	'Everything that is managed in Providence, grouped by topic. Only what your user can use is shown.' => 'כל מה שמנוהל ב-Providence, מקובץ לפי נושא. מוצג רק מה שהמשתמש שלכם רשאי להשתמש בו.',
 	'Search…' => 'חיפוש…',
 	'Search' => 'חיפוש',

@@ -335,6 +335,14 @@
         display: none;
     }
 
+    /* Lo mismo cuando la repite después del formulario (grupos, usuarios, roles, equipos, idiomas...):
+       se oculta toda barra de guardar que venga después de la primera */
+    & #mainContent div.control-box:has(.fa-check-circle) ~ div.control-box:has(.fa-check-circle),
+    & #mainContent div.control-box:has(.fa-check-circle) ~ * div.control-box:has(.fa-check-circle),
+    & #mainContent :has(> div.control-box .fa-check-circle) ~ div.control-box:has(.fa-check-circle) {
+        display: none;
+    }
+
     & #mainContent div.control-box:has(.fa-check-circle) {
         position: sticky;
         top: 8px;

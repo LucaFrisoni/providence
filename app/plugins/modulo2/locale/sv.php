@@ -89,7 +89,6 @@ return [
 	'Pages and texts of the public site (Pawtucket), if the institution uses it.' => 'Sidor och texter på den publika webbplatsen (Pawtucket), om institutionen använder den.',
 	'Logs of changes, events, searches and downloads.' => 'Loggar över ändringar, händelser, sökningar och nedladdningar.',
 	'System usage statistics.' => 'Statistik över systemets användning.',
-	'Improvement planned' => 'Förbättring planerad',
 	'Everything that is managed in Providence, grouped by topic. Only what your user can use is shown.' => 'Allt som förvaltas i Providence, grupperat efter ämne. Bara det som din användare får använda visas.',
 	'Search…' => 'Sök…',
 	'Search' => 'Sök',

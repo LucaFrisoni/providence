@@ -89,7 +89,6 @@ return [
 	'Pages and texts of the public site (Pawtucket), if the institution uses it.' => 'Müəssisə istifadə edirsə, ictimai saytın (Pawtucket) səhifələri və mətnləri.',
 	'Logs of changes, events, searches and downloads.' => 'Dəyişikliklərin, hadisələrin, axtarışların və yükləmələrin jurnalları.',
 	'System usage statistics.' => 'Sistemin istifadə statistikası.',
-	'Improvement planned' => 'Təkmilləşdirmə planlaşdırılıb',
 	'Everything that is managed in Providence, grouped by topic. Only what your user can use is shown.' => 'Providence-də idarə olunan hər şey, mövzulara görə qruplaşdırılmış. Yalnız istifadəçinizin istifadə edə bildiyi göstərilir.',
 	'Search…' => 'Axtar…',
 	'Search' => 'Axtar',

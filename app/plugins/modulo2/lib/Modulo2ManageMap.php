@@ -18,7 +18,6 @@ final class Modulo2ManageMap {
 	# -------------------------------------------------------
 	/** Estado de una sección en el módulo */
 	const STATUS_NATIVE = 'native';      // Se usa la pantalla de Providence (enlace)
-	const STATUS_PLANNED = 'planned';    // Hay una mejora prevista; mientras tanto, la pantalla de Providence
 	const STATUS_IMPROVED = 'improved';  // Pantalla propia del módulo
 	# -------------------------------------------------------
 	/** Grupos del panel, en orden: [id => ['title' => ..., 'sections' => [id => sección]]] */
@@ -50,7 +49,7 @@ final class Modulo2ManageMap {
 				Modulo2I18n::t('Copies of the configuration saved at different times: see what changed in each one and go back to an earlier one.')),
 			'changes' => self::internal(['Changes', 'Index'], Modulo2I18n::t('Change history'),
 				Modulo2I18n::t('Who changed each setting, when, and its value before and after.')),
-			'system_config' => self::native(['system_config'], Modulo2I18n::t('User interfaces, metadata elements, relationship types, locales, data dictionary, configuration check and maintenance (reindexing, exporting the configuration).'), self::STATUS_PLANNED),
+			'system_config' => self::native(['system_config'], Modulo2I18n::t('User interfaces, metadata elements, relationship types, locales, data dictionary, configuration check and maintenance (reindexing, exporting the configuration).')),
 			'preferences' => self::internal(['MyPreferences', 'EditUIPrefs'], Modulo2I18n::t('My preferences'),
 				Modulo2I18n::t('How you work in Providence: interface language and theme, editor screens by data type, search, quick add, what is copied when duplicating a record and units of measurement.')),
 			'preference_versions' => self::internal(['PreferenceVersions', 'Index'], Modulo2I18n::t('My preference versions'),

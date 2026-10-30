@@ -89,7 +89,6 @@ return [
 	'Pages and texts of the public site (Pawtucket), if the institution uses it.' => 'Σελίδες και κείμενα του δημόσιου ιστότοπου (Pawtucket), αν ο φορέας τον χρησιμοποιεί.',
 	'Logs of changes, events, searches and downloads.' => 'Αρχεία καταγραφής αλλαγών, συμβάντων, αναζητήσεων και λήψεων.',
 	'System usage statistics.' => 'Στατιστικά χρήσης του συστήματος.',
-	'Improvement planned' => 'Προγραμματισμένη βελτίωση',
 	'Everything that is managed in Providence, grouped by topic. Only what your user can use is shown.' => 'Ό,τι διαχειρίζεται κανείς στο Providence, ομαδοποιημένο ανά θέμα. Εμφανίζεται μόνο ό,τι μπορεί να χρησιμοποιήσει ο χρήστης σας.',
 	'Search…' => 'Αναζήτηση…',
 	'Search' => 'Αναζήτηση',
