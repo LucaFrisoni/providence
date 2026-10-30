@@ -34,14 +34,23 @@ impl State {
 
     /// SHA-256 de los archivos ordenados por nombre: nombre, largo y contenido de cada uno.
     pub fn hash(&self) -> String {
-        let mut hasher = Sha256::new();
-        for (name, content) in &self.files {
-            hasher.update(format!("{name}\n{}\n", content.len()));
-            hasher.update(content);
-            hasher.update("\n");
-        }
-        format!("{:x}", hasher.finalize())
+        hash_files(self.files.iter().map(|(n, c)| (n.as_str(), c.as_str())))
     }
+
+    /// El mismo hash, de solo los archivos `.conf` (sin la exportación de la base).
+    pub fn files_hash(&self) -> String {
+        hash_files(self.conf_files().into_iter())
+    }
+}
+
+fn hash_files<'a>(files: impl Iterator<Item = (&'a str, &'a str)>) -> String {
+    let mut hasher = Sha256::new();
+    for (name, content) in files {
+        hasher.update(format!("{name}\n{}\n", content.len()));
+        hasher.update(content);
+        hasher.update("\n");
+    }
+    format!("{:x}", hasher.finalize())
 }
 
 /// Usuario de Providence que hace la operación.
@@ -62,7 +71,7 @@ pub struct VersionInfo {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Version {
     pub id: u32,
-    /// Número correlativo (1, 2, 3...), el que ve el usuario. El id puede tener saltos.
+    /// Número correlativo (1, 2, 3...), el que ve el usuario. No cambia si se borra otra versión.
     pub number: u32,
     pub name: String,
     pub description: Option<String>,
@@ -76,13 +85,13 @@ pub struct Version {
 
 /// Resultado de guardar un estado: versión nueva o la que ya tenía ese hash.
 #[derive(Debug, PartialEq, Eq)]
-pub enum Saved {
-    Created(Version),
-    Existing(Version),
+pub enum Saved<V = Version> {
+    Created(V),
+    Existing(V),
 }
 
-impl Saved {
-    pub fn version(&self) -> &Version {
+impl<V> Saved<V> {
+    pub fn version(&self) -> &V {
         match self {
             Saved::Created(version) | Saved::Existing(version) => version,
         }
@@ -176,6 +185,9 @@ pub struct Change {
     pub version_after: Option<u32>,
     pub result: String,
     pub message: Option<String>,
+    /// Número de las versiones, el que ve el usuario (None si no hay o se borró).
+    pub version_before_number: Option<u32>,
+    pub version_after_number: Option<u32>,
 }
 
 /// Resultado de cerrar un cambio pendiente.
@@ -186,13 +198,17 @@ pub enum Closed {
     NotPending,
 }
 
-/// Resultado de renombrar una versión.
+/// Resultado de renombrar o borrar una versión.
 #[derive(Debug, PartialEq)]
-pub enum Renamed {
-    Done(Version),
+pub enum Owned<V = Version> {
+    Done(V),
+    /// El nombre nuevo es el mismo: no se guarda nada.
+    Unchanged(V),
     NotFound,
-    /// Solo la puede renombrar quien la creó.
+    /// Solo puede hacerlo quien la creó.
     NotOwner,
+    /// Es la versión de la configuración actual: no se puede borrar.
+    Current,
 }
 
 #[cfg(test)]
@@ -240,5 +256,15 @@ mod tests {
     fn empty_state_hash_is_sha256_of_nothing() {
         let empty = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855";
         assert_eq!(state(&[]).hash(), empty);
+        assert_eq!(state(&[(DATABASE_FILE, "<p/>")]).files_hash(), empty);
+    }
+
+    /// El hash de archivos no cambia con la base, y sin base es igual al hash completo.
+    #[test]
+    fn files_hash_ignores_the_database_export() {
+        let files = state(&[("a.conf", "x = 1")]);
+        let with_db = state(&[("a.conf", "x = 1"), (DATABASE_FILE, "<p/>")]);
+        assert_eq!(with_db.files_hash(), files.hash());
+        assert_ne!(with_db.hash(), files.hash());
     }
 }

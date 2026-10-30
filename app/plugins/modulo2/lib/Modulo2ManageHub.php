@@ -7,6 +7,7 @@
  * ----------------------------------------------------------------------
  */
 require_once(__DIR__.'/Modulo2ManageMap.php');
+require_once(__DIR__.'/Modulo2I18n.php');
 require_once(__DIR__.'/Modulo2NavRequirements.php');
 
 class Modulo2ManageHub {
@@ -42,7 +43,8 @@ class Modulo2ManageHub {
 		}
 		$item = $this->firstVisible($entry['keys']);
 		if (!$item) { return null; }
-		return $base + ['label' => (string)$item['displayName'], 'route' => self::route($item['default']), 'links' => $this->links($item)];
+		// Providence guarda navigation.conf en caché ya traducido en el idioma con que se leyó: se vuelve a traducir
+		return $base + ['label' => Modulo2I18n::t((string)$item['displayName']), 'route' => self::route($item['default']), 'links' => $this->links($item)];
 	}
 	# -------------------------------------------------------
 	/** Primer ítem de navigation.conf, entre las claves dadas, que existe y el usuario puede ver */
@@ -63,7 +65,7 @@ class Modulo2ManageHub {
 		foreach ($item['navigation'] ?? [] as $child) {
 			if (!is_array($child) || ($child['type'] ?? null) === 'dynamic' || empty($child['default'])) { continue; }
 			$route = $this->visible($child) ? $this->entryRoute($child) : null;
-			if ($route) { $links[] = ['label' => (string)($child['displayName'] ?? ''), 'route' => $route]; }
+			if ($route) { $links[] = ['label' => Modulo2I18n::t((string)($child['displayName'] ?? '')), 'route' => $route]; }
 		}
 		return $links;
 	}

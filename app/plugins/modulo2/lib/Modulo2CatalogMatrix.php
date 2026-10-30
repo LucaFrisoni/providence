@@ -25,14 +25,11 @@ class Modulo2CatalogMatrix {
 		return $rows;
 	}
 	# -------------------------------------------------------
-	/**
-	 * Todos los tipos de dato del catálogo, sin repetir: los de las secciones por tipo de dato y los
-	 * que aparecen como valor de una lista de tipos de dato (por ejemplo, en la búsqueda rápida)
-	 */
+	/** Todos los tipos de dato de las secciones por tipo de dato, sin repetir */
 	public static function dataTypes(array $catalog) : array {
 		$data_types = [];
 		foreach ($catalog['sections'] as $section) {
-			$data_types = array_merge($data_types, array_keys(self::rows($section)), self::tableListValues($section));
+			$data_types = array_merge($data_types, array_keys(self::rows($section)));
 		}
 		return array_values(array_unique($data_types));
 	}
@@ -66,18 +63,6 @@ class Modulo2CatalogMatrix {
 	# -------------------------------------------------------
 	public static function isPerDataType(array $section) : bool {
 		return ($section['scope'] ?? Modulo2Constants::SCOPE_DATA_TYPE) === Modulo2Constants::SCOPE_DATA_TYPE;
-	}
-	# -------------------------------------------------------
-	/** Tipos de dato que son valor (actual o de la distribución) de las listas de tipos de dato de una sección */
-	private static function tableListValues(array $section) : array {
-		$tables = [];
-		foreach ($section['settings'] as $setting) {
-			if (($setting['kind'] ?? null) !== Modulo2Constants::KIND_TABLE_LIST) { continue; }
-			foreach ($setting['entries'] as $entry) {
-				$tables = array_merge($tables, (array)($entry['current'] ?? []), (array)($entry['distribution'] ?? []));
-			}
-		}
-		return $tables;
 	}
 	# -------------------------------------------------------
 }

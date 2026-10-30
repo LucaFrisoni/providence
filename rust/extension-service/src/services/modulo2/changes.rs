@@ -48,11 +48,11 @@ fn verify_restore(
         }
         Some(_) => (
             ChangeResult::Failed,
-            Some("los archivos que quedaron no son los de la versión restaurada".into()),
+            Some("the resulting files are not the ones of the restored version".into()),
         ),
         None => (
             ChangeResult::Failed,
-            Some("no se informó el estado final para verificar la restauración".into()),
+            Some("the final state was not reported to verify the restore".into()),
         ),
     })
 }

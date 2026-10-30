@@ -43,6 +43,8 @@ RUN composer dump-autoload --no-interaction \
 
 COPY docker/providence/php.ini /usr/local/etc/php/conf.d/zz-providence.ini
 COPY docker/providence/configure-admin.php /usr/local/lib/providence/configure-admin.php
+COPY docker/providence/repair-installation.php /usr/local/lib/providence/repair-installation.php
+COPY docker/providence/initial-app.conf /usr/local/lib/providence/initial-app.conf
 COPY docker/providence/entrypoint.sh /usr/local/bin/providence-entrypoint
 RUN sed -i 's/\r$//' /usr/local/bin/providence-entrypoint && chmod +x /usr/local/bin/providence-entrypoint
 

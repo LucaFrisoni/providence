@@ -1,0 +1,795 @@
+# Traducciones propias de la instalación para es_MX (copia de las de es_ES). Providence las carga además de app/locale/es_MX
+# (initializeLocale.php: app/locale/user/<idioma>/messages.mo).
+# Completan las que la traducción de Providence tiene marcadas como dudosas (fuzzy), que no se usan.
+# messages.mo se genera desde este archivo con gettext: msgfmt messages.po -o messages.mo
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Language: es_MX\n"
+
+# Menú "Nuevo" (navigation.conf): la traducción de Providence es dudosa ("Localizaciones")
+msgid "Storage location"
+msgstr "Localización"
+
+# Mantenimiento (Administración): textos sin traducir o con otros espacios que los de Providence
+msgid "Clear search indexing queue lock file"
+msgstr "Liberar el bloqueo de la cola de indexación"
+
+msgid "<p>The search indexing queue is a task run periodically, usually via cron, to process pending indexing tasks. Simultaneous instances of the queue processor are prevented by means of a lock file. The lock file is created when the queue starts and deleted when it completed. While it is present new queue processing instances will refuse to start. In some cases, when a queue processing instance is killed or crashes, the lock file may not be removed and the queue will refuse to re-start. Lingering lock files may be removed by clicking the button below.</p>"
+msgstr "<p>La cola de indexación de búsqueda es una tarea que se ejecuta periódicamente, por lo general con cron, para procesar las indexaciones pendientes. Para que no corran dos procesos de la cola a la vez se usa un archivo de bloqueo: se crea cuando la cola empieza y se borra cuando termina. Mientras existe, no puede empezar otro proceso. A veces, si un proceso se interrumpe o falla, el archivo de bloqueo queda y la cola ya no vuelve a empezar. Con el botón de abajo se puede borrar ese bloqueo.</p>"
+
+msgid "<p>You cannot clear the lock file as <em>it is not writeable by the web server user.</em> Check file permissions and try again.</p>"
+msgstr "<p>No se puede liberar el bloqueo porque <em>el servidor web no tiene permiso para modificar el archivo.</em> Revise los permisos y vuelva a intentarlo.</p>"
+
+msgid "<p>You cannot clear the lock file as <em>no lock file is present at this time.</em></p>"
+msgstr "<p>No se puede liberar el bloqueo porque <em>en este momento no hay ningún bloqueo.</em></p>"
+
+msgid ""
+"\n"
+"\t    The lock file has been removed.\n"
+"\t"
+msgstr "Se liberó el bloqueo."
+
+msgid ""
+"<p>You can export the current configuration of this system as an <em>installation profile</em>. A profile is an XML document fully describing all of the metadata elements, lists, user interfaces, locales, search forms and displays present in your system. The <em>CollectiveAccess</em> installer can use installation profiles to create new, empty instances with specific configurations for use in new projects.</p>\n"
+"\t<p>Click on the \"Export\" button below to export and download the current system configuration as an installation profile.</p> \n"
+"\t<p>Note that for systems with complex configurations, generating the profile may take up to two minutes.</p>\n"
+"\t"
+msgstr ""
+"<p>Puede exportar la configuración actual del sistema como un <em>perfil de instalación</em>: un documento XML que describe todos los elementos de metadatos, listas, interfaces de usuario, idiomas, formularios de búsqueda y visualizaciones del sistema. El instalador de <em>CollectiveAccess</em> puede usar el perfil para crear instalaciones nuevas, vacías, con la misma configuración.</p>\n"
+"<p>Presione el botón de abajo para exportar y descargar la configuración actual como perfil de instalación.</p>\n"
+"<p>En sistemas con configuraciones complejas, generar el perfil puede tardar hasta dos minutos.</p>"
+
+msgid ""
+"<p>CollectiveAccess relies upon special <em>indices</em> to speed retrieval of hierarchical data such as multi-level lists and storage locations. Occasionally these indices can get out of sync with the actual hierarchical structure of your data. When this occurs you may experience odd behavior adding, moving or deleting items in a hierarchy. If you are experiencing issues with hierarchies you can rebuild the indices using this tool.</p> \n"
+"<p>Note that depending upon the size of your database rebuilding can take from a few seconds to several minutes. During the rebuilding process the system will remain usable but hierarchical functions may return inconsistent results.</p>\n"
+"\t"
+msgstr ""
+"<p>CollectiveAccess usa <em>índices</em> especiales para leer más rápido los datos jerárquicos, como listas de varios niveles y ubicaciones. A veces estos índices dejan de coincidir con la estructura real de los datos y aparecen comportamientos raros al agregar, mover o borrar elementos de una jerarquía. Si tiene problemas con las jerarquías, esta herramienta reconstruye los índices.</p>\n"
+"<p>Según el tamaño de la base, puede tardar desde unos segundos hasta varios minutos. Mientras tanto se puede seguir usando el sistema, pero las funciones de jerarquías pueden dar resultados inconsistentes.</p>"
+
+msgid ""
+"<p>CollectiveAccess relies upon <em>indices</em> when searching your data.  Indices are simply summaries of your data designed to speed query processing. The precise form and characteristics of the indices used will vary with the type of search engine you  are using. They may be stored on disk, in a database or on another server, but their purpose is always the same: to make searches execute faster.</p>\n"
+"<p>For search results to be accurate the database and indices must be in sync. CollectiveAccess simultaneously updates both the database and indices as you add, edit and delete data, keeping database and indices in agreement. Occasionally things get out of sync, however. If the basic and advanced searches are consistently returning unexpected results you can use this tool to rebuild the indices from the database and bring things back into alignment.</p> \n"
+"<p>Note that depending upon the size of your database rebuilding can take from a few minutes to several hours. During the rebuilding process the system will remain usable but search functions may return incomplete results. Browse functions, which do not rely upon indices, will not be affected.</p>\n"
+"\t"
+msgstr ""
+"<p>CollectiveAccess usa <em>índices</em> para buscar en sus datos. Los índices son resúmenes de los datos pensados para que las búsquedas sean más rápidas. Su forma depende del motor de búsqueda que se use: pueden estar en disco, en una base de datos o en otro servidor, pero siempre sirven para lo mismo.</p>\n"
+"<p>Para que los resultados sean correctos, la base de datos y los índices tienen que coincidir. CollectiveAccess actualiza ambos cada vez que se agregan, editan o borran datos, pero a veces dejan de coincidir. Si las búsquedas básica y avanzada devuelven resultados inesperados, esta herramienta reconstruye los índices a partir de la base de datos.</p>\n"
+"<p>Según el tamaño de la base, la reconstrucción puede tardar desde unos minutos hasta varias horas. Mientras tanto se puede seguir usando el sistema, pero las búsquedas pueden devolver resultados incompletos. La exploración, que no usa índices, no se ve afectada.</p>"
+
+msgid ""
+"<p>CollectiveAccess relies upon <em>sort values</em> when sorting values that should not sort alphabetically, such as titles with articles (eg. <em>The Man Who Fell to Earth</em> should sort as <em>Man Who Fell to Earth, The</em>) and alphanumeric identifiers (eg. <em>2011.001</em> and <em>2011.2</em> should sort next to each other with leading zeros in the first ignored).</p>\n"
+"<p>Sort values are derived from corresponding values in your database. The internal format of sort values can vary between versions of CollectiveAccess causing erroneous sorting behavior after an upgrade. If you notice values such as titles and identifiers are sorting incorrectly, you may need to reload sort values from your data.</p> \n"
+"<p>Note that depending upon the size of your database reloading sort values can take from a few minutes to an hour or more. During the reloading process the system will remain usable but search and browse functions may return incorrectly sorted results. </p>\n"
+"\t"
+msgstr ""
+"<p>CollectiveAccess usa <em>valores de ordenación</em> para ordenar lo que no debe ordenarse alfabéticamente, como títulos con artículos (por ejemplo, <em>El hombre que cayó a la Tierra</em> debe ordenarse como <em>Hombre que cayó a la Tierra, El</em>) e identificadores alfanuméricos (por ejemplo, <em>2011.001</em> y <em>2011.2</em> deben quedar juntos, sin tener en cuenta los ceros a la izquierda).</p>\n"
+"<p>Los valores de ordenación se calculan a partir de los datos. Su formato puede cambiar entre versiones de CollectiveAccess y, después de una actualización, algunos valores pueden ordenarse mal. Si nota que títulos o identificadores se ordenan mal, puede volver a cargar los valores de ordenación.</p>\n"
+"<p>Según el tamaño de la base, puede tardar desde unos minutos hasta una hora o más. Mientras tanto se puede seguir usando el sistema, pero las búsquedas y exploraciones pueden mostrar resultados mal ordenados.</p>"
+
+msgid "Clear search indexing lock file"
+msgstr "Liberar el bloqueo de indexación"
+
+msgid "Data dictionary"
+msgstr "Diccionario de datos"
+
+
+# Mantenimiento: los mismos textos con fin de línea CRLF (vistas con checkout en Windows)
+msgid ""
+"\r\n"
+"\t    The lock file has been removed.\r\n"
+"\t"
+msgstr "Se liberó el bloqueo."
+
+msgid ""
+"<p>You can export the current configuration of this system as an <em>installation profile</em>. A profile is an XML document fully describing all of the metadata elements, lists, user interfaces, locales, search forms and displays present in your system. The <em>CollectiveAccess</em> installer can use installation profiles to create new, empty instances with specific configurations for use in new projects.</p>\r\n"
+"\t<p>Click on the \"Export\" button below to export and download the current system configuration as an installation profile.</p> \r\n"
+"\t<p>Note that for systems with complex configurations, generating the profile may take up to two minutes.</p>\r\n"
+"\t"
+msgstr ""
+"<p>Puede exportar la configuración actual del sistema como un <em>perfil de instalación</em>: un documento XML que describe todos los elementos de metadatos, listas, interfaces de usuario, idiomas, formularios de búsqueda y visualizaciones del sistema. El instalador de <em>CollectiveAccess</em> puede usar el perfil para crear instalaciones nuevas, vacías, con la misma configuración.</p>\n"
+"<p>Presione el botón de abajo para exportar y descargar la configuración actual como perfil de instalación.</p>\n"
+"<p>En sistemas con configuraciones complejas, generar el perfil puede tardar hasta dos minutos.</p>"
+
+msgid ""
+"<p>CollectiveAccess relies upon special <em>indices</em> to speed retrieval of hierarchical data such as multi-level lists and storage locations. Occasionally these indices can get out of sync with the actual hierarchical structure of your data. When this occurs you may experience odd behavior adding, moving or deleting items in a hierarchy. If you are experiencing issues with hierarchies you can rebuild the indices using this tool.</p> \r\n"
+"<p>Note that depending upon the size of your database rebuilding can take from a few seconds to several minutes. During the rebuilding process the system will remain usable but hierarchical functions may return inconsistent results.</p>\r\n"
+"\t"
+msgstr ""
+"<p>CollectiveAccess usa <em>índices</em> especiales para leer más rápido los datos jerárquicos, como listas de varios niveles y ubicaciones. A veces estos índices dejan de coincidir con la estructura real de los datos y aparecen comportamientos raros al agregar, mover o borrar elementos de una jerarquía. Si tiene problemas con las jerarquías, esta herramienta reconstruye los índices.</p>\n"
+"<p>Según el tamaño de la base, puede tardar desde unos segundos hasta varios minutos. Mientras tanto se puede seguir usando el sistema, pero las funciones de jerarquías pueden dar resultados inconsistentes.</p>"
+
+msgid ""
+"<p>CollectiveAccess relies upon <em>indices</em> when searching your data.  Indices are simply summaries of your data designed to speed query processing. The precise form and characteristics of the indices used will vary with the type of search engine you  are using. They may be stored on disk, in a database or on another server, but their purpose is always the same: to make searches execute faster.</p>\r\n"
+"<p>For search results to be accurate the database and indices must be in sync. CollectiveAccess simultaneously updates both the database and indices as you add, edit and delete data, keeping database and indices in agreement. Occasionally things get out of sync, however. If the basic and advanced searches are consistently returning unexpected results you can use this tool to rebuild the indices from the database and bring things back into alignment.</p> \r\n"
+"<p>Note that depending upon the size of your database rebuilding can take from a few minutes to several hours. During the rebuilding process the system will remain usable but search functions may return incomplete results. Browse functions, which do not rely upon indices, will not be affected.</p>\r\n"
+"\t"
+msgstr ""
+"<p>CollectiveAccess usa <em>índices</em> para buscar en sus datos. Los índices son resúmenes de los datos pensados para que las búsquedas sean más rápidas. Su forma depende del motor de búsqueda que se use: pueden estar en disco, en una base de datos o en otro servidor, pero siempre sirven para lo mismo.</p>\n"
+"<p>Para que los resultados sean correctos, la base de datos y los índices tienen que coincidir. CollectiveAccess actualiza ambos cada vez que se agregan, editan o borran datos, pero a veces dejan de coincidir. Si las búsquedas básica y avanzada devuelven resultados inesperados, esta herramienta reconstruye los índices a partir de la base de datos.</p>\n"
+"<p>Según el tamaño de la base, la reconstrucción puede tardar desde unos minutos hasta varias horas. Mientras tanto se puede seguir usando el sistema, pero las búsquedas pueden devolver resultados incompletos. La exploración, que no usa índices, no se ve afectada.</p>"
+
+msgid ""
+"<p>CollectiveAccess relies upon <em>sort values</em> when sorting values that should not sort alphabetically, such as titles with articles (eg. <em>The Man Who Fell to Earth</em> should sort as <em>Man Who Fell to Earth, The</em>) and alphanumeric identifiers (eg. <em>2011.001</em> and <em>2011.2</em> should sort next to each other with leading zeros in the first ignored).</p>\r\n"
+"<p>Sort values are derived from corresponding values in your database. The internal format of sort values can vary between versions of CollectiveAccess causing erroneous sorting behavior after an upgrade. If you notice values such as titles and identifiers are sorting incorrectly, you may need to reload sort values from your data.</p> \r\n"
+"<p>Note that depending upon the size of your database reloading sort values can take from a few minutes to an hour or more. During the reloading process the system will remain usable but search and browse functions may return incorrectly sorted results. </p>\r\n"
+"\t"
+msgstr ""
+"<p>CollectiveAccess usa <em>valores de ordenación</em> para ordenar lo que no debe ordenarse alfabéticamente, como títulos con artículos (por ejemplo, <em>El hombre que cayó a la Tierra</em> debe ordenarse como <em>Hombre que cayó a la Tierra, El</em>) e identificadores alfanuméricos (por ejemplo, <em>2011.001</em> y <em>2011.2</em> deben quedar juntos, sin tener en cuenta los ceros a la izquierda).</p>\n"
+"<p>Los valores de ordenación se calculan a partir de los datos. Su formato puede cambiar entre versiones de CollectiveAccess y, después de una actualización, algunos valores pueden ordenarse mal. Si nota que títulos o identificadores se ordenan mal, puede volver a cargar los valores de ordenación.</p>\n"
+"<p>Según el tamaño de la base, puede tardar desde unos minutos hasta una hora o más. Mientras tanto se puede seguir usando el sistema, pero las búsquedas y exploraciones pueden mostrar resultados mal ordenados.</p>"
+
+
+# Diálogo al salir de un formulario con cambios sin guardar (themes/default/js/unsaved-changes.js)
+msgid "Leave without saving?"
+msgstr "¿Salir sin guardar?"
+
+msgid "This form has changes that are not saved. If you leave the page, they are discarded."
+msgstr "Este formulario tiene cambios sin guardar. Si sale de la página, se descartan."
+
+msgid "Keep editing"
+msgstr "Seguir editando"
+
+msgid "Leave without saving"
+msgstr "Salir sin guardar"
+
+
+# Encontrar, Exploración, Mi trabajo, Usuarios y Seguimiento: textos de Providence que faltaban en español
+msgid "Type * to see all the records."
+msgstr "Escriba * para ver todos los registros."
+
+msgid "The record was added to your watched items."
+msgstr "El registro se agregó a sus elementos bajo vigilancia."
+
+msgid "The record was removed from your watched items."
+msgstr "El registro ya no está entre sus elementos bajo vigilancia."
+
+msgid "Filter…"
+msgstr "Filtrar…"
+
+msgid "Search builder"
+msgstr "Constructor de búsquedas"
+
+msgid "have duplicate identifiers"
+msgstr "identificadores duplicados"
+
+msgid "has duplicate identifier"
+msgstr "identificador duplicado"
+
+msgid "%1 repeats"
+msgstr "%1 repeticiones"
+
+msgid "No options available"
+msgstr "No hay opciones disponibles"
+
+msgid "Click on a %1 to find %2 related to it. Click on the arrow next to a %3 to see more specific %4 within that %5, or use the search field."
+msgstr "Haga clic en un/a %1 para encontrar %2 relacionados/as. Haga clic en la flecha junto a un/a %3 para ver %4 más específicos/as dentro de ese/a %5, o use el campo de búsqueda."
+
+msgid "Full Results"
+msgstr "Ver todos"
+
+msgid "No results found for <em>%1</em>"
+msgstr "No se encontraron resultados para <em>%1</em>"
+
+msgid "Hide hierarchy"
+msgstr "Ocultar jerarquía"
+
+msgid "Show hierarchy"
+msgstr "Mostrar jerarquía"
+
+msgid "Saved search"
+msgstr "Búsqueda guardada"
+
+msgid "Could not save search"
+msgstr "No se pudo guardar la búsqueda"
+
+msgid "Repeat previous search"
+msgstr "Repetir la búsqueda anterior"
+
+msgid "Run saved search"
+msgstr "Ejecutar la búsqueda guardada"
+
+msgid "Download labels"
+msgstr "Descargar etiquetas"
+
+msgid "Download results"
+msgstr "Descargar resultados"
+
+msgid "All results: %1 (representation)"
+msgstr "Todos los resultados: %1 (representación)"
+
+msgid "Selected results: %1 (representation)"
+msgstr "Resultados seleccionados: %1 (representación)"
+
+msgid "Selected results: %1 (field)"
+msgstr "Resultados seleccionados: %1 (campo)"
+
+msgid "All results: %1 (field)"
+msgstr "Todos los resultados: %1 (campo)"
+
+msgid "Child records"
+msgstr "Registros hijos"
+
+msgid "show"
+msgstr "mostrar"
+
+msgid "hide"
+msgstr "ocultar"
+
+msgid "Edit in Spreadsheet"
+msgstr "Editar como planilla"
+
+msgid "Current sort"
+msgstr "Orden actual"
+
+msgid "Quick Look"
+msgstr "Vista rápida"
+
+msgid "Matched on"
+msgstr "Coincide en"
+
+msgid "Deaccessioned"
+msgstr "Dado de baja"
+
+msgid "Relevance"
+msgstr "Relevancia"
+
+msgid "remove all associated metadata"
+msgstr "borrar todos los metadatos asociados"
+
+msgid "transfer metadata to"
+msgstr "pasar los metadatos a"
+
+msgid "remove all references"
+msgstr "borrar todas las referencias"
+
+msgid "transfer references to"
+msgstr "pasar las referencias a"
+
+msgid "also transfer metadata"
+msgstr "pasar también los metadatos"
+
+msgid "Child records will be deleted"
+msgstr "También se borrarán los registros hijos"
+
+msgid "Your metadata alert rules"
+msgstr "Sus reglas de alerta de metadatos"
+
+msgid "1 rule is available for editing"
+msgstr "Hay 1 regla disponible para editar"
+
+msgid "%1 rules are available for editing"
+msgstr "Hay %1 reglas disponibles para editar"
+
+msgid "New metadata alert rule for "
+msgstr "Nueva regla de alerta para "
+
+msgid "Alert name"
+msgstr "Nombre de la alerta"
+
+msgid "Rule type"
+msgstr "Tipo de regla"
+
+msgid "No metadata alert rules have been created"
+msgstr "Todavía no hay reglas de alerta de metadatos"
+
+msgid "Limit to elements with"
+msgstr "Limitar a los elementos con"
+
+msgid "Attach to metadata element"
+msgstr "Asociar al elemento de metadatos"
+
+msgid "Back to metadata alert rule list"
+msgstr "Volver a la lista de reglas de alerta"
+
+msgid "metadata alert rule"
+msgstr "regla de alerta de metadatos"
+
+msgid "metadata alert rules"
+msgstr "reglas de alerta de metadatos"
+
+msgid "Alert target"
+msgstr "Destino de la alerta"
+
+msgid "Recipient users"
+msgstr "Usuarios que reciben la alerta"
+
+msgid "Recipient user groups"
+msgstr "Grupos que reciben la alerta"
+
+msgid "Trigger"
+msgstr "Disparador"
+
+msgid "Submission error"
+msgstr "Error al enviar"
+
+msgid "Submission warning"
+msgstr "Advertencia al enviar"
+
+msgid "Expression test"
+msgstr "Prueba de expresión"
+
+msgid "Short code for rule (must be unique)"
+msgstr "Código corto de la regla (debe ser único)"
+
+msgid "Your downloads"
+msgstr "Sus descargas"
+
+msgid "Refresh"
+msgstr "Actualizar"
+
+msgid "Delete downloaded"
+msgstr "Borrar las ya descargadas"
+
+msgid "Delete selected"
+msgstr "Borrar seleccionados"
+
+msgid "File"
+msgstr "Archivo"
+
+msgid "Created"
+msgstr "Creado"
+
+msgid "Generated"
+msgstr "Generado"
+
+msgid "Downloaded"
+msgstr "Descargado"
+
+msgid "No downloads are available"
+msgstr "No hay descargas disponibles"
+
+msgid "Downloads"
+msgstr "Descargas"
+
+msgid "Login information"
+msgstr "Datos de inicio de sesión"
+
+msgid "Password must not include the phrase \"%value\""
+msgstr "La contraseña no puede incluir la frase \"%value\""
+
+msgid "Password must include at least %value special character"
+msgstr "La contraseña debe incluir al menos %value carácter especial"
+
+msgid "Password must include at least %value special characters"
+msgstr "La contraseña debe incluir al menos %value caracteres especiales"
+
+msgid "Password must include at least %value digit"
+msgstr "La contraseña debe incluir al menos %value número"
+
+msgid "Password must include at least %value digits"
+msgstr "La contraseña debe incluir al menos %value números"
+
+msgid "Password must include at least %value lowercase character"
+msgstr "La contraseña debe incluir al menos %value minúscula"
+
+msgid "Password must include at least %value lowercase characters"
+msgstr "La contraseña debe incluir al menos %value minúsculas"
+
+msgid "Password must include at least %value uppercase character"
+msgstr "La contraseña debe incluir al menos %value mayúscula"
+
+msgid "Password must include at least %value uppercase characters"
+msgstr "La contraseña debe incluir al menos %value mayúsculas"
+
+msgid "Password must be at least %value character"
+msgstr "La contraseña debe tener al menos %value carácter"
+
+msgid "Password must be at least %value characters"
+msgstr "La contraseña debe tener al menos %value caracteres"
+
+msgid "Password must be at less than %value character"
+msgstr "La contraseña debe tener menos de %value carácter"
+
+msgid "Password must be at less than %value characters"
+msgstr "La contraseña debe tener menos de %value caracteres"
+
+msgid "Passwords do not match"
+msgstr "Las contraseñas no coinciden"
+
+msgid "Password is easy to guess"
+msgstr "La contraseña es fácil de adivinar"
+
+msgid "Change log"
+msgstr "Registro de cambios"
+
+msgid "Download log"
+msgstr "Registro de descargas"
+
+msgid "Group by %1 from %2"
+msgstr "Agrupar por %1 desde %2"
+
+msgid "Record"
+msgstr "Registro"
+
+msgid "Record Type"
+msgstr "Tipo de registro"
+
+msgid "Num Downloads"
+msgstr "Descargas"
+
+msgid "Num Users"
+msgstr "Usuarios"
+
+msgid "No downloads found"
+msgstr "No se encontraron descargas"
+
+msgid "Enter a date to display downloads from above"
+msgstr "Ingrese arriba una fecha para ver las descargas desde entonces"
+
+msgid "Userclass"
+msgstr "Clase de usuario"
+
+msgid "From %1"
+msgstr "Desde %1"
+
+msgid "Show %1 to %2 from %3 by %4"
+msgstr "Mostrar %1 en %2 desde %3 hechos por %4"
+
+msgid "Show %1 to %2 from %3"
+msgstr "Mostrar %1 en %2 desde %3"
+
+msgid "all changes"
+msgstr "todos los cambios"
+
+msgid "adds"
+msgstr "altas"
+
+msgid "edits"
+msgstr "ediciones"
+
+msgid "deletes"
+msgstr "borrados"
+
+msgid "anything"
+msgstr "cualquier registro"
+
+msgid "any user"
+msgstr "cualquier usuario"
+
+msgid "Change"
+msgstr "Cambio"
+
+msgid "No log entries found"
+msgstr "No se encontraron entradas"
+
+msgid "Choose display criteria to display matching log entries"
+msgstr "Elija los criterios de arriba para ver las entradas que coinciden"
+
+msgid "User sorts"
+msgstr "Ordenaciones de usuario"
+
+msgid "user sort"
+msgstr "ordenación de usuario"
+
+msgid "user sorts"
+msgstr "ordenaciones de usuario"
+
+msgid "Create New Sort"
+msgstr "Crear ordenación"
+
+msgid "Delete Selected"
+msgstr "Borrar seleccionadas"
+
+msgid "Sort field %1"
+msgstr "Campo %1"
+
+msgid "Sort subject"
+msgstr "Qué se ordena"
+
+msgid "Name of sort"
+msgstr "Nombre de la ordenación"
+
+msgid "Type of sort"
+msgstr "Tipo de ordenación"
+
+msgid "Search/browse (thumbnail view)"
+msgstr "Búsqueda y exploración (miniaturas)"
+
+msgid "Search/browse (full view)"
+msgstr "Búsqueda y exploración (vista completa)"
+
+msgid "Search/browse (list view)"
+msgstr "Búsqueda y exploración (lista)"
+
+msgid "Editor summaries"
+msgstr "Resúmenes del editor"
+
+msgid "Editor relationship bundles"
+msgstr "Relaciones en el editor"
+
+msgid "Set items bundles"
+msgstr "Elementos de los conjuntos"
+
+msgid "Include subtypes?"
+msgstr "¿Incluir subtipos?"
+
+msgid "Primary only"
+msgstr "Solo la principal"
+
+msgid "Display representations?"
+msgstr "¿Mostrar representaciones?"
+
+msgid "Preserve newlines"
+msgstr "Conservar los saltos de línea"
+
+msgid "Display as HTML"
+msgstr "Mostrar como HTML"
+
+msgid "Newlines"
+msgstr "Saltos de línea"
+
+msgid "Back to results"
+msgstr "Volver a los resultados"
+
+msgid "New form"
+msgstr "Formulario nuevo"
+
+
+# Importar archivos de contenido: textos de Providence que faltaban en español
+msgid "View media"
+msgstr "Ver archivos de contenido"
+
+msgid "Download import log"
+msgstr "Descargar el registro de la importación"
+
+msgid "Delete files"
+msgstr "Borrar archivos"
+
+msgid "Type used for newly created parent %1"
+msgstr "Tipo para los %1 padre que se creen"
+
+msgid "Type used for newly created child %1"
+msgstr "Tipo para los %1 hijos que se creen"
+
+msgid "Set %1 identifier to "
+msgstr "Asignar como identificador de %1 "
+
+msgid "Set %1 identifier to directory name"
+msgstr "Asignar como identificador de %1 el nombre de la carpeta"
+
+msgid "%1 title"
+msgstr "Título de %1"
+
+msgid "Set %1 title to %2"
+msgstr "Asignar como título de %1 %2"
+
+msgid "Set %1 title to identifier"
+msgstr "Asignar como título de %1 el identificador"
+
+msgid "Set %1 title to file name"
+msgstr "Asignar como título de %1 el nombre de archivo"
+
+msgid "Set %1 title to file name without extension"
+msgstr "Asignar como título de %1 el nombre de archivo sin extensión"
+
+msgid "Set %1 title to directory and file name"
+msgstr "Asignar como título de %1 el nombre de carpeta y archivo"
+
+msgid "where identifier %1 value"
+msgstr "donde el identificador %1 el valor"
+
+msgid "List names of files you wish to skip during import below, one per line. You may use asterisks (\"*\") as wildcards to make partial matches. Values enclosed in \"/\" characters will be treated as <a href=\"%1\" target=\"_new\">Perl-compatible regular expressions</a>."
+msgstr "Escriba abajo los nombres de los archivos que no quiere importar, uno por línea. Puede usar asteriscos (\"*\") como comodines para coincidencias parciales. Los valores entre caracteres \"/\" se tratan como <a href=\"%1\" target=\"_new\">expresiones regulares compatibles con Perl</a>."
+
+msgid "Replace existing media?"
+msgstr "¿Reemplazar los archivos de contenido existentes?"
+
+msgid " + %1 more"
+msgstr " y %1 más"
+
+msgid "Make imported media primary?"
+msgstr "¿Hacer principal el archivo importado?"
+
+msgid "<strong>Directory (all users):</strong> %1"
+msgstr "<strong>Carpeta (todos los usuarios):</strong> %1"
+
+msgid "<strong>Directory (user):</strong> %1"
+msgstr "<strong>Carpeta (usuario):</strong> %1"
+
+# Textos de Providence con datos (%1) que su traducción no tiene
+
+msgid "%1 available to you"
+msgstr "%1 disponibles para usted"
+
+msgid "%1 created by users"
+msgstr "%1 creados por usuarios"
+
+msgid "%1 created by the public"
+msgstr "%1 creados por el público"
+
+msgid "%1 %2 are available"
+msgstr "%1 %2 disponibles"
+
+msgid "%1 displays are available"
+msgstr "%1 formatos de visualización disponibles"
+
+msgid "%1 rules are available for editing"
+msgstr "%1 reglas disponibles para editar"
+
+msgid "%1 forms are available for editing"
+msgstr "%1 formularios disponibles para editar"
+
+msgid "%1 elements are defined"
+msgstr "%1 elementos definidos"
+
+msgid "%1 user interfaces are defined"
+msgstr "%1 interfaces de usuario definidas"
+
+msgid "%1 teams are available"
+msgstr "%1 equipos disponibles"
+
+msgid "%1 comments need moderation"
+msgstr "%1 comentarios por moderar"
+
+msgid "%1 comments total"
+msgstr "%1 comentarios en total"
+
+msgid "%1 moderated comments"
+msgstr "%1 comentarios moderados"
+
+msgid "%1 taggings need moderation"
+msgstr "%1 etiquetados por moderar"
+
+msgid "%1 total taggings"
+msgstr "%1 etiquetados en total"
+
+msgid "%1 total unique tags"
+msgstr "%1 etiquetas únicas en total"
+
+msgid "Lot contains %1 objects"
+msgstr "El lote contiene %1 objetos"
+
+msgid "Maximum upload size is %1"
+msgstr "El tamaño máximo de subida es %1"
+
+msgid "Number of %1 in hierarchy: %2"
+msgstr "Cantidad en la jerarquía (%1): %2"
+
+msgid "Click %1 names to explore. Click on an arrow icon to open a %1 for editing."
+msgstr "Haga clic en los nombres (%1) para explorar. Haga clic en una flecha para abrir un registro (%1) y editarlo."
+
+msgid "Use the controls below to create new %1 relative to this record in the hierarchy."
+msgstr "Use los controles de abajo para crear %1 relativos a este registro en la jerarquía."
+
+msgid "Use the controls below to create new %1 relative to this %2 in the hierarchy."
+msgstr "Use los controles de abajo para crear %1 relativos a este registro (%2) en la jerarquía."
+
+msgid "Create child record under this %1"
+msgstr "Crear un registro hijo bajo este registro (%1)"
+
+msgid "Change %1 type"
+msgstr "Cambiar el tipo (%1)"
+
+msgid "Your search found no %1"
+msgstr "La búsqueda no encontró %1"
+
+msgid "Creating new %1"
+msgstr "Creando: %1"
+
+msgid "Quick add %1"
+msgstr "Agregar rápido: %1"
+
+msgid "Deaccessioned %1"
+msgstr "%1 dados de baja"
+
+msgid "%1 public pages"
+msgstr "%1 páginas públicas"
+
+msgid "A tool for extraction of embedded metadata from audio and video files. See %1 for additional information."
+msgstr "Herramienta para extraer los metadatos incrustados en archivos de audio y video. Más información en %1."
+
+msgid "A tool for extraction of embedded metadata in images, documents and other media. See %1 for additional information."
+msgstr "Herramienta para extraer los metadatos incrustados en imágenes, documentos y otros medios. Más información en %1."
+
+msgid "LibreOffice cannot be found: conversion to PDF and generation of page previews will not be performed; you can obtain LibreOffice at %1"
+msgstr "No se encuentra LibreOffice: no se convertirá a PDF ni se generarán vistas previas de páginas. Puede obtener LibreOffice en %1"
+
+msgid "MeshLab cannot be found: you will not be able to process 3D files; you can obtain MeshLab at %1"
+msgstr "No se encuentra MeshLab: no podrá procesar archivos 3D. Puede obtener MeshLab en %1"
+
+msgid "To fully index Chinese-language content the Jieba PHP word segmenter (%1) should be installed."
+msgstr "Para indexar por completo contenido en chino debe instalarse el segmentador de palabras Jieba PHP (%1)."
+
+msgid "Try installing Jieba PHP. See See %1"
+msgstr "Pruebe instalar Jieba PHP. Vea %1"
+
+msgid "%1 Statistics"
+msgstr "Estadísticas: %1"
+
+msgid "Show %1"
+msgstr "Mostrar: %1"
+
+msgid "Your %1"
+msgstr "Sus %1"
+
+msgid "1 %1 is available"
+msgstr "1 %1 disponible"
+
+msgid "%1 page"
+msgstr "%1 página"
+
+msgid "%1 pages"
+msgstr "%1 páginas"
+
+msgid "%1 public page"
+msgstr "%1 página pública"
+
+msgid "%1 exporters are available"
+msgstr "%1 exportadores disponibles"
+
+msgid "Outstanding items: %1"
+msgstr "Elementos pendientes: %1"
+
+msgid "Checkout for %1 (%2)"
+msgstr "Préstamo para %1 (%2)"
+
+msgid "Items out (all users): %1"
+msgstr "Elementos prestados (todos los usuarios): %1"
+
+msgid "%1 importers are available"
+msgstr "%1 importadores disponibles"
+
+msgid "%1 rules are defined"
+msgstr "%1 reglas definidas"
+
+msgid "%1 mappings are defined"
+msgstr "%1 mapeos definidos"
+
+msgid "%1 saved searches"
+msgstr "%1 búsquedas guardadas"
+
+msgid "%1 (%2) - submitted on %3 by %4<br/>Status: %5"
+msgstr "%1 (%2) - enviado el %3 por %4<br/>Estado: %5"
+
+msgid "%1 by %2"
+msgstr "%1 por %2"
+
+msgid "%1 file"
+msgstr "%1 archivo"
+
+msgid "%1 files"
+msgstr "%1 archivos"
+
+msgid "%1 stuck"
+msgstr "%1 atascadas"
+
+msgid "+ %1 additional download"
+msgstr "+ %1 descarga más"
+
+msgid "+ %1 additional downloads"
+msgstr "+ %1 descargas más"
+
+msgid "+ %1 more completed job"
+msgstr "+ %1 tarea terminada más"
+
+msgid "+ %1 more completed jobs"
+msgstr "+ %1 tareas terminadas más"
+
+msgid "+ %1 more queued job"
+msgstr "+ %1 tarea en cola más"
+
+msgid "+ %1 more queued jobs"
+msgstr "+ %1 tareas en cola más"
+
+msgid "Displaying the last %1 %2 public registrations"
+msgstr "Se muestran los últimos %1 registros públicos (%2)"
+
+msgid "Email sent on %1"
+msgstr "Correo enviado el %1"
+
+msgid "Jobs completed in the last %1 hours (showing %2 of %3)"
+msgstr "Tareas terminadas en las últimas %1 horas (se muestran %2 de %3)"
+
+msgid "Jobs queued for later processing (showing %1 of %2)"
+msgstr "Tareas en cola para procesar más tarde (se muestran %1 de %2)"
+
+msgid "Jobs stuck in the last %1 hours"
+msgstr "Tareas atascadas en las últimas %1 horas"
+
+msgid "Jobs stuck in the last %1 hours (showing %2 of %3)"
+msgstr "Tareas atascadas en las últimas %1 horas (se muestran %2 de %3)"
+
+msgid "Showing recently created %1"
+msgstr "Se muestran los %1 creados recientemente"

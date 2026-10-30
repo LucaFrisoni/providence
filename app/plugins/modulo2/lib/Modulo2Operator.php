@@ -41,14 +41,14 @@ class Modulo2Operator {
 		return (bool)$this->allowedRisks();
 	}
 	# -------------------------------------------------------
-	/** Nombre propuesto para una versión guardada a mano, por ejemplo "Versión del 17/10/2026 14:32" */
+	/** Nombre propuesto para una versión, por ejemplo "Version of 17/10/2026 14:32" */
 	public function versionName(?int $time = null) : string {
-		return _t('Versión del %1', date('d/m/Y H:i', $time ?? time()));
+		return Modulo2I18n::t('Version of %1', date('d/m/Y H:i', $time ?? time()));
 	}
 	# -------------------------------------------------------
-	/** Versión automática que se guarda antes de una operación: se llama como el motivo */
-	public function automaticVersion(string $reason) : array {
-		return ['name' => $reason, 'description' => null];
+	/** Nombre propuesto para guardar el estado anterior a un cambio, por ejemplo "Before the changes of 17/10/2026 14:32" */
+	public function previousVersionName(?int $time = null) : string {
+		return Modulo2I18n::t('Before the changes of %1', date('d/m/Y H:i', $time ?? time()));
 	}
 	# -------------------------------------------------------
 }

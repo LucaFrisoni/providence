@@ -1,0 +1,237 @@
+# Traducciones propias de la instalación para nl_NL: los textos del tema ModernUI (diálogo al salir sin
+# guardar y ajustes de las pantallas de Providence). Providence las carga además de app/locale/nl_NL.
+# messages.mo se genera desde este archivo con gettext: msgfmt messages.po -o messages.mo
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Language: nl_NL\n"
+
+msgid "Leave without saving?"
+msgstr "Verlaten zonder op te slaan?"
+
+msgid "This form has changes that are not saved. If you leave the page, they are discarded."
+msgstr "Dit formulier bevat niet-opgeslagen wijzigingen. Als u de pagina verlaat, worden ze verworpen."
+
+msgid "Keep editing"
+msgstr "Verder bewerken"
+
+msgid "Leave without saving"
+msgstr "Verlaten zonder op te slaan"
+
+msgid "Type * to see all the records."
+msgstr "Typ * om alle records te zien."
+
+msgid "The record was added to your watched items."
+msgstr "Het record is toegevoegd aan uw gevolgde items."
+
+msgid "The record was removed from your watched items."
+msgstr "Het record is verwijderd uit uw gevolgde items."
+
+msgid "Filter…"
+msgstr "Filteren…"
+
+# Textos de Providence con datos (%1) que su traducción no tiene
+
+msgid "%1 available to you"
+msgstr "%1 beschikbaar voor u"
+
+msgid "%1 created by users"
+msgstr "%1 aangemaakt door gebruikers"
+
+msgid "%1 created by the public"
+msgstr "%1 aangemaakt door het publiek"
+
+msgid "%1 %2 are available"
+msgstr "%1 %2 beschikbaar"
+
+msgid "%1 displays are available"
+msgstr "%1 weergaven beschikbaar"
+
+msgid "%1 rules are available for editing"
+msgstr "%1 regels beschikbaar om te bewerken"
+
+msgid "%1 forms are available for editing"
+msgstr "%1 formulieren beschikbaar om te bewerken"
+
+msgid "%1 elements are defined"
+msgstr "%1 elementen gedefinieerd"
+
+msgid "%1 user interfaces are defined"
+msgstr "%1 gebruikersinterfaces gedefinieerd"
+
+msgid "%1 teams are available"
+msgstr "%1 teams beschikbaar"
+
+msgid "%1 comments need moderation"
+msgstr "%1 reacties moeten worden gemodereerd"
+
+msgid "%1 comments total"
+msgstr "%1 reacties in totaal"
+
+msgid "%1 moderated comments"
+msgstr "%1 gemodereerde reacties"
+
+msgid "%1 taggings need moderation"
+msgstr "%1 taggings moeten worden gemodereerd"
+
+msgid "%1 total taggings"
+msgstr "%1 taggings in totaal"
+
+msgid "%1 total unique tags"
+msgstr "%1 unieke tags in totaal"
+
+msgid "Lot contains %1 objects"
+msgstr "De partij bevat %1 objecten"
+
+msgid "Maximum upload size is %1"
+msgstr "Maximale uploadgrootte is %1"
+
+msgid "Number of %1 in hierarchy: %2"
+msgstr "Aantal in de hiërarchie (%1): %2"
+
+msgid "Click %1 names to explore. Click on an arrow icon to open a %1 for editing."
+msgstr "Klik op de namen (%1) om te verkennen. Klik op een pijl om een record (%1) te bewerken."
+
+msgid "Use the controls below to create new %1 relative to this record in the hierarchy."
+msgstr "Gebruik de knoppen hieronder om nieuwe %1 te maken ten opzichte van dit record in de hiërarchie."
+
+msgid "Use the controls below to create new %1 relative to this %2 in the hierarchy."
+msgstr "Gebruik de knoppen hieronder om nieuwe %1 te maken ten opzichte van dit record (%2) in de hiërarchie."
+
+msgid "Create child record under this %1"
+msgstr "Onderliggend record maken onder dit record (%1)"
+
+msgid "Change %1 type"
+msgstr "Type wijzigen (%1)"
+
+msgid "Your search found no %1"
+msgstr "Uw zoekopdracht vond geen resultaten (%1)"
+
+msgid "Creating new %1"
+msgstr "Nieuw aanmaken: %1"
+
+msgid "Quick add %1"
+msgstr "Snel toevoegen: %1"
+
+msgid "Deaccessioned %1"
+msgstr "Afgestoten %1"
+
+msgid "%1 public pages"
+msgstr "%1 openbare pagina's"
+
+msgid "A tool for extraction of embedded metadata from audio and video files. See %1 for additional information."
+msgstr "Een hulpmiddel om ingesloten metadata uit audio- en videobestanden te halen. Zie %1 voor meer informatie."
+
+msgid "A tool for extraction of embedded metadata in images, documents and other media. See %1 for additional information."
+msgstr "Een hulpmiddel om ingesloten metadata uit afbeeldingen, documenten en andere media te halen. Zie %1 voor meer informatie."
+
+msgid "LibreOffice cannot be found: conversion to PDF and generation of page previews will not be performed; you can obtain LibreOffice at %1"
+msgstr "LibreOffice is niet gevonden: er wordt niet naar PDF geconverteerd en er worden geen paginavoorbeelden gemaakt. U kunt LibreOffice downloaden op %1"
+
+msgid "MeshLab cannot be found: you will not be able to process 3D files; you can obtain MeshLab at %1"
+msgstr "MeshLab is niet gevonden: u kunt geen 3D-bestanden verwerken. U kunt MeshLab downloaden op %1"
+
+msgid "To fully index Chinese-language content the Jieba PHP word segmenter (%1) should be installed."
+msgstr "Om Chinese inhoud volledig te indexeren moet de woordsegmentatie Jieba PHP (%1) worden geïnstalleerd."
+
+msgid "Try installing Jieba PHP. See See %1"
+msgstr "Probeer Jieba PHP te installeren. Zie %1"
+
+msgid "%1 Statistics"
+msgstr "Statistieken: %1"
+
+msgid "Show %1"
+msgstr "Tonen: %1"
+
+msgid "Your %1"
+msgstr "Uw %1"
+
+msgid "1 %1 is available"
+msgstr "1 %1 beschikbaar"
+
+msgid "%1 page"
+msgstr "%1 pagina"
+
+msgid "%1 pages"
+msgstr "%1 pagina's"
+
+msgid "%1 public page"
+msgstr "%1 openbare pagina"
+
+msgid "%1 exporters are available"
+msgstr "%1 exporteurs beschikbaar"
+
+msgid "Outstanding items: %1"
+msgstr "Openstaande items: %1"
+
+msgid "Checkout for %1 (%2)"
+msgstr "Uitlening voor %1 (%2)"
+
+msgid "Items out (all users): %1"
+msgstr "Uitgeleende items (alle gebruikers): %1"
+
+msgid "%1 importers are available"
+msgstr "%1 importeurs beschikbaar"
+
+msgid "%1 rules are defined"
+msgstr "%1 regels gedefinieerd"
+
+msgid "%1 mappings are defined"
+msgstr "%1 toewijzingen gedefinieerd"
+
+msgid "%1 saved searches"
+msgstr "%1 opgeslagen zoekopdrachten"
+
+msgid "%1 (%2) - submitted on %3 by %4<br/>Status: %5"
+msgstr "%1 (%2) - ingediend op %3 door %4<br/>Status: %5"
+
+msgid "%1 by %2"
+msgstr "%1 door %2"
+
+msgid "%1 file"
+msgstr "%1 bestand"
+
+msgid "%1 files"
+msgstr "%1 bestanden"
+
+msgid "%1 stuck"
+msgstr "%1 vastgelopen"
+
+msgid "+ %1 additional download"
+msgstr "+ %1 extra download"
+
+msgid "+ %1 additional downloads"
+msgstr "+ %1 extra downloads"
+
+msgid "+ %1 more completed job"
+msgstr "+ %1 andere voltooide taak"
+
+msgid "+ %1 more completed jobs"
+msgstr "+ %1 andere voltooide taken"
+
+msgid "+ %1 more queued job"
+msgstr "+ %1 andere wachtende taak"
+
+msgid "+ %1 more queued jobs"
+msgstr "+ %1 andere wachtende taken"
+
+msgid "Displaying the last %1 %2 public registrations"
+msgstr "De laatste %1 openbare registraties (%2)"
+
+msgid "Email sent on %1"
+msgstr "E-mail verzonden op %1"
+
+msgid "Jobs completed in the last %1 hours (showing %2 of %3)"
+msgstr "Taken voltooid in de laatste %1 uur (%2 van %3)"
+
+msgid "Jobs queued for later processing (showing %1 of %2)"
+msgstr "Taken in de wachtrij voor latere verwerking (%1 van %2)"
+
+msgid "Jobs stuck in the last %1 hours"
+msgstr "Vastgelopen taken in de laatste %1 uur"
+
+msgid "Jobs stuck in the last %1 hours (showing %2 of %3)"
+msgstr "Vastgelopen taken in de laatste %1 uur (%2 van %3)"
+
+msgid "Showing recently created %1"
+msgstr "Recent aangemaakte %1"

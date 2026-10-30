@@ -41,8 +41,7 @@ class ChangesController extends Modulo2Controller {
 		$client = $this->client();
 		$page = $client->getChanges(Modulo2Constants::CHANGES_PAGE_SIZE, $before);
 		$catalog = $client->getCatalog();
-		$numbers = array_column($client->getVersions(), 'number', 'id');
-		$log = new Modulo2ChangeLog($catalog, $numbers, $this->dataTypeNames(Modulo2CatalogMatrix::dataTypes($catalog)));
+		$log = new Modulo2ChangeLog($catalog, $this->dataTypeNames(Modulo2CatalogMatrix::dataTypes($catalog)));
 		return ['html' => Modulo2Ui::changeRows($log->rows($page['changes'] ?? [])), 'next' => $page['next_before'] ?? null];
 	}
 	# -------------------------------------------------------

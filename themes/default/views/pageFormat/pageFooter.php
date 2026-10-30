@@ -36,9 +36,7 @@ $footer_color = $this->request->config->get('footer_color');
 <?php
 				if ($this->request->isLoggedIn()) {
 					print _p("User").': '.$this->request->user->getName();
-					if($this->request->user->canDoAction('can_set_preferences')) { 
-						print ' &gt; '.caNavLink($this->request, _t('Preferences'), '', 'system', 'Preferences', 'EditUIPrefs');
-					}
+					// Módulo 2: sin enlace a las preferencias nativas; las del usuario se editan desde Gestión > Mis preferencias
 					print ' &gt; '.caNavLink($this->request, _t('Logout'), '', 'system', 'auth', 'logout');
 				} else {
 					print caNavLink($this->request, _t('Login'), '', 'system', 'auth', 'login');
@@ -165,5 +163,28 @@ $footer_color = $this->request->config->get('footer_color');
 	});
 	</script>
 	<?= AssetLoadManager::getLoadHTML($this->request, ['outputTarget' => 'footer']); ?>
+<?php
+	// Módulo 2: scripts del tema para las pantallas nativas (diálogo al salir con cambios sin guardar y
+	// ajustes de búsqueda, listas y avisos), con sus textos traducidos en data-*
+	$theme_scripts = [
+		'js/unsaved-changes.js' => [
+			'title' => _t('Leave without saving?'),
+			'message' => _t('This form has changes that are not saved. If you leave the page, they are discarded.'),
+			'stay' => _t('Keep editing'),
+			'leave' => _t('Leave without saving')
+		],
+		'js/native-ui.js' => [
+			'search-hint' => _t('Type * to see all the records.'),
+			'watch-on' => _t('The record was added to your watched items.'),
+			'watch-off' => _t('The record was removed from your watched items.'),
+			'filter' => _t('Filter…')
+		]
+	];
+	foreach ($theme_scripts as $theme_script => $theme_texts) {
+		if (!($theme_script_url = $this->request->getUrlPathForThemeFile($theme_script))) { continue; }
+		$theme_attrs = join(' ', array_map(function($key, $text) { return "data-{$key}='".htmlspecialchars($text, ENT_QUOTES)."'"; }, array_keys($theme_texts), $theme_texts));
+		print "<script src='{$theme_script_url}' {$theme_attrs}></script>\n";
+	}
+?>
 	</body>
 </html>

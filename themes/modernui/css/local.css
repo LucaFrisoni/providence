@@ -1,0 +1,158 @@
+/* ----------------------------------------------------------------------
+ * themes/modernui/css/local.css : ajustes visuales del tema ModernUI.
+ * Providence lo carga después de sus estilos (pageHeader.php), así no se modifican los del tema.
+ * ----------------------------------------------------------------------
+ */
+
+/* Las pantallas de Providence con el aspecto del módulo 2 (@import tiene que ir antes que
+   las demás reglas) */
+@import url("native-screens.css");
+
+/* --- Pie de página: claro, con el color de acento de la interfaz --- */
+/* !important porque Providence pone el fondo en línea con footer_color de app.conf */
+#footerContainer {
+    background-color: #f5f7f8 !important;
+    border-top: 1px solid #dde3e6;
+    box-shadow: 0 -1px 4px rgba(0, 0, 0, 0.04);
+}
+
+#footer {
+    width: auto;
+    background-color: transparent;
+    color: #5b6770;
+    font-size: 11px;
+    padding: 7px 16px 6px 16px;
+}
+
+#footer div {
+    width: auto;
+    max-width: 1000px;
+    text-align: center;
+    font-family: inherit;
+}
+
+#footer a {
+    color: #138290;
+    text-decoration: none;
+}
+
+#footer a:hover {
+    color: #0d5f69;
+    text-decoration: underline;
+}
+
+/* --- Marca de campo obligatorio --- */
+/* Providence la escribe con estilo en línea (required_field_marker de app.conf) y en inglés ("[Required]"):
+   se reemplaza el texto por un asterisco junto al nombre del campo */
+span[style*="#bb0000"] {
+    font-size: 0 !important;
+}
+
+span[style*="#bb0000"]::after {
+    content: "*";
+    margin-left: 3px;
+    color: #d14343;
+    font-size: 14px;
+    font-weight: 700;
+    line-height: 1;
+    vertical-align: baseline;
+}
+
+/* --- Diálogo al salir con cambios sin guardar (unsaved-changes.js), con el aspecto del módulo 2 --- */
+dialog.ca-leave-dialog {
+    width: min(460px, 92vw);
+    padding: 0;
+    border: none;
+    border-radius: 14px;
+    box-shadow: 0 12px 32px rgba(16, 24, 40, .18);
+    font: 13px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    color: #1d2b33;
+}
+
+dialog.ca-leave-dialog::backdrop {
+    background: rgba(16, 24, 40, .45);
+    backdrop-filter: blur(2px);
+}
+
+.ca-leave-body {
+    padding: 20px 24px;
+}
+
+.ca-leave-body h2 {
+    margin: 0 0 6px 0;
+    font: 650 18px/1.3 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    color: #1d2b33;
+}
+
+.ca-leave-body p {
+    margin: 0;
+    color: #66757e;
+}
+
+.ca-leave-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    padding: 14px 24px;
+    border-top: 1px solid #e2e8eb;
+    border-radius: 0 0 14px 14px;
+    background: #f5f8f9;
+}
+
+.ca-leave-btn {
+    padding: 8px 16px;
+    border: 1px solid #cfd8dc;
+    border-radius: 8px;
+    background: #fff;
+    color: #1d2b33;
+    font: 600 13px/1.2 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    cursor: pointer;
+}
+
+.ca-leave-btn:hover {
+    background: #f5f8f9;
+}
+
+.ca-leave-btn:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(19, 130, 144, .22);
+}
+
+.ca-leave-btn-danger {
+    border-color: #b42318;
+    background: #b42318;
+    color: #fff;
+}
+
+.ca-leave-btn-danger:hover {
+    background: #912018;
+}
+
+/* --- Avisos abajo a la derecha (native-ui.js), como los del módulo 2 --- */
+.ca-toasts {
+    position: fixed;
+    right: 20px;
+    bottom: 20px;
+    z-index: 30000;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    max-width: min(380px, 90vw);
+}
+
+.ca-toast {
+    padding: 14px 16px;
+    border: 1px solid #e2e8eb;
+    border-left: 4px solid #138290;
+    border-radius: 10px;
+    background: #fff;
+    box-shadow: 0 12px 32px rgba(16, 24, 40, .18);
+    font: 13px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    color: #1d2b33;
+    animation: ca-toast-in .18s ease-out;
+}
+
+@keyframes ca-toast-in {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: none; }
+}

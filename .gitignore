@@ -22,7 +22,7 @@ build
 /app/log/*.log
 /themes/*
 !/themes/default
-/themes/default/css/local.css
+# local.css se versiona: tiene los ajustes visuales de la instalación (pie de página)
 /themes/default/views/bundles/inspector_info.php
 /support/scripts/*.php
 /support/scripts/*.sh

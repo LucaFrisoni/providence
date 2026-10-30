@@ -26,19 +26,27 @@ final class Modulo2ConfigValuesTest extends TestCase {
 		$this->assertFalse($this->valuesOf('subtype_list', ['ca_places_disable' => ['b', 'a']], ['ca_places_disable' => ['a', 'b']])['modified']);
 	}
 	# -------------------------------------------------------
-	#[TestDox('Normaliza cada tipo de valor; las listas de subtipos se ordenan y las de tipos de dato no')]
+	// La biblioteca de Providence necesita sus dos claves: con una sola no hace nada
+	#[TestDox('Una configuración con claves vinculadas está en sí solo si todas lo están')]
+	public function testLinkedKeysAreOnOnlyWhenAllAre() : void {
+		$catalog = ['sections' => [['id' => 'optional_modules', 'file' => 'app.conf', 'settings' => [['id' => 'library', 'kind' => 'boolean', 'entries' => [
+			['key' => 'enable_library_services', 'linked' => ['enable_object_checkout']]
+		]]]]]];
+		$current = fn(array $effective) => $this->reader($effective, [])->addValues($catalog)['sections'][0]['settings'][0]['entries'][0]['current'];
+
+		$this->assertTrue($current(['enable_library_services' => '1', 'enable_object_checkout' => '1']));
+		$this->assertFalse($current(['enable_library_services' => '1', 'enable_object_checkout' => '0']));
+		$this->assertFalse($current(['enable_library_services' => '0', 'enable_object_checkout' => '1']));
+	}
+	# -------------------------------------------------------
+	#[TestDox('Normaliza cada tipo de valor; las listas de subtipos se ordenan')]
 	public function testValuesAreNormalizedByKind() : void {
 		$cases = [
 			[null, 'boolean', false], ['', 'boolean', false], ['0', 'boolean', false],
 			['1', 'boolean', true], [1, 'boolean', true],
 			[null, 'subtype_list', []], ['', 'subtype_list', []], ['city', 'subtype_list', ['city']],
 			[['country', 'city'], 'subtype_list', ['city', 'country']], [[10, 20], 'subtype_list', ['10', '20']],
-			[null, 'table_list', []], [['ca_places', 'ca_objects'], 'table_list', ['ca_places', 'ca_objects']],
-			['2', 'number', 2], ['2.5', 'number', 2.5], [null, 'number', null], ['', 'number', null],
-			['FFFFFF', 'color', 'ffffff'], [null, 'color', ''],
-			['^ca_objects.idno', 'text', '^ca_objects.idno'], [null, 'text', ''], ['alwaysShow', 'choice', 'alwaysShow'],
-			[['a' => ['b' => '1']], 'structured', ['a' => ['b' => '1']]], [null, 'structured', []], ['', 'structured', []],
-			[['objects' => [], 'places' => []], 'key_order', ['objects', 'places']], [null, 'key_order', []]
+			['alwaysShow', 'choice', 'alwaysShow'], ['~', 'choice', '~'], [0, 'choice', '0'], [null, 'choice', '']
 		];
 		foreach ($cases as [$value, $kind, $expected]) {
 			$this->assertSame($expected, Modulo2ConfigValues::normalize($value, $kind), var_export($value, true)." ({$kind})");
@@ -60,20 +68,20 @@ final class Modulo2ConfigValuesTest extends TestCase {
 	public function testEverySectionIsReadFromItsFile() : void {
 		$loaded = [];
 		$reader = new Modulo2ConfigValues(
-			function(string $file) use (&$loaded) { $loaded[] = $file; return $this->fakeConfig(['ca_objects_disable' => '1', 'formats' => ['ca_objects' => ['x' => '1']]]); },
+			function(string $file) use (&$loaded) { $loaded[] = $file; return $this->fakeConfig(['ca_objects_disable' => '1', 'ca_objects_enforce_strict_type_hierarchy' => '~']); },
 			fn(string $file) => $this->fakeConfig([])
 		);
 
 		$catalog = $reader->addValues($this->threeSectionCatalog());
 
-		$this->assertSame(['app.conf', 'multipart_id_numbering.conf'], $loaded);
+		$this->assertSame(['app.conf', 'other.conf'], $loaded);
 		$current = [];
 		foreach ($catalog['sections'] as $section) {
 			foreach ($section['settings'] as $setting) {
 				foreach ($setting['entries'] as $entry) { $current[$entry['key']] = $entry['current']; }
 			}
 		}
-		$this->assertSame(['ca_objects_disable' => true, 'ca_places_disable' => false, 'ca_objects_disable_delete' => false, 'formats/ca_objects' => ['x' => '1']], $current);
+		$this->assertSame(['ca_objects_disable' => true, 'ca_places_disable' => false, 'ca_objects_disable_delete' => false, 'ca_objects_enforce_strict_type_hierarchy' => '~'], $current);
 		$this->assertSame('Tipos de dato', $catalog['sections'][0]['name'], 'Conserva los datos del catálogo');
 	}
 	# -------------------------------------------------------
@@ -123,7 +131,7 @@ final class Modulo2ConfigValuesTest extends TestCase {
 		]]];
 	}
 	# -------------------------------------------------------
-	/** Tres secciones: dos de app.conf (la primera con dos entradas) y una de multipart_id_numbering.conf */
+	/** Tres secciones: dos de app.conf (la primera con dos entradas) y una de otro archivo */
 	private function threeSectionCatalog() : array {
 		return ['sections' => [
 			['id' => 'data_types', 'name' => 'Tipos de dato', 'file' => 'app.conf', 'settings' => [['id' => 'disable', 'kind' => 'boolean', 'entries' => [
@@ -133,8 +141,8 @@ final class Modulo2ConfigValuesTest extends TestCase {
 			['id' => 'features', 'name' => 'Funciones', 'file' => 'app.conf', 'settings' => [['id' => 'disable_delete', 'kind' => 'boolean', 'entries' => [
 				['data_type' => 'ca_objects', 'key' => 'ca_objects_disable_delete']
 			]]]],
-			['id' => 'id_formats', 'name' => 'Formatos', 'file' => 'multipart_id_numbering.conf', 'settings' => [['id' => 'formats', 'kind' => 'structured', 'entries' => [
-				['data_type' => 'ca_objects', 'key' => 'formats/ca_objects']
+			['id' => 'hierarchies', 'name' => 'Jerarquías', 'file' => 'other.conf', 'settings' => [['id' => 'enforce_strict_type_hierarchy', 'kind' => 'choice', 'entries' => [
+				['data_type' => 'ca_objects', 'key' => 'ca_objects_enforce_strict_type_hierarchy']
 			]]]]
 		]];
 	}

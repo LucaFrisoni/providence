@@ -1,0 +1,237 @@
+# Traducciones propias de la instalación para sv_SE: los textos del tema ModernUI (diálogo al salir sin
+# guardar y ajustes de las pantallas de Providence). Providence las carga además de app/locale/sv_SE.
+# messages.mo se genera desde este archivo con gettext: msgfmt messages.po -o messages.mo
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Language: sv_SE\n"
+
+msgid "Leave without saving?"
+msgstr "Lämna utan att spara?"
+
+msgid "This form has changes that are not saved. If you leave the page, they are discarded."
+msgstr "Det här formuläret har ändringar som inte är sparade. Om du lämnar sidan förkastas de."
+
+msgid "Keep editing"
+msgstr "Fortsätt redigera"
+
+msgid "Leave without saving"
+msgstr "Lämna utan att spara"
+
+msgid "Type * to see all the records."
+msgstr "Skriv * för att se alla poster."
+
+msgid "The record was added to your watched items."
+msgstr "Posten lades till bland dina bevakade poster."
+
+msgid "The record was removed from your watched items."
+msgstr "Posten togs bort från dina bevakade poster."
+
+msgid "Filter…"
+msgstr "Filtrera…"
+
+# Textos de Providence con datos (%1) que su traducción no tiene
+
+msgid "%1 available to you"
+msgstr "%1 tillgängliga för dig"
+
+msgid "%1 created by users"
+msgstr "%1 skapade av användare"
+
+msgid "%1 created by the public"
+msgstr "%1 skapade av allmänheten"
+
+msgid "%1 %2 are available"
+msgstr "%1 %2 tillgängliga"
+
+msgid "%1 displays are available"
+msgstr "%1 visningar tillgängliga"
+
+msgid "%1 rules are available for editing"
+msgstr "%1 regler kan redigeras"
+
+msgid "%1 forms are available for editing"
+msgstr "%1 formulär kan redigeras"
+
+msgid "%1 elements are defined"
+msgstr "%1 element är definierade"
+
+msgid "%1 user interfaces are defined"
+msgstr "%1 användargränssnitt är definierade"
+
+msgid "%1 teams are available"
+msgstr "%1 team tillgängliga"
+
+msgid "%1 comments need moderation"
+msgstr "%1 kommentarer behöver modereras"
+
+msgid "%1 comments total"
+msgstr "%1 kommentarer totalt"
+
+msgid "%1 moderated comments"
+msgstr "%1 modererade kommentarer"
+
+msgid "%1 taggings need moderation"
+msgstr "%1 taggningar behöver modereras"
+
+msgid "%1 total taggings"
+msgstr "%1 taggningar totalt"
+
+msgid "%1 total unique tags"
+msgstr "%1 unika taggar totalt"
+
+msgid "Lot contains %1 objects"
+msgstr "Partiet innehåller %1 objekt"
+
+msgid "Maximum upload size is %1"
+msgstr "Största uppladdningsstorlek är %1"
+
+msgid "Number of %1 in hierarchy: %2"
+msgstr "Antal i hierarkin (%1): %2"
+
+msgid "Click %1 names to explore. Click on an arrow icon to open a %1 for editing."
+msgstr "Klicka på namnen (%1) för att utforska. Klicka på en pil för att öppna en post (%1) för redigering."
+
+msgid "Use the controls below to create new %1 relative to this record in the hierarchy."
+msgstr "Använd kontrollerna nedan för att skapa nya %1 i förhållande till denna post i hierarkin."
+
+msgid "Use the controls below to create new %1 relative to this %2 in the hierarchy."
+msgstr "Använd kontrollerna nedan för att skapa nya %1 i förhållande till denna post (%2) i hierarkin."
+
+msgid "Create child record under this %1"
+msgstr "Skapa underordnad post under denna post (%1)"
+
+msgid "Change %1 type"
+msgstr "Ändra typ (%1)"
+
+msgid "Your search found no %1"
+msgstr "Sökningen gav inga träffar (%1)"
+
+msgid "Creating new %1"
+msgstr "Skapar: %1"
+
+msgid "Quick add %1"
+msgstr "Snabbtillägg: %1"
+
+msgid "Deaccessioned %1"
+msgstr "Avförda %1"
+
+msgid "%1 public pages"
+msgstr "%1 offentliga sidor"
+
+msgid "A tool for extraction of embedded metadata from audio and video files. See %1 for additional information."
+msgstr "Ett verktyg för att läsa ut inbäddade metadata ur ljud- och videofiler. Mer information finns på %1."
+
+msgid "A tool for extraction of embedded metadata in images, documents and other media. See %1 for additional information."
+msgstr "Ett verktyg för att läsa ut inbäddade metadata ur bilder, dokument och andra medier. Mer information finns på %1."
+
+msgid "LibreOffice cannot be found: conversion to PDF and generation of page previews will not be performed; you can obtain LibreOffice at %1"
+msgstr "LibreOffice hittades inte: ingen konvertering till PDF och inga förhandsvisningar av sidor skapas. Du kan hämta LibreOffice på %1"
+
+msgid "MeshLab cannot be found: you will not be able to process 3D files; you can obtain MeshLab at %1"
+msgstr "MeshLab hittades inte: du kan inte bearbeta 3D-filer. Du kan hämta MeshLab på %1"
+
+msgid "To fully index Chinese-language content the Jieba PHP word segmenter (%1) should be installed."
+msgstr "För att helt indexera kinesiskt innehåll bör ordsegmenteraren Jieba PHP (%1) installeras."
+
+msgid "Try installing Jieba PHP. See See %1"
+msgstr "Försök installera Jieba PHP. Se %1"
+
+msgid "%1 Statistics"
+msgstr "Statistik: %1"
+
+msgid "Show %1"
+msgstr "Visa: %1"
+
+msgid "Your %1"
+msgstr "Dina %1"
+
+msgid "1 %1 is available"
+msgstr "1 %1 tillgänglig"
+
+msgid "%1 page"
+msgstr "%1 sida"
+
+msgid "%1 pages"
+msgstr "%1 sidor"
+
+msgid "%1 public page"
+msgstr "%1 offentlig sida"
+
+msgid "%1 exporters are available"
+msgstr "%1 exportörer tillgängliga"
+
+msgid "Outstanding items: %1"
+msgstr "Utestående objekt: %1"
+
+msgid "Checkout for %1 (%2)"
+msgstr "Utlåning till %1 (%2)"
+
+msgid "Items out (all users): %1"
+msgstr "Utlånade objekt (alla användare): %1"
+
+msgid "%1 importers are available"
+msgstr "%1 importörer tillgängliga"
+
+msgid "%1 rules are defined"
+msgstr "%1 regler definierade"
+
+msgid "%1 mappings are defined"
+msgstr "%1 mappningar definierade"
+
+msgid "%1 saved searches"
+msgstr "%1 sparade sökningar"
+
+msgid "%1 (%2) - submitted on %3 by %4<br/>Status: %5"
+msgstr "%1 (%2) – inskickad %3 av %4<br/>Status: %5"
+
+msgid "%1 by %2"
+msgstr "%1 av %2"
+
+msgid "%1 file"
+msgstr "%1 fil"
+
+msgid "%1 files"
+msgstr "%1 filer"
+
+msgid "%1 stuck"
+msgstr "%1 har fastnat"
+
+msgid "+ %1 additional download"
+msgstr "+ %1 nedladdning till"
+
+msgid "+ %1 additional downloads"
+msgstr "+ %1 nedladdningar till"
+
+msgid "+ %1 more completed job"
+msgstr "+ %1 slutfört jobb till"
+
+msgid "+ %1 more completed jobs"
+msgstr "+ %1 slutförda jobb till"
+
+msgid "+ %1 more queued job"
+msgstr "+ %1 köat jobb till"
+
+msgid "+ %1 more queued jobs"
+msgstr "+ %1 köade jobb till"
+
+msgid "Displaying the last %1 %2 public registrations"
+msgstr "De senaste %1 offentliga registreringarna (%2)"
+
+msgid "Email sent on %1"
+msgstr "E-post skickad %1"
+
+msgid "Jobs completed in the last %1 hours (showing %2 of %3)"
+msgstr "Jobb slutförda de senaste %1 timmarna (%2 av %3)"
+
+msgid "Jobs queued for later processing (showing %1 of %2)"
+msgstr "Jobb i kö för senare bearbetning (%1 av %2)"
+
+msgid "Jobs stuck in the last %1 hours"
+msgstr "Jobb som fastnat de senaste %1 timmarna"
+
+msgid "Jobs stuck in the last %1 hours (showing %2 of %3)"
+msgstr "Jobb som fastnat de senaste %1 timmarna (%2 av %3)"
+
+msgid "Showing recently created %1"
+msgstr "Nyligen skapade %1"

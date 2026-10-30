@@ -1,0 +1,61 @@
+# Corre las pruebas de la extensión (servicio Rust y plugins PHP) en GitHub Actions, con el mismo
+# entorno Docker que se usa para desarrollar. Se ejecuta en cada pull request hacia master_desarrollo
+# (desarrollo) o master (producción) y a mano.
+name: Pruebas de la extensión
+
+on:
+  pull_request:
+    branches: [master_desarrollo, master]
+  workflow_dispatch:
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - name: Descargar el código
+        uses: actions/checkout@v4
+
+      # El .env no está en el repositorio: se arma con el de ejemplo y contraseñas que solo existen en esta corrida
+      - name: Crear el .env
+        run: |
+          cp .env.example .env
+          set_var() { sed -i "s|^$1=.*|$1=$2|" .env; }
+          set_var MYSQL_ROOT_PASSWORD "$(openssl rand -hex 16)"
+          set_var CA_DB_PASSWORD "$(openssl rand -hex 16)"
+          set_var EXT_DB_PASSWORD "$(openssl rand -hex 16)"
+          set_var CA_ADMIN_USERNAME administrator
+          set_var CA_ADMIN_EMAIL ci@example.org
+          set_var CA_ADMIN_PASSWORD "$(openssl rand -hex 16)"
+
+      - name: Levantar el entorno Docker
+        run: docker compose up -d --build
+
+      # Providence se instala al arrancar por primera vez: se espera a que responda la pantalla de ingreso
+      - name: Esperar a Providence
+        run: |
+          for i in $(seq 1 90); do
+            if curl -sf -o /dev/null http://127.0.0.1:8080/index.php/system/auth/login; then exit 0; fi
+            sleep 10
+          done
+          docker compose logs providence | tail -100
+          exit 1
+
+      # Usa la versión de Rust de rust/extension-service/rust-toolchain.toml
+      - name: Preparar Rust
+        run: rustup show active-toolchain
+        working-directory: rust/extension-service
+
+      - name: Pruebas de Rust
+        run: tests/extension/test-rust.sh all
+
+      - name: Pruebas PHP
+        run: tests/extension/test-php.sh all
+
+      - name: Registros del entorno si algo falló
+        if: failure()
+        run: docker compose logs --tail=200
+
+      - name: Apagar el entorno
+        if: always()
+        run: docker compose down -v

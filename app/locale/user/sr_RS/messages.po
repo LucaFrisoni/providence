@@ -1,0 +1,297 @@
+# Traducciones propias de la instalación para sr_RS: los textos del tema ModernUI (diálogo al salir sin
+# guardar y ajustes de las pantallas de Providence). Providence las carga además de app/locale/sr_RS.
+# messages.mo se genera desde este archivo con gettext: msgfmt messages.po -o messages.mo
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Language: sr_RS\n"
+
+msgid "Leave without saving?"
+msgstr "Изаћи без чувања?"
+
+msgid "This form has changes that are not saved. If you leave the page, they are discarded."
+msgstr "Овај образац има несачуване измене. Ако напустите страницу, биће одбачене."
+
+msgid "Keep editing"
+msgstr "Настави уређивање"
+
+msgid "Leave without saving"
+msgstr "Изађи без чувања"
+
+msgid "Type * to see all the records."
+msgstr "Унесите * да видите све записе."
+
+msgid "The record was added to your watched items."
+msgstr "Запис је додат у ставке које пратите."
+
+msgid "The record was removed from your watched items."
+msgstr "Запис је уклоњен из ставки које пратите."
+
+msgid "Filter…"
+msgstr "Филтер…"
+
+# Textos de Providence con datos (%1) que su traducción no tiene
+
+msgid "%1 available to you"
+msgstr "Доступно вама: %1"
+
+msgid "%1 created by users"
+msgstr "Направили корисници: %1"
+
+msgid "%1 created by the public"
+msgstr "Направила јавност: %1"
+
+msgid "%1 %2 are available"
+msgstr "Доступно (%2): %1"
+
+msgid "%1 displays are available"
+msgstr "Доступни прикази: %1"
+
+msgid "%1 rules are available for editing"
+msgstr "Правила доступна за уређивање: %1"
+
+msgid "%1 forms are available for editing"
+msgstr "Обрасци доступни за уређивање: %1"
+
+msgid "%1 elements are defined"
+msgstr "Дефинисани елементи: %1"
+
+msgid "%1 user interfaces are defined"
+msgstr "Дефинисани кориснички интерфејси: %1"
+
+msgid "%1 teams are available"
+msgstr "Доступни тимови: %1"
+
+msgid "%1 comments need moderation"
+msgstr "Коментари који чекају модерацију: %1"
+
+msgid "%1 comments total"
+msgstr "Укупно коментара: %1"
+
+msgid "%1 moderated comments"
+msgstr "Модерирани коментари: %1"
+
+msgid "%1 taggings need moderation"
+msgstr "Означавања која чекају модерацију: %1"
+
+msgid "%1 total taggings"
+msgstr "Укупно означавања: %1"
+
+msgid "%1 total unique tags"
+msgstr "Укупно јединствених ознака: %1"
+
+msgid "Lot contains %1 objects"
+msgstr "Број објеката у лоту: %1"
+
+msgid "Maximum upload size is %1"
+msgstr "Највећа величина отпремања: %1"
+
+msgid "Number of %1 in hierarchy: %2"
+msgstr "Број у хијерархији (%1): %2"
+
+msgid "Click %1 names to explore. Click on an arrow icon to open a %1 for editing."
+msgstr "Кликните на називе (%1) да истражите. Кликните на стрелицу да отворите запис (%1) за уређивање."
+
+msgid "Use the controls below to create new %1 relative to this record in the hierarchy."
+msgstr "Користите контроле испод да направите нове записе (%1) у односу на овај запис у хијерархији."
+
+msgid "Use the controls below to create new %1 relative to this %2 in the hierarchy."
+msgstr "Користите контроле испод да направите нове записе (%1) у односу на овај запис (%2) у хијерархији."
+
+msgid "Create child record under this %1"
+msgstr "Направи подређени запис испод овог записа (%1)"
+
+msgid "Change %1 type"
+msgstr "Промени тип (%1)"
+
+msgid "Your search found no %1"
+msgstr "Претрага није пронашла резултате (%1)"
+
+msgid "Creating new %1"
+msgstr "Прављење: %1"
+
+msgid "Quick add %1"
+msgstr "Брзо додавање: %1"
+
+msgid "Deaccessioned %1"
+msgstr "Искључени из фонда: %1"
+
+msgid "%1 public pages"
+msgstr "Јавне странице: %1"
+
+msgid "A tool for extraction of embedded metadata from audio and video files. See %1 for additional information."
+msgstr "Алат за издвајање уграђених метаподатака из аудио и видео датотека. Више информација: %1."
+
+msgid "A tool for extraction of embedded metadata in images, documents and other media. See %1 for additional information."
+msgstr "Алат за издвајање уграђених метаподатака из слика, докумената и других медија. Више информација: %1."
+
+msgid "LibreOffice cannot be found: conversion to PDF and generation of page previews will not be performed; you can obtain LibreOffice at %1"
+msgstr "LibreOffice није пронађен: конверзија у PDF и прављење прегледа страница неће се обављати. LibreOffice можете преузети са %1"
+
+msgid "MeshLab cannot be found: you will not be able to process 3D files; you can obtain MeshLab at %1"
+msgstr "MeshLab није пронађен: нећете моћи да обрађујете 3D датотеке. MeshLab можете преузети са %1"
+
+msgid "To fully index Chinese-language content the Jieba PHP word segmenter (%1) should be installed."
+msgstr "За потпуно индексирање садржаја на кинеском треба инсталирати сегментатор речи Jieba PHP (%1)."
+
+msgid "Try installing Jieba PHP. See See %1"
+msgstr "Покушајте да инсталирате Jieba PHP. Погледајте %1"
+
+msgid "%1 Statistics"
+msgstr "Статистика: %1"
+
+msgid "Show %1"
+msgstr "Прикажи: %1"
+
+msgid "Your %1"
+msgstr "Ваши: %1"
+
+msgid "1 %1 is available"
+msgstr "Доступно: 1 (%1)"
+
+msgid "%1 page"
+msgstr "Странице: %1"
+
+msgid "%1 pages"
+msgstr "Странице: %1"
+
+msgid "%1 public page"
+msgstr "Јавне странице: %1"
+
+msgid "%1 exporters are available"
+msgstr "Доступни извозници: %1"
+
+msgid "Outstanding items: %1"
+msgstr "Невраћене ставке: %1"
+
+msgid "Checkout for %1 (%2)"
+msgstr "Задужење за %1 (%2)"
+
+msgid "Items out (all users): %1"
+msgstr "Задужене ставке (сви корисници): %1"
+
+msgid "%1 importers are available"
+msgstr "Доступни увозници: %1"
+
+msgid "%1 rules are defined"
+msgstr "Дефинисана правила: %1"
+
+msgid "%1 mappings are defined"
+msgstr "Дефинисана мапирања: %1"
+
+msgid "%1 saved searches"
+msgstr "Сачуване претраге: %1"
+
+msgid "%1 (%2) - submitted on %3 by %4<br/>Status: %5"
+msgstr "%1 (%2) - послао/ла %4, %3<br/>Статус: %5"
+
+msgid "%1 by %2"
+msgstr "%1 – %2"
+
+msgid "%1 completed"
+msgstr "Завршено: %1"
+
+msgid "%1 file"
+msgstr "Датотеке: %1"
+
+msgid "%1 files"
+msgstr "Датотеке: %1"
+
+msgid "%1 queued"
+msgstr "У реду чекања: %1"
+
+msgid "%1 running"
+msgstr "У току: %1"
+
+msgid "%1 stuck"
+msgstr "Заглављено: %1"
+
+msgid "%1 tagged %2 with \"%3\""
+msgstr "%1 је означио/ла %2 ознаком „%3”"
+
+msgid "+ %1 additional download"
+msgstr "+ још преузимања: %1"
+
+msgid "+ %1 additional downloads"
+msgstr "+ још преузимања: %1"
+
+msgid "+ %1 more completed job"
+msgstr "+ још завршених послова: %1"
+
+msgid "+ %1 more completed jobs"
+msgstr "+ још завршених послова: %1"
+
+msgid "+ %1 more queued job"
+msgstr "+ још послова у реду чекања: %1"
+
+msgid "+ %1 more queued jobs"
+msgstr "+ још послова у реду чекања: %1"
+
+msgid "Added %1 to '%2'"
+msgstr "Додато %1 у „%2”"
+
+msgid "Changes to <strong>%1</strong> from %2"
+msgstr "Измене у <strong>%1</strong> од %2"
+
+msgid "Deleted %1"
+msgstr "Обрисано: %1"
+
+msgid "Displaying the last %1 %2 comments"
+msgstr "Последњи коментари: %1 (%2)"
+
+msgid "Displaying the last %1 %2 public registrations"
+msgstr "Последње јавне регистрације: %1 (%2)"
+
+msgid "Displaying the last %1 %2 tags"
+msgstr "Последње ознаке: %1 (%2)"
+
+msgid "Email sent on %1"
+msgstr "Е-порука послата %1"
+
+msgid "Item was deleted - row_id: %1; table number: %2"
+msgstr "Ставка је обрисана – row_id: %1; број табеле: %2"
+
+msgid "Jobs completed in the last %1 hours"
+msgstr "Послови завршени у последњих %1 сати"
+
+msgid "Jobs completed in the last %1 hours (showing %2 of %3)"
+msgstr "Послови завршени у последњих %1 сати (%2 од %3)"
+
+msgid "Jobs queued for later processing (showing %1 of %2)"
+msgstr "Послови у реду чекања за каснију обраду (%1 од %2)"
+
+msgid "Jobs stuck in the last %1 hours"
+msgstr "Послови заглављени у последњих %1 сати"
+
+msgid "Jobs stuck in the last %1 hours (showing %2 of %3)"
+msgstr "Послови заглављени у последњих %1 сати (%2 од %3)"
+
+msgid "Showing %1 <span style='font-weight:bold; text-transform:lowercase;'>%2</span> with status <span style='font-weight:bold; text-transform:lowercase;'>\"%3\"</span>"
+msgstr "%1 <span style='font-weight:bold; text-transform:lowercase;'>%2</span> са статусом <span style='font-weight:bold; text-transform:lowercase;'>„%3”</span>"
+
+msgid "Showing recently created %1"
+msgstr "Недавно направљено: %1"
+
+msgid "Showing the last %1 <span style='font-weight:bold; text-transform:lowercase;'>%2</span> created"
+msgstr "Последњих %1 направљених <span style='font-weight:bold; text-transform:lowercase;'>%2</span>"
+
+msgid "There are no %1 comments"
+msgstr "Нема коментара (%1)"
+
+msgid "There are no %1 tags."
+msgstr "Нема ознака (%1)."
+
+msgid "There are no running jobs, queued jobs or jobs completed in the last %1 hours."
+msgstr "Нема послова у току, у реду чекања нити завршених у последњих %1 сати."
+
+msgid "There have been no changes to <strong>%1</strong> from %2."
+msgstr "Није било измена у <strong>%1</strong> од %2."
+
+msgid "Unknown change type '%1'"
+msgstr "Непознат тип измене „%1”"
+
+msgid "Updated %1 to '%2'"
+msgstr "%1 ажурирано на „%2”"
+
+msgid "Updated at %1"
+msgstr "Ажурирано %1"

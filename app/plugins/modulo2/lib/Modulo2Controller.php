@@ -1,7 +1,7 @@
 <?php
 /* ----------------------------------------------------------------------
  * app/plugins/modulo2/lib/Modulo2Controller.php :
- * Base de los controladores de configuraciones, versiones e historial: permisos, CSRF y servicios.
+ * Base de los controladores del módulo: permisos, CSRF, servicios y el rastro de navegación.
  * ----------------------------------------------------------------------
  */
 require_once(__DIR__.'/Modulo2Constants.php');
@@ -9,12 +9,16 @@ require_once(__DIR__.'/Modulo2ServiceClient.php');
 require_once(__DIR__.'/Modulo2Operator.php');
 require_once(__DIR__.'/Modulo2LocalConfig.php');
 require_once(__DIR__.'/Modulo2State.php');
+require_once(__DIR__.'/Modulo2Breadcrumbs.php');
+require_once(__DIR__.'/Modulo2Ui.php');
 
 abstract class Modulo2Controller extends ActionController {
 	# -------------------------------------------------------
 	protected $config;
 	/** Si esta petición pidió rearmar el menú (entonces se rearma en la siguiente) */
 	private static bool $menu_flag_set_now = false;
+	/** Nombre de la página dentro de su sección, para el rastro de navegación (null en la principal) */
+	protected ?string $breadcrumb_page = null;
 	# -------------------------------------------------------
 	public function __construct(&$request, &$response, $view_paths=null) {
 		if (!is_array($view_paths)) { $view_paths = []; }
@@ -25,6 +29,15 @@ abstract class Modulo2Controller extends ActionController {
 
 		if (!$this->request->user->canDoAction(Modulo2Constants::PERMISSION)) { $this->denyAccess(); }
 		$this->refreshMenuIfPending();
+	}
+	# -------------------------------------------------------
+	/** Como el de Providence, con el rastro de navegación delante de la página si el usuario lo pidió */
+	public function &render($view, $dont_add_content = false, $dont_replace_tags = false) {
+		if (!$dont_add_content && Modulo2Breadcrumbs::enabled($this->request->user)) {
+			$trail = Modulo2Breadcrumbs::trail($this->request->getController(), $this->breadcrumb_page, fn($controller, $action) => $this->navUrl($controller, $action));
+			$this->response->addContent(Modulo2Ui::breadcrumbs($trail), 'view');
+		}
+		return parent::render($view, $dont_add_content, $dont_replace_tags);
 	}
 	# -------------------------------------------------------
 	/**
@@ -62,10 +75,27 @@ abstract class Modulo2Controller extends ActionController {
 	protected function validChange(array $back) : bool {
 		$valid = $this->request->getRequestMethod() === 'POST' && caValidateCSRFToken($this->request, null, ['notifications' => $this->notification]);
 		if (!$valid) {
-			$this->notify(_t('La operación no se aplicó: el formulario venció o no es válido. Volver a intentarlo.'), true);
+			$this->notify(Modulo2I18n::t('Nothing was changed: the form expired or is not valid. Please try again.'), true);
 			$this->redirectTo(...$back);
 		}
 		return $valid;
+	}
+	# -------------------------------------------------------
+	/** Nombre y nota de la versión que se guarda con los cambios (version_name, version_note) */
+	protected function versionFromForm() : array {
+		$name = mb_substr(trim($this->rawParameter('version_name')), 0, 255) ?: $this->operator()->versionName();
+		$note = trim($this->rawParameter('version_note'));
+		return ['name' => $name, 'description' => strlen($note) ? $note : null];
+	}
+	# -------------------------------------------------------
+	/**
+	 * Versión del estado anterior que el usuario pidió guardar (casilla save_previous y nombre
+	 * previous_name), o null si no la pidió
+	 */
+	protected function previousVersionFromForm() : ?array {
+		if ($this->rawParameter('save_previous') !== '1') { return null; }
+		$name = mb_substr(trim($this->rawParameter('previous_name')), 0, 255);
+		return ['name' => $name !== '' ? $name : $this->operator()->previousVersionName(), 'description' => null];
 	}
 	# -------------------------------------------------------
 	protected function operator() : Modulo2Operator {
@@ -105,7 +135,8 @@ abstract class Modulo2Controller extends ActionController {
 		$names = [];
 		foreach ($data_types as $data_type) {
 			$instance = Datamodel::getInstance($data_type, true);
-			$names[$data_type] = $instance ? (string)$instance->getProperty('NAME_PLURAL') : $data_type;
+			// Se traduce de nuevo: si Providence cargó el modelo antes de elegir el idioma, el nombre quedó en inglés
+			$names[$data_type] = $instance ? _t((string)$instance->getProperty('NAME_PLURAL')) : $data_type;
 		}
 		return $names;
 	}

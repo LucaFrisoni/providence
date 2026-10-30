@@ -9,6 +9,7 @@
  */
 require_once(__CA_APP_DIR__.'/plugins/modulo2/lib/Modulo2State.php');
 require_once(__CA_APP_DIR__.'/plugins/modulo2/lib/Modulo2ServiceClient.php');
+require_once(__CA_APP_DIR__.'/plugins/modulo2/lib/Modulo2SettingsDiff.php');
 require_once(__CA_MODELS_DIR__.'/ca_user_roles.php');
 
 use PHPUnit\Framework\Attributes\TestDox;
@@ -78,13 +79,75 @@ final class Modulo2VersioningIntegrationTest extends TestCase {
 		$client = Modulo2ServiceClient::fromConfig($config);
 
 		$info = $client->getStateInfo(Modulo2State::fromConfig($config)->current());
-		$versions = $client->getVersions();
+		$versions = $client->getVersions(Modulo2Constants::VERSIONS_PAGE_SIZE)['versions'];
 
 		$this->assertArrayHasKey('version', $info);
 		$ids = array_column($versions, 'id');
 		$sorted = $ids;
 		rsort($sorted);
 		$this->assertSame($sorted, $ids);
+	}
+	# -------------------------------------------------------
+	// Exportar la configuración en base tarda segundos: se reutiliza mientras sus tablas no cambien
+	#[TestDox('La exportación de la base se reutiliza mientras no cambie, y se rehace cuando cambia una lista')]
+	public function testDatabaseExportIsReusedUntilItChanges() : void {
+		$first = Modulo2State::exportDatabase();
+		$fingerprint = Modulo2State::databaseFingerprint();
+		$this->assertSame($first, Modulo2State::exportDatabase());
+
+		$list = new ca_lists();
+		$list->load(['list_code' => 'object_types']);
+		$list->setMode(ACCESS_WRITE);
+		$item = $list->addItem('m2test_cache', true, false, null, null, 'm2test_cache');
+		try {
+			$item->addLabel(['name_singular' => 'M2 cache', 'name_plural' => 'M2 cache'], ca_locales::codeToID('en_US'), null, true);
+			$this->assertNotSame($fingerprint, Modulo2State::databaseFingerprint());
+			$this->assertStringContainsString('m2test_cache', Modulo2State::exportDatabase());
+		} finally {
+			$item->setMode(ACCESS_WRITE);
+			$item->delete(true, ['hard' => true]);
+		}
+	}
+	# -------------------------------------------------------
+	// "View changes" compara una versión con la anterior: al borrar la del medio, la siguiente pasa a
+	// compararse con la de antes y toma su número, así lo que muestra sigue siendo correcto
+	#[TestDox('Al borrar una versión, la siguiente toma su número y "Ver cambios" la compara con la anterior a la borrada')]
+	public function testChangesAfterDeletingTheVersionBefore() : void {
+		$client = Modulo2ServiceClient::fromConfig(Configuration::load(Modulo2Constants::CONF_FILE));
+		$user = ['id' => 999001, 'name' => 'm2-test-'.bin2hex(random_bytes(3))];
+		$state = fn(string $mode) => ['files' => ['app.conf' => "# {$user['name']}
+ca_objects_children_display_mode_in_results = {$mode}
+"], 'database' => null];
+		$elsewhere = $state('alwaysShow');
+		[$first, $middle, $last] = array_map(fn($mode) => $client->createVersion($user, ['name' => $mode, 'description' => null], $state($mode)), ['show', 'hide', 'alwaysHide']);
+		try {
+			$client->deleteVersion($middle['id'], $user, $elsewhere);
+			$detail = $client->getVersion($last['id']);
+			$this->assertSame([$first['id'], $middle['number']], [$detail['version']['parent_id'], $detail['version']['number']]);
+
+			$parent = $client->getVersion($detail['version']['parent_id']);
+			$changes = (new Modulo2SettingsDiff($client->getCatalog()))->changes($parent['files'], $detail['files']);
+			$this->assertSame([['ca_objects_children_display_mode_in_results', 'alwaysShow', 'alwaysHide']], array_map(fn($c) => [$c['entry']['key'], $c['before'], $c['after']], $changes));
+		} finally {
+			foreach ([$last, $first] as $version) { $client->deleteVersion($version['id'], $user, $elsewhere); }
+		}
+	}
+	# -------------------------------------------------------
+	#[TestDox('El servicio no deja borrar la versión de la configuración actual')]
+	public function testCurrentVersionCannotBeDeleted() : void {
+		$client = Modulo2ServiceClient::fromConfig(Configuration::load(Modulo2Constants::CONF_FILE));
+		$user = ['id' => 999001, 'name' => 'm2-test-'.bin2hex(random_bytes(3))];
+		$current = ['files' => ['app.conf' => "# {$user['name']}
+"], 'database' => null];
+		$version = $client->createVersion($user, ['name' => 'actual', 'description' => null], $current);
+		try {
+			$client->deleteVersion($version['id'], $user, $current);
+			$this->fail('Se esperaba el rechazo');
+		} catch (Modulo2ServiceException $e) {
+			$this->assertSame(409, $e->getStatus());
+		} finally {
+			$client->deleteVersion($version['id'], $user, ['files' => [], 'database' => '<otro/>']);
+		}
 	}
 	# -------------------------------------------------------
 }

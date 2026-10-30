@@ -7,7 +7,8 @@
  */
 require_once(__CA_APP_DIR__.'/plugins/modulo2/lib/Modulo2CatalogMatrix.php');
 require_once(__CA_APP_DIR__.'/plugins/modulo2/lib/Modulo2ValueFormatter.php');
-require_once(__CA_APP_DIR__.'/plugins/modulo2/lib/Modulo2DatabaseConfiguration.php');
+require_once(__CA_APP_DIR__.'/plugins/modulo2/lib/Modulo2EditorData.php');
+require_once(__CA_APP_DIR__.'/plugins/modulo2/lib/Modulo2Ui.php');
 
 use PHPUnit\Framework\Attributes\TestDox;
 use PHPUnit\Framework\TestCase;
@@ -22,43 +23,41 @@ final class Modulo2ConfigurationsViewTest extends TestCase {
 	public function testSectionsAreGroupedByScope() : void {
 		$html = $this->render(self::INDEX_VIEW, ['catalog' => $this->catalog()]);
 
-		$by_type = strpos($html, _t('Por tipo de dato'));
-		$global = strpos($html, _t('De toda la instalación'));
+		$by_type = strpos($html, _t('By data type'));
+		$global = strpos($html, _t('Whole installation'));
 		$this->assertNotFalse($by_type);
 		$this->assertLessThan(strpos($html, 'id="m2-section-features"'), $by_type);
-		$this->assertLessThan(strpos($html, 'id="m2-section-visual_identity"'), $global);
-		$this->assertStringNotContainsString('multipart_id_numbering.conf', $html, 'El archivo es un detalle técnico');
+		$this->assertLessThan(strpos($html, 'id="m2-section-reports"'), $global);
+		$this->assertStringNotContainsString('other.conf', $html, 'El archivo es un detalle técnico');
 	}
 	# -------------------------------------------------------
 	// Se ve todo al entrar; la barra lateral abre los grupos según las secciones abiertas (data-m2-scope)
 	#[TestDox('Al cargar la página todas las secciones están desplegadas y marcadas con su grupo')]
 	public function testSectionsStartExpanded() : void {
-		$html = $this->render(self::INDEX_VIEW, ['catalog' => $this->catalog(), 'database_summary' => []]);
+		$html = $this->render(self::INDEX_VIEW, ['catalog' => $this->catalog()]);
 
-		$this->assertSame(4, preg_match_all('/<details class="m2-section" open /', $html));
+		$this->assertSame(3, preg_match_all('/<details class="m2-section" open /', $html));
 		$this->assertStringContainsString('id="m2-section-features" data-modified="1" data-m2-scope="data_type"', $html);
-		$this->assertStringContainsString('id="m2-section-visual_identity" data-modified="0" data-m2-scope="global"', $html);
-		$this->assertStringContainsString('data-m2-scope="database"', $html);
+		$this->assertStringContainsString('id="m2-section-reports" data-modified="0" data-m2-scope="global"', $html);
+		$this->assertStringNotContainsString('data-m2-scope="database"', $html, 'La configuración en la base está en el panel de gestión');
 	}
 	# -------------------------------------------------------
 	#[TestDox('Una configuración invertida en 0 se ve activa (✓), y un valor modificado, resaltado con su valor original')]
 	public function testInvertedAndModifiedValues() : void {
 		$html = $this->render(self::INDEX_VIEW, ['catalog' => $this->catalog()]);
 
-		$this->assertStringContainsString('<span class="m2-bool m2-on">✓ '._t('Sí').'</span>', $html);
-		$this->assertStringContainsString('class="m2-value m2-modified" title="'._t('Valor original: %1', _t('Sí')).'"', $html);
+		$this->assertStringContainsString('<span class="m2-bool m2-on">✓ '._t('Yes').'</span>', $html);
+		$this->assertStringContainsString('class="m2-value m2-modified" title="'._t('Providence default: %1', _t('Yes')).'"', $html);
 		$this->assertStringNotContainsString('title="ca_places_disable_delete', $html, 'Sin claves de Providence a la vista');
 		$this->assertStringContainsString('<tr class="m2-row m2-row-modified">', $html);
 		$this->assertStringContainsString('data-modified="1"', $html);
 	}
 	# -------------------------------------------------------
-	#[TestDox('Muestra las estructuras plegadas con su contenido, los órdenes como lista y los colores con muestra')]
-	public function testStructuresOrdersAndColors() : void {
+	#[TestDox('Una opción muestra su etiqueta, no su valor')]
+	public function testChoiceShowsItsLabel() : void {
 		$html = $this->render(self::INDEX_VIEW, ['catalog' => $this->catalog()]);
 
-		$this->assertStringContainsString('<details class="m2-structured"><summary>'._t('1 elemento').'</summary><pre>__default__ = {', $html);
-		$this->assertStringContainsString('<ol class="m2-order"><li>objects</li><li>places</li></ol>', $html);
-		$this->assertStringContainsString('<span class="m2-swatch" style="background:#ff0000"></span>#ff0000', $html);
+		$this->assertStringContainsString('<td class="m2-value">Parcial</td>', $html);
 	}
 	# -------------------------------------------------------
 	#[TestDox('Escapa los textos del catálogo y de los valores')]
@@ -72,32 +71,66 @@ final class Modulo2ConfigurationsViewTest extends TestCase {
 		$this->assertStringContainsString('&lt;script&gt;alert(1)&lt;/script&gt;', $html);
 	}
 	# -------------------------------------------------------
-	#[TestDox('Muestra el resumen de la base con la cantidad y el enlace de cada elemento')]
-	public function testDatabaseSummary() : void {
-		$summary = ['lists' => ['label' => 'Listas', 'count' => 7, 'url' => '/index.php/administrate/setup/Lists/Index']];
+	# -------------------------------------------------------
+	// Solo se edita lo que el usuario puede cambiar: editable y con permiso para su nivel de riesgo
+	#[TestDox('Los valores editables cuyo riesgo el usuario puede editar se cambian en el lugar; los demás son solo texto')]
+	public function testEditableValuesAreEditedInPlace() : void {
+		$catalog = $this->editableCatalog();
 
-		$html = $this->render(self::INDEX_VIEW, ['catalog' => $this->catalog(), 'database_summary' => $summary]);
+		$low_only = $this->render(self::INDEX_VIEW, $this->editorVars($catalog, ['low']));
+		$read_only = $this->render(self::INDEX_VIEW, $this->editorVars($catalog, []));
 
-		$this->assertMatchesRegularExpression('!<td>Listas</td>\s*<td class="m2-value">7</td>\s*<td><a href="/index.php/administrate/setup/Lists/Index">!', $html);
+		$this->assertStringContainsString('data-m2-entry="app.conf|ca_places_disable_delete"><button type="button" class="m2-edit">', $low_only);
+		$this->assertStringNotContainsString('data-m2-entry="app.conf|report_header_enabled"', $low_only, 'Riesgo medio sin permiso');
+		$this->assertStringNotContainsString('data-m2-entry="other.conf', $low_only, 'No editable');
+		$this->assertStringNotContainsString('class="m2-edit"', $read_only);
+		$this->assertStringNotContainsString('id="m2-save-form"', $read_only, 'Sin nada para editar no hay guardado');
+		$this->assertStringContainsString(_t('You are not allowed to change settings: you can only view them.'), $read_only);
 	}
 	# -------------------------------------------------------
-	// Solo se enlaza lo que el usuario puede cambiar: editable y con permiso para su nivel de riesgo
-	#[TestDox('Enlaza al formulario los valores editables cuyo riesgo el usuario puede editar')]
-	public function testEditableValuesLinkToTheirForm() : void {
-		$catalog = $this->catalog();
-		$catalog['sections'][0]['settings'][0]['editable'] = true;
-		$catalog['sections'][2]['settings'][0] += ['editable' => true];
-		$catalog['sections'][2]['settings'][0]['risk'] = 'medium';
-		$vars = ['catalog' => $catalog, 'edit_url' => fn($file, $key) => "/edit/{$file}/{$key}"];
+	// Los cambios no se aplican de a uno: un solo formulario los envía todos, con la versión nueva
+	#[TestDox('La página tiene un solo formulario que guarda todos los cambios juntos, con el nombre de la versión nueva')]
+	public function testOneFormSavesAllTheChanges() : void {
+		$html = $this->render(self::INDEX_VIEW, $this->editorVars($this->editableCatalog(), ['low']));
 
-		$low_only = $this->render(self::INDEX_VIEW, $vars + ['allowed_risks' => ['low']]);
-		$read_only = $this->render(self::INDEX_VIEW, $vars + ['allowed_risks' => []]);
+		$this->assertSame(1, substr_count($html, '<form method="post"'));
+		$this->assertStringContainsString('<form method="post" action="/save" id="m2-save-form">', $html);
+		$this->assertStringContainsString('name="version_name" maxlength="255" value="Version of 22/10/2026 10:00"', $html);
+		$this->assertStringContainsString('<input type="hidden" name="changes" id="m2-changes"/>', $html);
+		$this->assertStringContainsString('name="csrfToken" value="token"', $html);
+	}
+	# -------------------------------------------------------
+	// Saber si la configuración actual está en una versión exporta la base (segundos): la página no lo
+	// calcula al abrirse, lo pide al editar. Hasta tener la respuesta, la opción no se envía con el guardado
+	#[TestDox('La opción de conservar la configuración actual arranca oculta y sin enviarse, y se consulta al servidor; los pendientes no se guardan en el navegador')]
+	public function testSaveAsksWhetherToKeepTheCurrentConfiguration() : void {
+		$html = $this->render(self::INDEX_VIEW, $this->editorVars($this->editableCatalog(), ['low']) + ['state_url' => '/estado']);
 
-		$this->assertStringContainsString('<a class="m2-edit" href="/edit/app.conf/ca_places_disable_delete">', $low_only);
-		$this->assertStringNotContainsString('/edit/app.conf/menu_color', $low_only, 'Riesgo medio sin permiso');
-		$this->assertStringNotContainsString('/edit/multipart_id_numbering.conf', $low_only, 'No editable');
-		$this->assertStringNotContainsString('class="m2-edit"', $read_only);
-		$this->assertStringContainsString(_t('No tiene permiso para cambiar configuraciones: solo puede consultarlas.'), $read_only);
+		$this->assertStringContainsString('<div class="m2-previous" id="m2-previous" hidden data-m2-url="/estado">', $html);
+		$this->assertStringContainsString('name="save_previous" value="1" checked disabled', $html);
+		$this->assertMatchesRegularExpression('/name="previous_name"[^>]* disabled /', $html);
+		$this->assertStringNotContainsString('sessionStorage.setItem(\'modulo2-cambios', $html);
+	}
+	# -------------------------------------------------------
+	// Los datos van como JSON dentro de la página: un texto del catálogo no puede cerrar el <script>
+	#[TestDox('Los datos del editor van como JSON sin poder cerrar el script de la página')]
+	public function testEditorDataCannotBreakTheScript() : void {
+		$catalog = $this->editableCatalog();
+		$catalog['sections'][0]['settings'][0]['description'] = '</script><script>alert(1)</script>';
+
+		$html = $this->render(self::INDEX_VIEW, $this->editorVars($catalog, ['low']));
+
+		$this->assertStringNotContainsString('</script><script>alert(1)', $html);
+		$this->assertStringContainsString('\u003Cscript\u003Ealert(1)', $html);
+	}
+	# -------------------------------------------------------
+	#[TestDox('Desplegar y plegar todo son botones debajo de la barra de herramientas')]
+	public function testExpandAndCollapseAreButtons() : void {
+		$html = $this->render(self::INDEX_VIEW, ['catalog' => $this->catalog()]);
+
+		$this->assertStringContainsString('<button type="button" class="m2-btn m2-btn-small" data-m2-open="1">', $html);
+		$this->assertStringContainsString('<button type="button" class="m2-btn m2-btn-small" data-m2-open="0">', $html);
+		$this->assertLessThan(strpos($html, 'data-m2-open="1"'), strpos($html, 'class="m2-toolbar"'));
 	}
 	# -------------------------------------------------------
 	#[TestDox('Con un error muestra solo el mensaje, sin secciones')]
@@ -112,10 +145,53 @@ final class Modulo2ConfigurationsViewTest extends TestCase {
 	public function testSidebarGroupsSectionsByScope() : void {
 		$html = $this->render(self::INFO_VIEW, ['catalog' => $this->catalog()]);
 
-		$this->assertLessThan(strpos($html, _t('De toda la instalación')), strpos($html, 'href="#m2-section-features"'));
-		$this->assertGreaterThan(strpos($html, _t('De toda la instalación')), strpos($html, 'href="#m2-section-visual_identity"'));
+		$this->assertLessThan(strpos($html, _t('Whole installation')), strpos($html, 'href="#m2-section-features"'));
+		$this->assertGreaterThan(strpos($html, _t('Whole installation')), strpos($html, 'href="#m2-section-reports"'));
 		$this->assertStringContainsString(_t('Funciones').'<span class="m2-count">1</span>', $html);
-		$this->assertStringContainsString('href="#m2-section-database"', $html);
+	}
+	# -------------------------------------------------------
+	// El campo de baja de las pantallas de edición se cambia con un botón que se aplica al instante
+	#[TestDox('En "Bajas" muestra si cada tipo de dato tiene el campo de baja en su editor, y solo con permiso ofrece cambiarlo')]
+	public function testDeaccessionFieldInTheDeaccessionSection() : void {
+		$catalog = $this->catalog();
+		$catalog['sections'][] = ['id' => 'deaccession', 'name' => 'Bajas', 'description' => 'Bajas', 'file' => 'app.conf', 'scope' => 'global', 'settings' => []];
+		$vars = ['catalog' => $catalog, 'deaccession_field' => ['ca_objects' => true, 'ca_collections' => false], 'deaccession_field_url' => '/campo', 'csrf_token' => 'token'];
+
+		$editable = $this->render(self::INDEX_VIEW, $vars + ['can_edit_deaccession_field' => true]);
+		$this->assertMatchesRegularExpression('!<td>Ca_objects</td>\s*<td class="m2-value"><span class="m2-bool m2-on">!', $editable);
+		$this->assertStringContainsString('<input type="hidden" name="table" value="ca_collections"/>', $editable);
+		$this->assertStringContainsString('<input type="hidden" name="show" value="0"/>', $editable, 'El que se muestra ofrece ocultarlo');
+		$this->assertStringContainsString('<input type="hidden" name="show" value="1"/>', $editable, 'El que no se muestra ofrece mostrarlo');
+
+		$read_only = $this->render(self::INDEX_VIEW, $vars + ['can_edit_deaccession_field' => false]);
+		$this->assertStringContainsString(_t('Deaccession from the editor'), $read_only);
+		$this->assertStringNotContainsString('action="/campo"', $read_only);
+	}
+	# -------------------------------------------------------
+	#[TestDox('La barra lateral tiene tres partes: las configuraciones, las versiones y el historial, con sus enlaces')]
+	public function testSidebarHasSettingsVersionsAndHistory() : void {
+		$html = $this->render(self::INFO_VIEW, ['catalog' => $this->catalog(), 'versions_url' => '/versiones', 'history_url' => '/historial']);
+
+		$settings = strpos($html, '<div class="m2-division">'._t('Settings'));
+		$versions = strpos($html, '<div class="m2-division">'._t('Versions'));
+		$history = strpos($html, '<div class="m2-division">'._t('History'));
+		$this->assertTrue($settings < strpos($html, 'href="#m2-section-features"') && strpos($html, 'href="#m2-section-reports"') < $versions && $versions < $history);
+		$this->assertStringContainsString('<a href="/versiones">'._t('Configuration versions').'</a>', $html);
+		$this->assertStringContainsString('<a href="/historial">'._t('Change history').'</a>', $html);
+	}
+	# -------------------------------------------------------
+	// La misma barra lateral está en las versiones y el historial: ahí las secciones llevan a la página de configuraciones
+	#[TestDox('Fuera de la página de configuraciones, las secciones de la barra lateral llevan a esa página y se marca la página actual')]
+	public function testSidebarOnVersionsAndHistoryPages() : void {
+		$vars = ['catalog' => $this->catalog(), 'versions_url' => '/versiones', 'history_url' => '/historial', 'sections_url' => '/configuraciones'];
+
+		$versions = $this->render(self::INFO_VIEW, $vars + ['current_page' => 'Versions']);
+		$this->assertStringContainsString('href="/configuraciones#m2-section-features"', $versions);
+		$this->assertStringContainsString('<li class="m2-current"><a href="/versiones">', $versions);
+		$this->assertStringContainsString('<li><a href="/historial">', $versions);
+
+		$history = $this->render(self::INFO_VIEW, $vars + ['current_page' => 'Changes']);
+		$this->assertStringContainsString('<li class="m2-current"><a href="/historial">', $history);
 	}
 	# -------------------------------------------------------
 	#[TestDox('El buscador de la barra lateral busca en el nombre de la sección, de sus configuraciones y en sus claves')]
@@ -131,7 +207,7 @@ final class Modulo2ConfigurationsViewTest extends TestCase {
 	public function testSidebarGroupsStartCollapsed() : void {
 		$html = $this->render(self::INFO_VIEW, ['catalog' => $this->catalog()]);
 
-		$this->assertSame(3, preg_match_all('/<ul class="arrow" id="m2-group-/', $html));
+		$this->assertSame(2, preg_match_all('/<ul class="arrow" id="m2-group-/', $html));
 		$this->assertStringNotContainsString('arrow selected', $html);
 	}
 	# -------------------------------------------------------
@@ -145,6 +221,22 @@ final class Modulo2ConfigurationsViewTest extends TestCase {
 		};
 		$include = function(string $path) { ob_start(); include $path; return ob_get_clean(); };
 		return Closure::bind($include, $context, get_class($context))($view);
+	}
+	# -------------------------------------------------------
+	/** Catálogo de prueba con una configuración editable de riesgo bajo y otra de riesgo medio */
+	private function editableCatalog() : array {
+		$catalog = $this->catalog();
+		$catalog['sections'][0]['settings'][0]['editable'] = true;
+		$catalog['sections'][2]['settings'][0] += ['editable' => true];
+		$catalog['sections'][2]['settings'][0]['risk'] = 'medium';
+		return $catalog;
+	}
+	# -------------------------------------------------------
+	/** Variables de la página con los datos del editor para esos riesgos */
+	private function editorVars(array $catalog, array $risks) : array {
+		$editor = (new Modulo2EditorData($catalog, $risks, ['ca_objects' => 'objects', 'ca_places' => 'places'], fn($type) => [], fn($file) => []))->build();
+		return ['catalog' => $catalog, 'allowed_risks' => $risks, 'editor' => $editor, 'save_url' => '/save', 'csrf_token' => 'token',
+			'suggested_version_name' => 'Version of 22/10/2026 10:00'];
 	}
 	# -------------------------------------------------------
 	/** Entrada con sus valores ya leídos */
@@ -166,12 +258,12 @@ final class Modulo2ConfigurationsViewTest extends TestCase {
 					$this->entry('ca_places_disable_delete', true, false, 'ca_places')
 				], true)
 			]],
-			['id' => 'id_formats', 'name' => 'Formatos', 'description' => 'Formatos', 'file' => 'multipart_id_numbering.conf', 'scope' => 'data_type', 'settings' => [
-				$this->setting('formats', 'structured', [$this->entry('formats/ca_objects', ['__default__' => ['separator' => '.']], ['__default__' => ['separator' => '.']], 'ca_objects')])
+			['id' => 'hierarchies', 'name' => 'Jerarquías', 'description' => 'Jerarquías', 'file' => 'other.conf', 'scope' => 'data_type', 'settings' => [
+				['options' => [['value' => '0', 'label' => 'Sin restricción'], ['value' => '~', 'label' => 'Parcial']]]
+					+ $this->setting('enforce_strict_type_hierarchy', 'choice', [$this->entry('ca_objects_enforce_strict_type_hierarchy', '~', '~', 'ca_objects')])
 			]],
-			['id' => 'visual_identity', 'name' => 'Identidad visual', 'description' => 'Colores', 'file' => 'app.conf', 'scope' => 'global', 'settings' => [
-				$this->setting('menu_color', 'color', [$this->entry('menu_color', 'ff0000', 'ff0000')]),
-				$this->setting('navigation/New/navigation', 'key_order', [$this->entry('navigation/New/navigation', ['objects', 'places'], ['objects', 'places'])])
+			['id' => 'reports', 'name' => 'Informes', 'description' => 'Informes', 'file' => 'app.conf', 'scope' => 'global', 'settings' => [
+				$this->setting('report_header_enabled', 'boolean', [$this->entry('report_header_enabled', false, false)])
 			]]
 		]];
 	}
