@@ -181,3 +181,117 @@ msgstr "Дефинисана мапирања: %1"
 
 msgid "%1 saved searches"
 msgstr "Сачуване претраге: %1"
+
+msgid "%1 (%2) - submitted on %3 by %4<br/>Status: %5"
+msgstr "%1 (%2) - послао/ла %4, %3<br/>Статус: %5"
+
+msgid "%1 by %2"
+msgstr "%1 – %2"
+
+msgid "%1 completed"
+msgstr "Завршено: %1"
+
+msgid "%1 file"
+msgstr "Датотеке: %1"
+
+msgid "%1 files"
+msgstr "Датотеке: %1"
+
+msgid "%1 queued"
+msgstr "У реду чекања: %1"
+
+msgid "%1 running"
+msgstr "У току: %1"
+
+msgid "%1 stuck"
+msgstr "Заглављено: %1"
+
+msgid "%1 tagged %2 with \"%3\""
+msgstr "%1 је означио/ла %2 ознаком „%3”"
+
+msgid "+ %1 additional download"
+msgstr "+ још преузимања: %1"
+
+msgid "+ %1 additional downloads"
+msgstr "+ још преузимања: %1"
+
+msgid "+ %1 more completed job"
+msgstr "+ још завршених послова: %1"
+
+msgid "+ %1 more completed jobs"
+msgstr "+ још завршених послова: %1"
+
+msgid "+ %1 more queued job"
+msgstr "+ још послова у реду чекања: %1"
+
+msgid "+ %1 more queued jobs"
+msgstr "+ још послова у реду чекања: %1"
+
+msgid "Added %1 to '%2'"
+msgstr "Додато %1 у „%2”"
+
+msgid "Changes to <strong>%1</strong> from %2"
+msgstr "Измене у <strong>%1</strong> од %2"
+
+msgid "Deleted %1"
+msgstr "Обрисано: %1"
+
+msgid "Displaying the last %1 %2 comments"
+msgstr "Последњи коментари: %1 (%2)"
+
+msgid "Displaying the last %1 %2 public registrations"
+msgstr "Последње јавне регистрације: %1 (%2)"
+
+msgid "Displaying the last %1 %2 tags"
+msgstr "Последње ознаке: %1 (%2)"
+
+msgid "Email sent on %1"
+msgstr "Е-порука послата %1"
+
+msgid "Item was deleted - row_id: %1; table number: %2"
+msgstr "Ставка је обрисана – row_id: %1; број табеле: %2"
+
+msgid "Jobs completed in the last %1 hours"
+msgstr "Послови завршени у последњих %1 сати"
+
+msgid "Jobs completed in the last %1 hours (showing %2 of %3)"
+msgstr "Послови завршени у последњих %1 сати (%2 од %3)"
+
+msgid "Jobs queued for later processing (showing %1 of %2)"
+msgstr "Послови у реду чекања за каснију обраду (%1 од %2)"
+
+msgid "Jobs stuck in the last %1 hours"
+msgstr "Послови заглављени у последњих %1 сати"
+
+msgid "Jobs stuck in the last %1 hours (showing %2 of %3)"
+msgstr "Послови заглављени у последњих %1 сати (%2 од %3)"
+
+msgid "Showing %1 <span style='font-weight:bold; text-transform:lowercase;'>%2</span> with status <span style='font-weight:bold; text-transform:lowercase;'>\"%3\"</span>"
+msgstr "%1 <span style='font-weight:bold; text-transform:lowercase;'>%2</span> са статусом <span style='font-weight:bold; text-transform:lowercase;'>„%3”</span>"
+
+msgid "Showing recently created %1"
+msgstr "Недавно направљено: %1"
+
+msgid "Showing the last %1 <span style='font-weight:bold; text-transform:lowercase;'>%2</span> created"
+msgstr "Последњих %1 направљених <span style='font-weight:bold; text-transform:lowercase;'>%2</span>"
+
+msgid "There are no %1 comments"
+msgstr "Нема коментара (%1)"
+
+msgid "There are no %1 tags."
+msgstr "Нема ознака (%1)."
+
+msgid "There are no running jobs, queued jobs or jobs completed in the last %1 hours."
+msgstr "Нема послова у току, у реду чекања нити завршених у последњих %1 сати."
+
+msgid "There have been no changes to <strong>%1</strong> from %2."
+msgstr "Није било измена у <strong>%1</strong> од %2."
+
+msgid "Unknown change type '%1'"
+msgstr "Непознат тип измене „%1”"
+
+msgid "Updated %1 to '%2'"
+msgstr "%1 ажурирано на „%2”"
+
+msgid "Updated at %1"
+msgstr "Ажурирано %1"

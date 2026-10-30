@@ -181,3 +181,117 @@ msgstr "Ορισμένες αντιστοιχίσεις: %1"
 
 msgid "%1 saved searches"
 msgstr "Αποθηκευμένες αναζητήσεις: %1"
+
+msgid "%1 (%2) - submitted on %3 by %4<br/>Status: %5"
+msgstr "%1 (%2) - υποβλήθηκε στις %3 από %4<br/>Κατάσταση: %5"
+
+msgid "%1 by %2"
+msgstr "%1 από %2"
+
+msgid "%1 completed"
+msgstr "Ολοκληρωμένες: %1"
+
+msgid "%1 file"
+msgstr "Αρχεία: %1"
+
+msgid "%1 files"
+msgstr "Αρχεία: %1"
+
+msgid "%1 queued"
+msgstr "Σε αναμονή: %1"
+
+msgid "%1 running"
+msgstr "Σε εκτέλεση: %1"
+
+msgid "%1 stuck"
+msgstr "Κολλημένες: %1"
+
+msgid "%1 tagged %2 with \"%3\""
+msgstr "Ο/Η %1 έβαλε στο %2 την ετικέτα «%3»"
+
+msgid "+ %1 additional download"
+msgstr "+ ακόμη %1 λήψη"
+
+msgid "+ %1 additional downloads"
+msgstr "+ ακόμη %1 λήψεις"
+
+msgid "+ %1 more completed job"
+msgstr "+ ακόμη %1 ολοκληρωμένη εργασία"
+
+msgid "+ %1 more completed jobs"
+msgstr "+ ακόμη %1 ολοκληρωμένες εργασίες"
+
+msgid "+ %1 more queued job"
+msgstr "+ ακόμη %1 εργασία σε αναμονή"
+
+msgid "+ %1 more queued jobs"
+msgstr "+ ακόμη %1 εργασίες σε αναμονή"
+
+msgid "Added %1 to '%2'"
+msgstr "Προστέθηκε %1 στο «%2»"
+
+msgid "Changes to <strong>%1</strong> from %2"
+msgstr "Αλλαγές σε <strong>%1</strong> από %2"
+
+msgid "Deleted %1"
+msgstr "Διαγράφηκε: %1"
+
+msgid "Displaying the last %1 %2 comments"
+msgstr "Τελευταία σχόλια: %1 (%2)"
+
+msgid "Displaying the last %1 %2 public registrations"
+msgstr "Τελευταίες δημόσιες εγγραφές χρηστών: %1 (%2)"
+
+msgid "Displaying the last %1 %2 tags"
+msgstr "Τελευταίες ετικέτες: %1 (%2)"
+
+msgid "Email sent on %1"
+msgstr "Το email στάλθηκε στις %1"
+
+msgid "Item was deleted - row_id: %1; table number: %2"
+msgstr "Το στοιχείο διαγράφηκε - row_id: %1· αριθμός πίνακα: %2"
+
+msgid "Jobs completed in the last %1 hours"
+msgstr "Εργασίες που ολοκληρώθηκαν τις τελευταίες %1 ώρες"
+
+msgid "Jobs completed in the last %1 hours (showing %2 of %3)"
+msgstr "Εργασίες που ολοκληρώθηκαν τις τελευταίες %1 ώρες (%2 από %3)"
+
+msgid "Jobs queued for later processing (showing %1 of %2)"
+msgstr "Εργασίες σε αναμονή για μεταγενέστερη επεξεργασία (%1 από %2)"
+
+msgid "Jobs stuck in the last %1 hours"
+msgstr "Εργασίες που κόλλησαν τις τελευταίες %1 ώρες"
+
+msgid "Jobs stuck in the last %1 hours (showing %2 of %3)"
+msgstr "Εργασίες που κόλλησαν τις τελευταίες %1 ώρες (%2 από %3)"
+
+msgid "Showing %1 <span style='font-weight:bold; text-transform:lowercase;'>%2</span> with status <span style='font-weight:bold; text-transform:lowercase;'>\"%3\"</span>"
+msgstr "%1 <span style='font-weight:bold; text-transform:lowercase;'>%2</span> με κατάσταση <span style='font-weight:bold; text-transform:lowercase;'>«%3»</span>"
+
+msgid "Showing recently created %1"
+msgstr "Πρόσφατα δημιουργημένα: %1"
+
+msgid "Showing the last %1 <span style='font-weight:bold; text-transform:lowercase;'>%2</span> created"
+msgstr "Τα τελευταία %1 <span style='font-weight:bold; text-transform:lowercase;'>%2</span> που δημιουργήθηκαν"
+
+msgid "There are no %1 comments"
+msgstr "Δεν υπάρχουν σχόλια (%1)"
+
+msgid "There are no %1 tags."
+msgstr "Δεν υπάρχουν ετικέτες (%1)."
+
+msgid "There are no running jobs, queued jobs or jobs completed in the last %1 hours."
+msgstr "Δεν υπάρχουν εργασίες σε εκτέλεση, σε αναμονή ή ολοκληρωμένες τις τελευταίες %1 ώρες."
+
+msgid "There have been no changes to <strong>%1</strong> from %2."
+msgstr "Δεν υπήρξαν αλλαγές σε <strong>%1</strong> από %2."
+
+msgid "Unknown change type '%1'"
+msgstr "Άγνωστος τύπος αλλαγής «%1»"
+
+msgid "Updated %1 to '%2'"
+msgstr "Το %1 ενημερώθηκε σε «%2»"
+
+msgid "Updated at %1"
+msgstr "Ενημερώθηκε στις %1"

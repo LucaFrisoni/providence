@@ -181,3 +181,51 @@ msgstr "Definovaná mapování: %1"
 
 msgid "%1 saved searches"
 msgstr "Uložená hledání: %1"
+
+msgid "%1 (%2) - submitted on %3 by %4<br/>Status: %5"
+msgstr "%1 (%2) – odesláno %3 uživatelem %4<br/>Stav: %5"
+
+msgid "%1 by %2"
+msgstr "%1 – %2"
+
+msgid "%1 file"
+msgstr "Soubory: %1"
+
+msgid "%1 files"
+msgstr "Soubory: %1"
+
+msgid "%1 stuck"
+msgstr "Zaseknuté: %1"
+
+msgid "+ %1 additional download"
+msgstr "+ další stažení: %1"
+
+msgid "+ %1 additional downloads"
+msgstr "+ další stažení: %1"
+
+msgid "+ %1 more completed job"
+msgstr "+ další dokončené úlohy: %1"
+
+msgid "+ %1 more completed jobs"
+msgstr "+ další dokončené úlohy: %1"
+
+msgid "+ %1 more queued job"
+msgstr "+ další úlohy ve frontě: %1"
+
+msgid "+ %1 more queued jobs"
+msgstr "+ další úlohy ve frontě: %1"
+
+msgid "Jobs completed in the last %1 hours (showing %2 of %3)"
+msgstr "Úlohy dokončené za posledních %1 h (%2 z %3)"
+
+msgid "Jobs queued for later processing (showing %1 of %2)"
+msgstr "Úlohy ve frontě na pozdější zpracování (%1 z %2)"
+
+msgid "Jobs stuck in the last %1 hours"
+msgstr "Úlohy zaseknuté za posledních %1 h"
+
+msgid "Jobs stuck in the last %1 hours (showing %2 of %3)"
+msgstr "Úlohy zaseknuté za posledních %1 h (%2 z %3)"
+
+msgid "Showing recently created %1"
+msgstr "Nedávno vytvořené: %1"

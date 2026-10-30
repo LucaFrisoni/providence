@@ -620,6 +620,12 @@ tipo de dato, subtipos anidados de objetos, para "Resultados" un objeto con dos 
   Helvetica, botones grises en mayúsculas, encabezados de tabla y listas desplegables de siempre) y el
   rastro de navegación usa el HTML y las flechas de Providence (`Modulo2Ui::breadcrumbs`). El tema se
   toma del usuario conectado (`Modulo2Ui::modernTheme`).
+- **Pantalla de inicio.** El cuadro de instrumentos (la pantalla que se ve al entrar o al hacer clic en
+  el logo) usa todo el ancho en dos columnas (una en pantallas angostas). Cada widget es una tarjeta con
+  su título; al editar el cuadro, quitar y configurar son botones cuadrados en el título, la columna vacía
+  muestra un recuadro punteado para soltar widgets y la ventana para agregar uno es una lista con la
+  descripción de cada widget. Las listas de los widgets ya no ocupan 300 px fijos: crecen hasta ese alto.
+  Como el resto de ModernUI, es solo CSS (`native-screens.css`): con el tema default se ve como siempre.
 - **Botones que crecen con el texto.** Los textos cambian de largo según el idioma (en alemán o húngaro
   son más largos): los botones, chips y ventanas no tienen ancho fijo y pasan a dos líneas si hace
   falta. Las ventanas de Descargar y Opciones crecen hasta 640 px.
@@ -687,7 +693,9 @@ de textos, y cada una se traduce en un lugar distinto:
    (menús, barras laterales, listas, editores, Administration, Encontrar, Gestión) y comparando, idioma
    por idioma, cada texto visible con la traducción de Providence: un texto cuenta como faltante si no
    está traducido o si su "traducción" es igual al inglés. Así salieron unos 1.400 textos (desde 260 en
-   checo hasta 1.270 en serbio). Sus traducciones están en `locale/providence/<idioma>.php` ([inglés =>
+   checo hasta 1.270 en serbio). Los textos de la pantalla de inicio y de sus widgets (títulos,
+   descripciones, ajustes, permisos de cada widget) se buscaron en su código, porque varios solo aparecen
+   al editar el cuadro: fueron unos 290 más. Sus traducciones están en `locale/providence/<idioma>.php` ([inglés =>
    traducción]) y `locale/providence/build.php` arma con ellas `themes/default/conf/translations.conf`, el archivo
    que Providence prevé para cambiar sus textos (tiene prioridad sobre su traducción). Solo se escribe
    un texto en los idiomas que lo necesitan, así no se pisa una traducción de Providence que ya está.
@@ -717,11 +725,12 @@ docker compose up -d --build providence
   interfaz, agregando el nombre en el idioma. Los nombres de las versiones también son datos: "Versión
   del 29/10/2026" quedó en castellano porque se guardó con la interfaz en castellano.
 - **Textos escritos en las vistas de Providence sin pasar por la traducción** (por ejemplo "selected
-  sets" o "Layout:" en las listas): cambiarlos exige modificar Providence.
+  sets" o "Layout:" en las listas, "More Info" en el widget de cambios recientes y las opciones de la
+  descarga del resumen, como "Include logo?"): cambiarlos exige modificar Providence.
 - **Textos con datos que la traducción de Providence tiene en inglés.** La traducción de Providence
   gana sobre la de `app/locale/user`, así que si trae el texto igual al inglés no se puede corregir sin
-  modificar sus archivos de traducción. Pasa en alemán con nueve textos de las barras laterales (por
-  ejemplo "%1 rules are available for editing").
+  modificar sus archivos de traducción. Pasa en alemán con once textos de las barras laterales y de los
+  widgets (por ejemplo "%1 rules are available for editing").
 
 Las traducciones de los puntos 2 y 3 siguen el vocabulario de la traducción de Providence de cada
 idioma.
@@ -743,7 +752,7 @@ Lo que pide el módulo 2 y dónde está:
 | Restringir a usuarios autorizados                | Permisos por nivel de riesgo                                                                                                     |
 | Versión recuperable antes de un cambio crítico   | Al guardar se ofrece guardar antes la configuración actual                                                                       |
 
-**Fuera del alcance:** mejorar Administration, la pantalla principal y sus widgets, y funciones nuevas
+**Fuera del alcance:** mejorar Administration y agregar funciones nuevas
 para las preferencias (por ejemplo, más monedas). Las preferencias de Mis preferencias son funciones de
 Providence: el módulo las muestra, las guarda con el guardado de Providence y las versiona (lo prueban
 las pruebas de guardado de cada grupo), pero no prueba qué hace Providence con cada una. Si una no
@@ -794,6 +803,7 @@ funciona, corregirla exige modificar Providence.
 - [x] Dos temas: ModernUI (el de un usuario nuevo) y el default de Providence; las pantallas del módulo
       tienen versión con el aspecto clásico
 - [x] Botones y ventanas que crecen con el texto en cada idioma
+- [x] Pantalla de inicio y sus widgets, con sus textos traducidos
 
 **Fase 7: Mis preferencias**
 

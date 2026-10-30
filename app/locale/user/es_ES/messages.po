@@ -739,3 +739,57 @@ msgstr "%1 mapeos definidos"
 
 msgid "%1 saved searches"
 msgstr "%1 búsquedas guardadas"
+
+msgid "%1 (%2) - submitted on %3 by %4<br/>Status: %5"
+msgstr "%1 (%2) - enviado el %3 por %4<br/>Estado: %5"
+
+msgid "%1 by %2"
+msgstr "%1 por %2"
+
+msgid "%1 file"
+msgstr "%1 archivo"
+
+msgid "%1 files"
+msgstr "%1 archivos"
+
+msgid "%1 stuck"
+msgstr "%1 atascadas"
+
+msgid "+ %1 additional download"
+msgstr "+ %1 descarga más"
+
+msgid "+ %1 additional downloads"
+msgstr "+ %1 descargas más"
+
+msgid "+ %1 more completed job"
+msgstr "+ %1 tarea terminada más"
+
+msgid "+ %1 more completed jobs"
+msgstr "+ %1 tareas terminadas más"
+
+msgid "+ %1 more queued job"
+msgstr "+ %1 tarea en cola más"
+
+msgid "+ %1 more queued jobs"
+msgstr "+ %1 tareas en cola más"
+
+msgid "Displaying the last %1 %2 public registrations"
+msgstr "Se muestran los últimos %1 registros públicos (%2)"
+
+msgid "Email sent on %1"
+msgstr "Correo enviado el %1"
+
+msgid "Jobs completed in the last %1 hours (showing %2 of %3)"
+msgstr "Tareas terminadas en las últimas %1 horas (se muestran %2 de %3)"
+
+msgid "Jobs queued for later processing (showing %1 of %2)"
+msgstr "Tareas en cola para procesar más tarde (se muestran %1 de %2)"
+
+msgid "Jobs stuck in the last %1 hours"
+msgstr "Tareas atascadas en las últimas %1 horas"
+
+msgid "Jobs stuck in the last %1 hours (showing %2 of %3)"
+msgstr "Tareas atascadas en las últimas %1 horas (se muestran %2 de %3)"
+
+msgid "Showing recently created %1"
+msgstr "Se muestran los %1 creados recientemente"

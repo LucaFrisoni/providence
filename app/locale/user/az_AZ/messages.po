@@ -181,3 +181,105 @@ msgstr "Təyin edilmiş uyğunlaşdırmalar: %1"
 
 msgid "%1 saved searches"
 msgstr "Saxlanmış axtarışlar: %1"
+
+msgid "%1 (%2) - submitted on %3 by %4<br/>Status: %5"
+msgstr "%1 (%2) - %3 tarixində %4 tərəfindən göndərilib<br/>Status: %5"
+
+msgid "%1 by %2"
+msgstr "%1 - %2"
+
+msgid "%1 file"
+msgstr "Fayllar: %1"
+
+msgid "%1 files"
+msgstr "Fayllar: %1"
+
+msgid "%1 queued"
+msgstr "Növbədə: %1"
+
+msgid "%1 running"
+msgstr "İcra olunur: %1"
+
+msgid "%1 stuck"
+msgstr "İlişib qalıb: %1"
+
+msgid "%1 tagged %2 with \"%3\""
+msgstr "%1 %2 üçün \"%3\" etiketini qoydu"
+
+msgid "+ %1 additional download"
+msgstr "+ daha %1 endirmə"
+
+msgid "+ %1 additional downloads"
+msgstr "+ daha %1 endirmə"
+
+msgid "+ %1 more completed job"
+msgstr "+ daha %1 tamamlanmış iş"
+
+msgid "+ %1 more completed jobs"
+msgstr "+ daha %1 tamamlanmış iş"
+
+msgid "+ %1 more queued job"
+msgstr "+ daha %1 növbədə olan iş"
+
+msgid "+ %1 more queued jobs"
+msgstr "+ daha %1 növbədə olan iş"
+
+msgid "Added %1 to '%2'"
+msgstr "%1 '%2' sahəsinə əlavə edildi"
+
+msgid "Changes to <strong>%1</strong> from %2"
+msgstr "<strong>%1</strong> üzrə %2 tarixindən dəyişikliklər"
+
+msgid "Displaying the last %1 %2 comments"
+msgstr "Son şərhlər: %1 (%2)"
+
+msgid "Displaying the last %1 %2 public registrations"
+msgstr "Son ictimai qeydiyyatlar: %1 (%2)"
+
+msgid "Displaying the last %1 %2 tags"
+msgstr "Son etiketlər: %1 (%2)"
+
+msgid "Email sent on %1"
+msgstr "E-poçt %1 tarixində göndərilib"
+
+msgid "Jobs completed in the last %1 hours (showing %2 of %3)"
+msgstr "Son %1 saatda tamamlanmış işlər (%3 işdən %2)"
+
+msgid "Jobs queued for later processing (showing %1 of %2)"
+msgstr "Sonrakı emal üçün növbədə olan işlər (%2 işdən %1)"
+
+msgid "Jobs stuck in the last %1 hours"
+msgstr "Son %1 saatda ilişib qalan işlər"
+
+msgid "Jobs stuck in the last %1 hours (showing %2 of %3)"
+msgstr "Son %1 saatda ilişib qalan işlər (%3 işdən %2)"
+
+msgid "Showing %1 <span style='font-weight:bold; text-transform:lowercase;'>%2</span> with status <span style='font-weight:bold; text-transform:lowercase;'>\"%3\"</span>"
+msgstr "%1 <span style='font-weight:bold; text-transform:lowercase;'>%2</span>, status: <span style='font-weight:bold; text-transform:lowercase;'>\"%3\"</span>"
+
+msgid "Showing recently created %1"
+msgstr "Son yaradılanlar: %1"
+
+msgid "Showing the last %1 <span style='font-weight:bold; text-transform:lowercase;'>%2</span> created"
+msgstr "Son yaradılmış %1 <span style='font-weight:bold; text-transform:lowercase;'>%2</span>"
+
+msgid "There are no %1 comments"
+msgstr "Şərh yoxdur (%1)"
+
+msgid "There are no %1 tags."
+msgstr "Etiket yoxdur (%1)."
+
+msgid "There are no running jobs, queued jobs or jobs completed in the last %1 hours."
+msgstr "Son %1 saatda icra olunan, növbədə olan və ya tamamlanmış iş yoxdur."
+
+msgid "There have been no changes to <strong>%1</strong> from %2."
+msgstr "<strong>%1</strong> üzrə %2 tarixindən dəyişiklik olmayıb."
+
+msgid "Unknown change type '%1'"
+msgstr "Naməlum dəyişiklik növü '%1'"
+
+msgid "Updated %1 to '%2'"
+msgstr "%1 '%2' olaraq yeniləndi"
+
+msgid "Updated at %1"
+msgstr "%1 tarixində yeniləndi"

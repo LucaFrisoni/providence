@@ -181,3 +181,57 @@ msgstr "%1 mappningar definierade"
 
 msgid "%1 saved searches"
 msgstr "%1 sparade sökningar"
+
+msgid "%1 (%2) - submitted on %3 by %4<br/>Status: %5"
+msgstr "%1 (%2) – inskickad %3 av %4<br/>Status: %5"
+
+msgid "%1 by %2"
+msgstr "%1 av %2"
+
+msgid "%1 file"
+msgstr "%1 fil"
+
+msgid "%1 files"
+msgstr "%1 filer"
+
+msgid "%1 stuck"
+msgstr "%1 har fastnat"
+
+msgid "+ %1 additional download"
+msgstr "+ %1 nedladdning till"
+
+msgid "+ %1 additional downloads"
+msgstr "+ %1 nedladdningar till"
+
+msgid "+ %1 more completed job"
+msgstr "+ %1 slutfört jobb till"
+
+msgid "+ %1 more completed jobs"
+msgstr "+ %1 slutförda jobb till"
+
+msgid "+ %1 more queued job"
+msgstr "+ %1 köat jobb till"
+
+msgid "+ %1 more queued jobs"
+msgstr "+ %1 köade jobb till"
+
+msgid "Displaying the last %1 %2 public registrations"
+msgstr "De senaste %1 offentliga registreringarna (%2)"
+
+msgid "Email sent on %1"
+msgstr "E-post skickad %1"
+
+msgid "Jobs completed in the last %1 hours (showing %2 of %3)"
+msgstr "Jobb slutförda de senaste %1 timmarna (%2 av %3)"
+
+msgid "Jobs queued for later processing (showing %1 of %2)"
+msgstr "Jobb i kö för senare bearbetning (%1 av %2)"
+
+msgid "Jobs stuck in the last %1 hours"
+msgstr "Jobb som fastnat de senaste %1 timmarna"
+
+msgid "Jobs stuck in the last %1 hours (showing %2 of %3)"
+msgstr "Jobb som fastnat de senaste %1 timmarna (%2 av %3)"
+
+msgid "Showing recently created %1"
+msgstr "Nyligen skapade %1"

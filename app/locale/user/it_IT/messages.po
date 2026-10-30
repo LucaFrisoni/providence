@@ -181,3 +181,87 @@ msgstr "%1 mappature definite"
 
 msgid "%1 saved searches"
 msgstr "%1 ricerche salvate"
+
+msgid "%1 (%2) - submitted on %3 by %4<br/>Status: %5"
+msgstr "%1 (%2) - inviato il %3 da %4<br/>Stato: %5"
+
+msgid "%1 by %2"
+msgstr "%1 di %2"
+
+msgid "%1 completed"
+msgstr "%1 completati"
+
+msgid "%1 file"
+msgstr "%1 file"
+
+msgid "%1 files"
+msgstr "%1 file"
+
+msgid "%1 queued"
+msgstr "%1 in coda"
+
+msgid "%1 running"
+msgstr "%1 in esecuzione"
+
+msgid "%1 stuck"
+msgstr "%1 bloccati"
+
+msgid "%1 tagged %2 with \"%3\""
+msgstr "%1 ha etichettato %2 con \"%3\""
+
+msgid "+ %1 additional download"
+msgstr "+ %1 altro download"
+
+msgid "+ %1 additional downloads"
+msgstr "+ %1 altri download"
+
+msgid "+ %1 more completed job"
+msgstr "+ %1 altro processo completato"
+
+msgid "+ %1 more completed jobs"
+msgstr "+ %1 altri processi completati"
+
+msgid "+ %1 more queued job"
+msgstr "+ %1 altro processo in coda"
+
+msgid "+ %1 more queued jobs"
+msgstr "+ %1 altri processi in coda"
+
+msgid "Changes to <strong>%1</strong> from %2"
+msgstr "Modifiche a <strong>%1</strong> dal %2"
+
+msgid "Displaying the last %1 %2 public registrations"
+msgstr "Ultime %1 registrazioni pubbliche (%2)"
+
+msgid "Displaying the last %1 %2 tags"
+msgstr "Ultimi %1 tag (%2)"
+
+msgid "Email sent on %1"
+msgstr "Email inviata il %1"
+
+msgid "Jobs completed in the last %1 hours"
+msgstr "Processi completati nelle ultime %1 ore"
+
+msgid "Jobs completed in the last %1 hours (showing %2 of %3)"
+msgstr "Processi completati nelle ultime %1 ore (%2 di %3)"
+
+msgid "Jobs queued for later processing (showing %1 of %2)"
+msgstr "Processi in coda per l'elaborazione successiva (%1 di %2)"
+
+msgid "Jobs stuck in the last %1 hours"
+msgstr "Processi bloccati nelle ultime %1 ore"
+
+msgid "Jobs stuck in the last %1 hours (showing %2 of %3)"
+msgstr "Processi bloccati nelle ultime %1 ore (%2 di %3)"
+
+msgid "Showing recently created %1"
+msgstr "%1 creati di recente"
+
+msgid "There are no running jobs, queued jobs or jobs completed in the last %1 hours."
+msgstr "Non ci sono processi in esecuzione, in coda o completati nelle ultime %1 ore."
+
+msgid "Updated %1 to '%2'"
+msgstr "%1 aggiornato a '%2'"
+
+msgid "Updated at %1"
+msgstr "Aggiornato il %1"

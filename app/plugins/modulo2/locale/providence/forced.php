@@ -2,8 +2,8 @@
 /* ----------------------------------------------------------------------
  * app/plugins/modulo2/locale/providence/forced.php :
  * Textos de Providence que se cambian aunque su traducción los tenga: "locale" se dice "idioma" en todos los
- * idiomas, y "Quick add", que en castellano Providence traduce entre comillas ('Al vuelo'). Se cambian solo en
- * los idiomas cuyo archivo trae el texto.
+ * idiomas, y algunos que la traducción al castellano trae mal ("'Al vuelo'", "Busqueda por conjuntos").
+ * Se cambian solo en los idiomas cuyo archivo trae el texto.
  * ----------------------------------------------------------------------
  */
 return [
@@ -53,6 +53,7 @@ return [
 	'The locale of the tag.',
 	'The primary locale associated with the place.',
 	'Quick add',
+	'Search By Set',
 	'Unique numeric identifier used by CollectiveAccess internally to identify this locale',
 	'User interface locale',
 	'locale',

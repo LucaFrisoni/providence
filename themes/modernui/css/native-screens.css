@@ -1,6 +1,6 @@
 /* ----------------------------------------------------------------------
  * themes/modernui/css/native-screens.css : aspecto moderno, igual al del módulo 2, para las pantallas
- * nativas de Providence (Administración, Nuevo, Encontrar, Exploración, Gestión, Importar...).
+ * nativas de Providence (inicio, Administración, Nuevo, Encontrar, Exploración, Gestión, Importar...).
  * Solo cambia la apariencia. Lo carga local.css.
  * ----------------------------------------------------------------------
  */
@@ -1996,6 +1996,420 @@
         border: 1px solid #cfd8dc;
         border-radius: 8px;
         font: 12px var(--adm-font);
+    }
+
+    /* --- Pantalla de inicio (el cuadro de instrumentos) y sus widgets --- */
+    & #mainContentFull {
+        font-family: var(--adm-font);
+        color: var(--adm-text);
+    }
+
+    /* Botones de edición del cuadro, arriba a la derecha (Providence muestra y oculta cada uno) */
+    & #dashboardControls {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+        align-items: center;
+        gap: 8px;
+        margin: 4px 16px 6px 16px;
+        padding: 0;
+    }
+
+    & #dashboardControls #clearDashboardControl {
+        display: flex;
+        gap: 8px;
+        margin-right: auto;
+        float: none !important;
+    }
+
+    & #dashboardControls a.button-gray {
+        padding: 7px 14px;
+        border: 1px solid var(--adm-border);
+        border-radius: 8px;
+        background: #fff;
+        box-shadow: var(--adm-shadow);
+        font: 600 12.5px var(--adm-font);
+        color: var(--adm-text);
+        text-transform: none;
+        text-decoration: none;
+        transition: background .15s, border-color .15s, color .15s;
+    }
+
+    & #dashboardControls a.button-gray:hover {
+        border-color: var(--adm-accent);
+        color: var(--adm-accent-dark);
+    }
+
+    & #dashboardControls :is(#dashboardAddButton, #dashboardDoneEditingButton) {
+        border-color: var(--adm-accent);
+        background: var(--adm-accent);
+        color: #fff;
+    }
+
+    & #dashboardControls :is(#dashboardAddButton, #dashboardDoneEditingButton):hover {
+        background: var(--adm-accent-dark);
+        color: #fff;
+    }
+
+    & #dashboardControls #dashboardClearButton:hover {
+        border-color: var(--adm-danger-border);
+        color: var(--adm-danger);
+    }
+
+    /* Dos columnas que ocupan todo el ancho; en pantallas angostas, una */
+    & .dashboard {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 0 20px;
+        margin: 0 16px;
+    }
+
+    @media (max-width: 900px) {
+        & .dashboard { grid-template-columns: minmax(0, 1fr); }
+    }
+
+    & .dashboard .dashboardWelcomeMessage {
+        grid-column: 1 / -1;
+        margin: 6px 0 14px 0;
+        padding: 14px 18px;
+        border: 1px solid #cfe7ea;
+        border-radius: 12px;
+        background: var(--adm-accent-soft);
+        font: 13px/1.55 var(--adm-font);
+        color: var(--adm-text);
+    }
+
+    & .dashboard .dashboardColumn {
+        float: none;
+        width: auto;
+        min-width: 0;
+        min-height: 60px;
+    }
+
+    & .dashboard .dashboardLanding {
+        margin: 6px 0;
+        padding: 0;
+        border: 2px dashed #cfd8dc;
+        border-radius: 12px;
+        line-height: 100px;
+        color: var(--adm-muted);
+        font: 13px/100px var(--adm-font);
+    }
+
+    /* Cada widget es una tarjeta con su título arriba */
+    & .dashboard .portlet {
+        position: relative;
+        margin: 0 0 18px 0;
+        overflow: hidden;
+        border: 1px solid var(--adm-border);
+        border-radius: 12px;
+        background: #fff;
+        box-shadow: var(--adm-shadow);
+    }
+
+    & .dashboard .portlet.ui-sortable-helper {
+        box-shadow: var(--adm-shadow-lg);
+    }
+
+    & .dashboard .ui-sortable:not(.ui-sortable-disabled) .portlet-header {
+        cursor: move;
+    }
+
+    & .dashboard .portlet-header {
+        padding: 12px 70px 11px 16px;
+        border-bottom: 1px solid var(--adm-border);
+        border-radius: 0;
+        background: #fff;
+        font: 700 14px var(--adm-font);
+        color: var(--adm-text);
+    }
+
+    & .dashboard .portlet-content {
+        padding: 10px 16px 12px 16px;
+        border: none;
+        background: #fff;
+        font: 13px/1.5 var(--adm-font);
+        color: var(--adm-text);
+    }
+
+    /* Quitar y configurar: botones cuadrados en el título (solo al editar el cuadro) */
+    & .dashboard :is(a.dashboardRemoveWidget, a.dashboardWidgetSettingsButton) {
+        position: absolute;
+        top: 8px;
+        z-index: 1;
+        width: 28px;
+        height: 28px;
+        margin: 0;
+        border: 1px solid var(--adm-border);
+        border-radius: 8px;
+        background: #fff;
+        color: var(--adm-muted);
+        text-align: center;
+        line-height: 26px;
+        float: none;
+        transition: background .15s, color .15s, border-color .15s;
+    }
+
+    & .dashboard a.dashboardRemoveWidget { right: 10px; }
+    & .dashboard a.dashboardWidgetSettingsButton { right: 44px; }
+
+    & .dashboard :is(a.dashboardRemoveWidget, a.dashboardWidgetSettingsButton) .caIcon {
+        font-size: 13px !important;
+        color: inherit;
+    }
+
+    & .dashboard a.dashboardRemoveWidget:hover {
+        border-color: var(--adm-danger-border);
+        background: #fdf3f2;
+        color: var(--adm-danger);
+    }
+
+    & .dashboard a.dashboardWidgetSettingsButton:hover {
+        border-color: var(--adm-accent);
+        background: var(--adm-accent-soft);
+        color: var(--adm-accent-dark);
+    }
+
+    /* Contenido de los widgets */
+    & .dashboard .dashboardWidgetContentContainer {
+        padding: 0;
+        font-size: 13px !important;
+    }
+
+    & .dashboard .dashboardWidgetHeading {
+        margin: 2px 0 8px 0;
+        font: 13px/1.4 var(--adm-font);
+        color: var(--adm-muted);
+    }
+
+    /* Providence les da 300 px fijos aunque tengan poco: ahora crecen hasta ese alto */
+    & .dashboard .dashboardWidgetScrollMedium {
+        height: auto;
+        max-height: 300px;
+        padding-left: 0 !important;
+    }
+
+    & .dashboard .dashboardWidgetScrollLarge {
+        height: auto;
+        max-height: 400px;
+    }
+
+    & .dashboard .dashboardWidgetContentContainer ul {
+        margin: 0;
+        padding: 0;
+    }
+
+    & .dashboard .dashboardWidgetContentContainer li {
+        margin: 0;
+        padding: 7px 0;
+        border-bottom: 1px solid var(--adm-border);
+        color: var(--adm-muted);
+        font-size: 12.5px;
+    }
+
+    & .dashboard .dashboardWidgetContentContainer li:last-child {
+        border-bottom: none;
+    }
+
+    & .dashboard .dashboardWidgetContentContainer li li {
+        padding: 3px 0;
+        border-bottom: none;
+    }
+
+    & .dashboard .dashboardWidgetContentContainer :is(li, b, strong) > a,
+    & .dashboard .dashboardWidgetContentContainer ul li a {
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--adm-accent-dark);
+    }
+
+    & .dashboard .dashboardWidgetContentContainer a:hover {
+        color: var(--adm-accent);
+        text-decoration: underline;
+    }
+
+    & .dashboard .dashboardWidgetTable {
+        width: 100%;
+        border-collapse: collapse;
+        border-spacing: 0;
+    }
+
+    & .dashboard .dashboardWidgetTable th {
+        padding: 8px 10px;
+        border-bottom: 1px solid var(--adm-border);
+        background: var(--adm-soft);
+        font: 700 11px var(--adm-font);
+        letter-spacing: .04em;
+        text-transform: uppercase;
+        text-align: left;
+        color: var(--adm-heading);
+    }
+
+    & .dashboard .dashboardWidgetTable td {
+        padding: 8px 10px;
+        border-bottom: 1px solid var(--adm-border);
+        background: none;
+        font-size: 12.5px;
+    }
+
+    & .dashboard .dashboardWidgetTable tr:last-child td {
+        border-bottom: none;
+    }
+
+    /* Títulos de grupo de algunos widgets (búsquedas memorizadas, conjuntos), que Providence pinta en línea */
+    & .dashboard .dashboardWidgetContentContainer > div[style*="background-color:#e9e9e9"] {
+        padding: 6px 10px !important;
+        border-radius: 8px;
+        background: var(--adm-soft) !important;
+        font: 700 12px var(--adm-font) !important;
+        color: var(--adm-heading);
+    }
+
+    & .dashboard .dashboardWidgetContentContainer select {
+        width: auto !important;
+        min-width: 140px;
+        max-width: 100%;
+    }
+
+    & .dashboard .dashboardWidgetContentContainer a.button {
+        margin-left: 6px;
+        padding: 5px 10px;
+        border: 1px solid var(--adm-border);
+        border-radius: 8px;
+        background: #fff;
+        font: 600 12px var(--adm-font);
+        color: var(--adm-accent-dark);
+    }
+
+    & .dashboard .dashboardWidgetClock {
+        padding: 8px 0 4px 0;
+        font-family: var(--adm-font);
+        color: var(--adm-text);
+    }
+
+    /* Formulario de configuración de un widget (botón "i") */
+    & .dashboard .portlet-content h1 {
+        margin: 2px 0 10px 0;
+        font: 700 14px var(--adm-font);
+        color: var(--adm-text);
+    }
+
+    & .dashboard .portlet-content form :is(input[type="text"], select) {
+        padding: 5px 8px;
+        border: 1px solid #cfd8dc;
+        border-radius: 8px;
+        font: 13px var(--adm-font);
+    }
+
+    & .dashboard .portlet-content div.formLabel {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        margin: 0 0 10px 0;
+        font: 600 12.5px var(--adm-font);
+        color: var(--adm-heading);
+    }
+
+    & .dashboard .portlet-content div.formLabel br {
+        display: none;
+    }
+
+    /* Las casillas van antes de su texto, en el mismo renglón */
+    & .dashboard .portlet-content div.formLabel:has(> input[type="checkbox"]) {
+        flex-direction: row-reverse;
+        justify-content: flex-end;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 6px;
+        font-weight: 400;
+        color: var(--adm-text);
+    }
+
+    & .dashboard .portlet-content div.formLabel input[type="checkbox"] {
+        width: 16px;
+        height: 16px;
+        margin: 0;
+        accent-color: var(--adm-accent);
+    }
+
+    /* Ventana para agregar un widget */
+    & #dashboardWidgetPanel {
+        position: fixed;
+        top: 90px;
+        width: min(480px, 92vw);
+        height: auto;
+        max-height: calc(100vh - 140px);
+        margin-left: max(-240px, -46vw);
+        padding: 18px 20px;
+        overflow-y: auto;
+        border: 1px solid var(--adm-border);
+        border-radius: 12px;
+        /* La sombra grande oscurece la página detrás de la ventana */
+        box-shadow: 0 0 0 100vmax rgba(16, 24, 40, .35), var(--adm-shadow-lg);
+        font-family: var(--adm-font);
+        z-index: 31000;
+    }
+
+    & #dashboardWidgetPanelTitle {
+        margin: 0 0 12px 0;
+        font: 700 16px var(--adm-font);
+        color: var(--adm-text);
+    }
+
+    & #dashboardWidgetPanel a.dashboardWidgetPanelHide {
+        position: absolute;
+        top: 14px;
+        right: 14px;
+        float: none;
+        width: 28px;
+        height: 28px;
+        border: 1px solid var(--adm-border);
+        border-radius: 8px;
+        background: #fff;
+        text-align: center;
+        font: 16px/26px var(--adm-font);
+        color: var(--adm-muted);
+    }
+
+    & #dashboardWidgetPanel a.dashboardWidgetPanelHide::before {
+        content: "×";
+    }
+
+    & #dashboardWidgetPanelContent {
+        height: auto;
+        overflow: visible;
+        font: 13px var(--adm-font);
+    }
+
+    & #dashboardWidgetPanelContent > form > a {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-top: 4px;
+        padding: 8px 10px 2px 10px;
+        border-radius: 8px;
+        font: 600 13.5px var(--adm-font);
+        color: var(--adm-accent-dark);
+    }
+
+    & #dashboardWidgetPanelContent > form > a:hover {
+        background: var(--adm-accent-soft);
+    }
+
+    & #dashboardWidgetPanelContent > form > a .caIcon {
+        color: var(--adm-accent);
+    }
+
+    & #dashboardWidgetPanelContent > form > br {
+        display: none;
+    }
+
+    & #dashboardWidgetPanelContent #widgetDescription {
+        margin: 0 0 6px 0;
+        padding: 0 10px 8px 34px;
+        border-bottom: 1px solid var(--adm-border);
+        font-size: 12px;
+        color: var(--adm-muted);
     }
 }
 

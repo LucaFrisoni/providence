@@ -181,3 +181,51 @@ msgstr "%1 correspondances définies"
 
 msgid "%1 saved searches"
 msgstr "%1 recherches enregistrées"
+
+msgid "%1 (%2) - submitted on %3 by %4<br/>Status: %5"
+msgstr "%1 (%2) – envoyé le %3 par %4<br/>Statut : %5"
+
+msgid "%1 by %2"
+msgstr "%1 par %2"
+
+msgid "%1 file"
+msgstr "%1 fichier"
+
+msgid "%1 files"
+msgstr "%1 fichiers"
+
+msgid "%1 stuck"
+msgstr "%1 bloquées"
+
+msgid "+ %1 additional download"
+msgstr "+ %1 téléchargement supplémentaire"
+
+msgid "+ %1 additional downloads"
+msgstr "+ %1 téléchargements supplémentaires"
+
+msgid "+ %1 more completed job"
+msgstr "+ %1 autre tâche terminée"
+
+msgid "+ %1 more completed jobs"
+msgstr "+ %1 autres tâches terminées"
+
+msgid "+ %1 more queued job"
+msgstr "+ %1 autre tâche en attente"
+
+msgid "+ %1 more queued jobs"
+msgstr "+ %1 autres tâches en attente"
+
+msgid "Jobs completed in the last %1 hours (showing %2 of %3)"
+msgstr "Tâches terminées au cours des %1 dernières heures (%2 sur %3)"
+
+msgid "Jobs queued for later processing (showing %1 of %2)"
+msgstr "Tâches en attente de traitement (%1 sur %2)"
+
+msgid "Jobs stuck in the last %1 hours"
+msgstr "Tâches bloquées au cours des %1 dernières heures"
+
+msgid "Jobs stuck in the last %1 hours (showing %2 of %3)"
+msgstr "Tâches bloquées au cours des %1 dernières heures (%2 sur %3)"
+
+msgid "Showing recently created %1"
+msgstr "%1 créés récemment"

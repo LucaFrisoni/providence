@@ -181,3 +181,57 @@ msgstr "%1 toewijzingen gedefinieerd"
 
 msgid "%1 saved searches"
 msgstr "%1 opgeslagen zoekopdrachten"
+
+msgid "%1 (%2) - submitted on %3 by %4<br/>Status: %5"
+msgstr "%1 (%2) - ingediend op %3 door %4<br/>Status: %5"
+
+msgid "%1 by %2"
+msgstr "%1 door %2"
+
+msgid "%1 file"
+msgstr "%1 bestand"
+
+msgid "%1 files"
+msgstr "%1 bestanden"
+
+msgid "%1 stuck"
+msgstr "%1 vastgelopen"
+
+msgid "+ %1 additional download"
+msgstr "+ %1 extra download"
+
+msgid "+ %1 additional downloads"
+msgstr "+ %1 extra downloads"
+
+msgid "+ %1 more completed job"
+msgstr "+ %1 andere voltooide taak"
+
+msgid "+ %1 more completed jobs"
+msgstr "+ %1 andere voltooide taken"
+
+msgid "+ %1 more queued job"
+msgstr "+ %1 andere wachtende taak"
+
+msgid "+ %1 more queued jobs"
+msgstr "+ %1 andere wachtende taken"
+
+msgid "Displaying the last %1 %2 public registrations"
+msgstr "De laatste %1 openbare registraties (%2)"
+
+msgid "Email sent on %1"
+msgstr "E-mail verzonden op %1"
+
+msgid "Jobs completed in the last %1 hours (showing %2 of %3)"
+msgstr "Taken voltooid in de laatste %1 uur (%2 van %3)"
+
+msgid "Jobs queued for later processing (showing %1 of %2)"
+msgstr "Taken in de wachtrij voor latere verwerking (%1 van %2)"
+
+msgid "Jobs stuck in the last %1 hours"
+msgstr "Vastgelopen taken in de laatste %1 uur"
+
+msgid "Jobs stuck in the last %1 hours (showing %2 of %3)"
+msgstr "Vastgelopen taken in de laatste %1 uur (%2 van %3)"
+
+msgid "Showing recently created %1"
+msgstr "Recent aangemaakte %1"

@@ -181,3 +181,99 @@ msgstr "Meghatározott leképezések: %1"
 
 msgid "%1 saved searches"
 msgstr "Mentett keresések: %1"
+
+msgid "%1 (%2) - submitted on %3 by %4<br/>Status: %5"
+msgstr "%1 (%2) – beküldte %4, %3<br/>Állapot: %5"
+
+msgid "%1 by %2"
+msgstr "%1 – %2"
+
+msgid "%1 file"
+msgstr "Fájlok: %1"
+
+msgid "%1 files"
+msgstr "Fájlok: %1"
+
+msgid "%1 stuck"
+msgstr "Elakadt: %1"
+
+msgid "%1 tagged %2 with \"%3\""
+msgstr "%1 felcímkézte ezt: %2, címke: „%3”"
+
+msgid "+ %1 additional download"
+msgstr "+ további letöltések: %1"
+
+msgid "+ %1 additional downloads"
+msgstr "+ további letöltések: %1"
+
+msgid "+ %1 more completed job"
+msgstr "+ további befejezett feladatok: %1"
+
+msgid "+ %1 more completed jobs"
+msgstr "+ további befejezett feladatok: %1"
+
+msgid "+ %1 more queued job"
+msgstr "+ további sorban álló feladatok: %1"
+
+msgid "+ %1 more queued jobs"
+msgstr "+ további sorban álló feladatok: %1"
+
+msgid "Added %1 to '%2'"
+msgstr "%1 hozzáadva ehhez: „%2”"
+
+msgid "Changes to <strong>%1</strong> from %2"
+msgstr "<strong>%1</strong> változásai ettől: %2"
+
+msgid "Displaying the last %1 %2 comments"
+msgstr "Legutóbbi hozzászólások: %1 (%2)"
+
+msgid "Displaying the last %1 %2 public registrations"
+msgstr "Legutóbbi nyilvános regisztrációk: %1 (%2)"
+
+msgid "Displaying the last %1 %2 tags"
+msgstr "Legutóbbi címkék: %1 (%2)"
+
+msgid "Email sent on %1"
+msgstr "E-mail elküldve: %1"
+
+msgid "Item was deleted - row_id: %1; table number: %2"
+msgstr "A tétel törölve – row_id: %1; táblaszám: %2"
+
+msgid "Jobs completed in the last %1 hours (showing %2 of %3)"
+msgstr "Az elmúlt %1 órában befejezett feladatok (%2 / %3)"
+
+msgid "Jobs queued for later processing (showing %1 of %2)"
+msgstr "Későbbi feldolgozásra váró feladatok (%1 / %2)"
+
+msgid "Jobs stuck in the last %1 hours"
+msgstr "Az elmúlt %1 órában elakadt feladatok"
+
+msgid "Jobs stuck in the last %1 hours (showing %2 of %3)"
+msgstr "Az elmúlt %1 órában elakadt feladatok (%2 / %3)"
+
+msgid "Showing %1 <span style='font-weight:bold; text-transform:lowercase;'>%2</span> with status <span style='font-weight:bold; text-transform:lowercase;'>\"%3\"</span>"
+msgstr "%1 <span style='font-weight:bold; text-transform:lowercase;'>%2</span>, állapot: <span style='font-weight:bold; text-transform:lowercase;'>„%3”</span>"
+
+msgid "Showing recently created %1"
+msgstr "Legutóbb létrehozott: %1"
+
+msgid "Showing the last %1 <span style='font-weight:bold; text-transform:lowercase;'>%2</span> created"
+msgstr "Az utolsó %1 létrehozott <span style='font-weight:bold; text-transform:lowercase;'>%2</span>"
+
+msgid "There are no %1 comments"
+msgstr "Nincsenek hozzászólások (%1)"
+
+msgid "There are no %1 tags."
+msgstr "Nincsenek címkék (%1)."
+
+msgid "There are no running jobs, queued jobs or jobs completed in the last %1 hours."
+msgstr "Az elmúlt %1 órában nincs futó, sorban álló vagy befejezett feladat."
+
+msgid "There have been no changes to <strong>%1</strong> from %2."
+msgstr "<strong>%1</strong> nem változott ettől: %2."
+
+msgid "Unknown change type '%1'"
+msgstr "Ismeretlen változástípus: „%1”"
+
+msgid "Updated %1 to '%2'"
+msgstr "%1 frissítve erre: „%2”"

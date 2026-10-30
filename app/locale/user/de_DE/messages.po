@@ -181,3 +181,78 @@ msgstr "%1 Zuordnungen definiert"
 
 msgid "%1 saved searches"
 msgstr "%1 gespeicherte Suchen"
+
+msgid "%1 (%2) - submitted on %3 by %4<br/>Status: %5"
+msgstr "%1 (%2) – eingereicht am %3 von %4<br/>Status: %5"
+
+msgid "%1 by %2"
+msgstr "%1 von %2"
+
+msgid "%1 file"
+msgstr "%1 Datei"
+
+msgid "%1 files"
+msgstr "%1 Dateien"
+
+msgid "%1 queued"
+msgstr "%1 in Warteschlange"
+
+msgid "%1 running"
+msgstr "%1 laufend"
+
+msgid "%1 stuck"
+msgstr "%1 hängen fest"
+
+msgid "%1 tagged %2 with \"%3\""
+msgstr "%1 hat %2 mit „%3“ verschlagwortet"
+
+msgid "+ %1 additional download"
+msgstr "+ %1 weiterer Download"
+
+msgid "+ %1 additional downloads"
+msgstr "+ %1 weitere Downloads"
+
+msgid "+ %1 more completed job"
+msgstr "+ %1 weiterer abgeschlossener Auftrag"
+
+msgid "+ %1 more completed jobs"
+msgstr "+ %1 weitere abgeschlossene Aufträge"
+
+msgid "+ %1 more queued job"
+msgstr "+ %1 weiterer wartender Auftrag"
+
+msgid "+ %1 more queued jobs"
+msgstr "+ %1 weitere wartende Aufträge"
+
+msgid "Added %1 to '%2'"
+msgstr "%1 zu „%2“ hinzugefügt"
+
+msgid "Displaying the last %1 %2 public registrations"
+msgstr "Die letzten %1 öffentlichen Registrierungen (%2)"
+
+msgid "Email sent on %1"
+msgstr "E-Mail gesendet am %1"
+
+msgid "Jobs completed in the last %1 hours (showing %2 of %3)"
+msgstr "In den letzten %1 Stunden abgeschlossene Aufträge (%2 von %3)"
+
+msgid "Jobs queued for later processing (showing %1 of %2)"
+msgstr "Für später eingeplante Aufträge (%1 von %2)"
+
+msgid "Jobs stuck in the last %1 hours"
+msgstr "In den letzten %1 Stunden hängengebliebene Aufträge"
+
+msgid "Jobs stuck in the last %1 hours (showing %2 of %3)"
+msgstr "In den letzten %1 Stunden hängengebliebene Aufträge (%2 von %3)"
+
+msgid "Showing %1 <span style='font-weight:bold; text-transform:lowercase;'>%2</span> with status <span style='font-weight:bold; text-transform:lowercase;'>\"%3\"</span>"
+msgstr "%1 <span style='font-weight:bold; text-transform:lowercase;'>%2</span> mit Status <span style='font-weight:bold; text-transform:lowercase;'>„%3“</span>"
+
+msgid "Showing recently created %1"
+msgstr "Zuletzt angelegte %1"
+
+msgid "Unknown change type '%1'"
+msgstr "Unbekannte Änderungsart „%1“"
+
+msgid "Updated %1 to '%2'"
+msgstr "%1 auf „%2“ geändert"

@@ -181,3 +181,57 @@ msgstr "מיפויים מוגדרים: %1"
 
 msgid "%1 saved searches"
 msgstr "חיפושים שמורים: %1"
+
+msgid "%1 (%2) - submitted on %3 by %4<br/>Status: %5"
+msgstr "%1 (%2) - נשלח ב-%3 על ידי %4<br/>מצב: %5"
+
+msgid "%1 by %2"
+msgstr "%1 מאת %2"
+
+msgid "%1 file"
+msgstr "קבצים: %1"
+
+msgid "%1 files"
+msgstr "קבצים: %1"
+
+msgid "%1 stuck"
+msgstr "תקועות: %1"
+
+msgid "+ %1 additional download"
+msgstr "+ הורדות נוספות: %1"
+
+msgid "+ %1 additional downloads"
+msgstr "+ הורדות נוספות: %1"
+
+msgid "+ %1 more completed job"
+msgstr "+ משימות נוספות שהושלמו: %1"
+
+msgid "+ %1 more completed jobs"
+msgstr "+ משימות נוספות שהושלמו: %1"
+
+msgid "+ %1 more queued job"
+msgstr "+ משימות נוספות בתור: %1"
+
+msgid "+ %1 more queued jobs"
+msgstr "+ משימות נוספות בתור: %1"
+
+msgid "Displaying the last %1 %2 public registrations"
+msgstr "%1 ההרשמות הציבוריות האחרונות (%2)"
+
+msgid "Email sent on %1"
+msgstr "דוא\"ל נשלח ב-%1"
+
+msgid "Jobs completed in the last %1 hours (showing %2 of %3)"
+msgstr "משימות שהושלמו ב-%1 השעות האחרונות (%2 מתוך %3)"
+
+msgid "Jobs queued for later processing (showing %1 of %2)"
+msgstr "משימות בתור לעיבוד מאוחר יותר (%1 מתוך %2)"
+
+msgid "Jobs stuck in the last %1 hours"
+msgstr "משימות שנתקעו ב-%1 השעות האחרונות"
+
+msgid "Jobs stuck in the last %1 hours (showing %2 of %3)"
+msgstr "משימות שנתקעו ב-%1 השעות האחרונות (%2 מתוך %3)"
+
+msgid "Showing recently created %1"
+msgstr "נוצרו לאחרונה: %1"

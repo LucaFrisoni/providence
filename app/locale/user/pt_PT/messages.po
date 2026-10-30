@@ -181,3 +181,84 @@ msgstr "%1 mapeamentos definidos"
 
 msgid "%1 saved searches"
 msgstr "%1 pesquisas guardadas"
+
+msgid "%1 (%2) - submitted on %3 by %4<br/>Status: %5"
+msgstr "%1 (%2) - enviado em %3 por %4<br/>Estado: %5"
+
+msgid "%1 by %2"
+msgstr "%1 por %2"
+
+msgid "%1 file"
+msgstr "%1 ficheiro"
+
+msgid "%1 files"
+msgstr "%1 ficheiros"
+
+msgid "%1 running"
+msgstr "%1 em execução"
+
+msgid "%1 stuck"
+msgstr "%1 bloqueadas"
+
+msgid "+ %1 additional download"
+msgstr "+ %1 transferência adicional"
+
+msgid "+ %1 additional downloads"
+msgstr "+ %1 transferências adicionais"
+
+msgid "+ %1 more completed job"
+msgstr "+ %1 tarefa concluída adicional"
+
+msgid "+ %1 more completed jobs"
+msgstr "+ %1 tarefas concluídas adicionais"
+
+msgid "+ %1 more queued job"
+msgstr "+ %1 tarefa em fila adicional"
+
+msgid "+ %1 more queued jobs"
+msgstr "+ %1 tarefas em fila adicionais"
+
+msgid "Changes to <strong>%1</strong> from %2"
+msgstr "Alterações a <strong>%1</strong> desde %2"
+
+msgid "Displaying the last %1 %2 public registrations"
+msgstr "Últimos %1 registos públicos (%2)"
+
+msgid "Email sent on %1"
+msgstr "E-mail enviado em %1"
+
+msgid "Item was deleted - row_id: %1; table number: %2"
+msgstr "O item foi eliminado - row_id: %1; número da tabela: %2"
+
+msgid "Jobs completed in the last %1 hours"
+msgstr "Tarefas concluídas nas últimas %1 horas"
+
+msgid "Jobs completed in the last %1 hours (showing %2 of %3)"
+msgstr "Tarefas concluídas nas últimas %1 horas (%2 de %3)"
+
+msgid "Jobs queued for later processing (showing %1 of %2)"
+msgstr "Tarefas em fila para processamento posterior (%1 de %2)"
+
+msgid "Jobs stuck in the last %1 hours"
+msgstr "Tarefas bloqueadas nas últimas %1 horas"
+
+msgid "Jobs stuck in the last %1 hours (showing %2 of %3)"
+msgstr "Tarefas bloqueadas nas últimas %1 horas (%2 de %3)"
+
+msgid "Showing %1 <span style='font-weight:bold; text-transform:lowercase;'>%2</span> with status <span style='font-weight:bold; text-transform:lowercase;'>\"%3\"</span>"
+msgstr "%1 <span style='font-weight:bold; text-transform:lowercase;'>%2</span> com o estado <span style='font-weight:bold; text-transform:lowercase;'>\"%3\"</span>"
+
+msgid "Showing recently created %1"
+msgstr "%1 criados recentemente"
+
+msgid "Showing the last %1 <span style='font-weight:bold; text-transform:lowercase;'>%2</span> created"
+msgstr "Últimos %1 <span style='font-weight:bold; text-transform:lowercase;'>%2</span> criados"
+
+msgid "There are no running jobs, queued jobs or jobs completed in the last %1 hours."
+msgstr "Não há tarefas em execução, em fila nem concluídas nas últimas %1 horas."
+
+msgid "There have been no changes to <strong>%1</strong> from %2."
+msgstr "Não houve alterações a <strong>%1</strong> desde %2."
+
+msgid "Unknown change type '%1'"
+msgstr "Tipo de alteração desconhecido «%1»"
