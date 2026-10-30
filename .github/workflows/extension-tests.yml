@@ -1,11 +1,11 @@
 # Corre las pruebas de la extensión (servicio Rust y plugins PHP) en GitHub Actions, con el mismo
-# entorno Docker que se usa para desarrollar. Se ejecuta en cada push, en cada pull request y a mano.
+# entorno Docker que se usa para desarrollar. Se ejecuta en cada pull request hacia master_desarrollo
+# (desarrollo) o master (producción) y a mano.
 name: Pruebas de la extensión
 
 on:
-  push:
-    branches: [master, modulo2]
   pull_request:
+    branches: [master_desarrollo, master]
   workflow_dispatch:
 
 jobs:
