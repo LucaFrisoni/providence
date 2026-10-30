@@ -260,9 +260,10 @@ de sus claves. El archivo empieza con un aviso de que lo escribe el módulo. Con
       lo que no está en el perfil.
     - Borrar un elemento de metadatos o un ítem de lista que ya se usa en registros afecta datos
       catalogados.
-    - **Decisión pendiente** (con el equipo y la cátedra): para implementarla hace falta una prueba de
-      concepto del instalador sobre una copia de la base, y mostrar antes de aplicar qué se va a
-      borrar y cuántos registros lo usan.
+    - **Decisión:** queda así. La copia de la base en cada versión sirve para consultar y comparar; la
+      configuración en base se edita y se corrige con las pantallas de Providence (Administration).
+      Restaurarla exigiría probar antes el instalador sobre una copia de la base y mostrar qué se
+      borraría y cuántos registros lo usan.
 
 **Dónde se guarda la historia:** en tres tablas de la
 [base de la extensión](../../README.md#base-de-datos-de-la-extensión). Las configuraciones en sí
