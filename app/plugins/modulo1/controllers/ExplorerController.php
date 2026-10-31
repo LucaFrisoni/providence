@@ -11,6 +11,9 @@ class ExplorerController extends ActionController {
 	const DEFAULT_TIMEOUT = 5;
 	
 	private $config;
+	//lo que usa la barra lateral
+	private static array $navegacion = [];
+	private static string $actual = '';
 	public function __construct(&$request, &$response, $view_paths=null) {
 		if (!is_array($view_paths)) { $view_paths = []; }
 		$view_paths[] = __CA_APP_DIR__.'/plugins/modulo1/themes/'.__CA_THEME__.'/views';
@@ -23,28 +26,33 @@ class ExplorerController extends ActionController {
 
 	//6.1: vista general de los elementos de metadatos
 	public function Index() {
+		$this->preparar('arbol');
 		$this->mostrar('getArbolElementos', 'arbol', 'explorer_index_html.php');
 	}
 	# -------------------------------------------------------
 	//6.2: vista por tipo de entidad, con los elementos asignados a cada una
 	public function Entidades() {
+		$this->preparar('entidades');
 		$this->mostrar('getVistaEntidades', 'vista', 'explorer_entidades_html.php');
 	}
 
 	//6.3: vista por elemento de metadatos, el parámetro `elemento` elige cuál mostrar
 	public function Elementos() {
+		$this->preparar('elementos');
 		$this->view->setVar('elemento', $this->request->getParameter('elemento', pString));
 		$this->mostrar('getVistaElementos', 'vista', 'explorer_elementos_html.php');
 	}
 
 	//6.4: vista de relaciones entre entidades (origen, tipo, destino, inversa, multiplicidad y características)
 	public function Relaciones() {
+		$this->preparar('relaciones');
 		$this->mostrar('getVistaRelaciones', 'vista', 'explorer_relaciones_html.php');
 	}
 	
 	//6.5: perfil del modelo y de su configuración. Con el parámetro `accion` también registra una decisión o guarda una versión y muestra el perfil ya actualizado.
 	public function Perfil() {
 		if (!$this->request->user->canDoAction('can_use_modulo1')) { return; }
+		$this->preparar('perfil');
 		try {
 			$cliente = $this->createClient();
 			$modelo = (new Modulo1ModeloReader())->leerModelo();
@@ -97,6 +105,41 @@ class ExplorerController extends ActionController {
 		}
 	}
 	
+	//Deja listo lo que usa la barra lateral (explorer_info_html.php), las pantallas del módulo, con su dirección, y cuál es la actual
+	private function preparar(string $pantalla) {
+		$grupos = [
+			[_t('Explorar el modelo'), [
+				'arbol' => [_t('Elementos de metadatos'), 'Index'],
+				'entidades' => [_t('Vista por tipo de entidad'), 'Entidades'],
+				'elementos' => [_t('Vista por elemento'), 'Elementos'],
+				'relaciones' => [_t('Vista de relaciones'), 'Relaciones']
+			]],
+			[_t('Perfil y versiones'), [
+				'perfil' => [_t('Perfil del modelo'), 'Perfil'],
+				'versiones' => [_t('Versiones del perfil'), 'Versiones']
+			]]
+		];
+		$navegacion = [];
+		foreach ($grupos as [$titulo, $pantallas]) {
+			$items = [];
+			foreach ($pantallas as $id => [$nombre, $accion]) {
+				$items[$id] = ['nombre' => $nombre, 'url' => caNavUrl($this->request, 'modulo1', 'Explorer', $accion)];
+			}
+			$navegacion[] = ['titulo' => $titulo, 'pantallas' => $items];
+		}
+		self::$navegacion = $navegacion;
+		self::$actual = $pantalla;
+	}
+	# -------------------------------------------------------
+	//barra lateral con el índice de pantallas
+	public function Info() {
+		if (!self::$navegacion || !$this->request->user->canDoAction('can_use_modulo1')) { return ''; }
+		$this->view->setVar('navegacion', self::$navegacion);
+		$this->view->setVar('pantalla', self::$actual);
+		return $this->render('explorer_info_html.php', true);
+ 	}
+
+	//usuario q hace el cambio
 	private function usuario() : array {
 		$id = (int)$this->request->getUserID();
 		return ['id' => $id, 'nombre' => (string)$this->request->user->get('user_name') ?: 'usuario '.$id];

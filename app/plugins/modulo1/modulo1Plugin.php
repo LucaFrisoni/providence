@@ -1,9 +1,11 @@
 <?php
 
 //  Modulo 1: administración y exploración del modelo de informacion
-//  Agrega el menu del modulo
+//  las pantallas se abren desde el panel de gestion
 
 class modulo1Plugin extends BaseApplicationPlugin {
+	//nombre del widget de la barra lateral
+	const EXPLORER_WIDGET = 'modulo1ExplorerInfo';
 	private $config;
 
 	public function __construct($plugin_path) {
@@ -11,6 +13,17 @@ class modulo1Plugin extends BaseApplicationPlugin {
 		$this->config = Configuration::load($plugin_path.'/conf/modulo1.conf');
 		parent::__construct();
 	}
+	
+	public function hookRenderWidgets($widgets) {
+		$widgets[self::EXPLORER_WIDGET] = [
+			'domain' => ['module' => 'modulo1', 'controller' => 'Explorer'],
+			'handler' => ['module' => 'modulo1', 'controller' => 'Explorer', 'action' => 'Info', 'isplugin' => true],
+			'requires' => [],
+			'parameters' => []
+		];
+		return $widgets;
+ 	}
+
 	public function checkStatus() {
 		return [
 			'description' => $this->getDescription(),
@@ -18,60 +31,6 @@ class modulo1Plugin extends BaseApplicationPlugin {
 			'warnings' => [],
 			'available' => (bool)$this->config->get('enabled')
 		];
-	}
-
-	//Agrega el menu modulo 1 a la barra principal
-	public function hookRenderMenuBar($menu_bar) {
-		$request = $this->getRequest();
-		if (!$request || !$request->user->canDoAction('can_use_modulo1')) { return $menu_bar; }
-		$menu_bar['modulo1'] = [
-			'displayName' => _t('Módulo 1'),
-			'navigation' => [
-				'explorer' => [
-					'displayName' => _t('Elementos de metadatos'),
-					'default' => ['module' => 'modulo1', 'controller' => 'Explorer', 'action' => 'Index'],
-					'is_enabled' => 1,
-					'requires' => [],
-					'parameters' => []
-				],
-				'entidades' => [
-					'displayName' => _t('Vista por tipo de entidad'),
-					'default' => ['module' => 'modulo1', 'controller' => 'Explorer', 'action' => 'Entidades'],
-					'is_enabled' => 1,
-					'requires' => [],
-					'parameters' => []
-				], 
-				'elementos' => [
-					'displayName' => _t('Vista por elemento'),
-					'default' => ['module' => 'modulo1', 'controller' => 'Explorer', 'action' => 'Elementos'],
-					'is_enabled' => 1,
-					'requires' => [],
-					'parameters' => []
- 				], 
-				'relaciones' => [
-					'displayName' => _t('Vista de relaciones'),
-					'default' => ['module' => 'modulo1', 'controller' => 'Explorer', 'action' => 'Relaciones'],
-					'is_enabled' => 1,
-					'requires' => [],
-					'parameters' => []
- 				], 
-				'perfil' => [
-					'displayName' => _t('Perfil del modelo'),
-					'default' => ['module' => 'modulo1', 'controller' => 'Explorer', 'action' => 'Perfil'],
-					'is_enabled' => 1,
-					'requires' => [],
-					'parameters' => []
-				],
-				'versiones' => [
-					'displayName' => _t('Versiones del perfil'),
-					'default' => ['module' => 'modulo1', 'controller' => 'Explorer', 'action' => 'Versiones'],
-					'is_enabled' => 1,
-					'requires' => [],
-					'parameters' => []
- 				]
-			]
-		];
-		return $menu_bar;
 	}
 
 	static function getRoleActionList() {

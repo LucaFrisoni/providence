@@ -4,51 +4,32 @@
 $vista = $this->getVar('vista');
 $error = $this->getVar('error');
 $aviso = $this->getVar('aviso');
-?>
-<h1><?= _t('Módulo 1: perfil del modelo y de su configuración'); ?></h1>
-<?php if ($error) { ?>
-	<div class="notification-error-box"><?= htmlspecialchars($error); ?></div>
-<?php } else { ?>
-	<style>
-		.modulo1-tabla { border-collapse: collapse; margin: 0.5em 0 1em; }
-		.modulo1-tabla th, .modulo1-tabla td { border: 1px solid #ccc; padding: 4px 8px; text-align: left; vertical-align: top; }
-		.modulo1-formulario label { display: block; margin: 0.5em 0 0.2em; }
-		.modulo1-formulario textarea, .modulo1-formulario input[type=text], .modulo1-formulario select { width: 40em; max-width: 100%; }
-	</style>
-	<?php if ($aviso) { ?>
-		<div class="<?= $this->getVar('aviso_error') ? 'notification-error-box' : 'notification-info-box'; ?>"><?= htmlspecialchars($aviso); ?></div>
-	<?php } ?>
-	<p>
-		<?php if ($vista['ultima_version']) { ?>
-			<?= _t('Última versión guardada:'); ?> <?= htmlspecialchars(Modulo1Html::textoDeVersion($vista['ultima_version'])); ?>.
-			<strong><?= $vista['hay_cambios'] ? _t('El perfil cambió desde esa versión.') : _t('El perfil no cambió desde esa versión.'); ?></strong>
-		<?php } else { ?>
-			<?= _t('Todavía no se guardó ninguna versión de este perfil.'); ?>
-		<?php } ?>
-	</p>
-	<?= Modulo1Html::perfil($vista['perfil']); ?>
-
-	<h2><?= _t('Registrar una decisión'); ?></h2>
-	<p><?= _t('Explica por qué una parte del modelo está configurada así. Con el propósito vacío se elimina la decisión de esa parte.'); ?></p>
-	<form method="post" class="modulo1-formulario">
-		<input type="hidden" name="accion" value="decision">
-		<label for="referencia"><?= _t('Parte del perfil'); ?></label>
-		<select name="referencia" id="referencia">
-			<?= Modulo1Html::opciones(array_map(function($r) { return [$r['clave'], $r['texto']]; }, $vista['referencias'])); ?>
-		</select>
-		<label for="proposito"><?= _t('Propósito de la decisión'); ?></label>
-		<textarea name="proposito" id="proposito" rows="3"></textarea>
-		<p><button type="submit"><?= _t('Guardar decisión'); ?></button></p>
-	</form>
-
-	<h2><?= _t('Guardar una versión del perfil'); ?></h2>
-	<p><?= _t('Si el perfil no cambió desde la última versión, no se crea otra.'); ?></p>
-	<form method="post" class="modulo1-formulario">
-		<input type="hidden" name="accion" value="version">
-		<label for="nombre"><?= _t('Nombre de la versión'); ?></label>
-		<input type="text" name="nombre" id="nombre">
-		<label for="descripcion"><?= _t('Descripción (opcional)'); ?></label>
-		<textarea name="descripcion" id="descripcion" rows="2"></textarea>
-		<p><button type="submit"><?= _t('Guardar versión'); ?></button></p>
-	</form>
-<?php } ?>
+echo Modulo1Html::cabecera(_t('Perfil del modelo y de su configuración'), _t('El modelo tal como está hoy en Providence, con las decisiones que explican cómo se configuró. Las versiones guardadas permiten ver después qué cambió.'));
+if ($error) {
+	echo Modulo1Html::error($error);
+} else {
+	if ($aviso) {
+		echo '<div class="m1-aviso'.($this->getVar('aviso_error') ? ' m1-aviso-error' : '').'">'.Modulo1Html::e($aviso).'</div>';
+	}
+	$ultima = $vista['ultima_version'];
+	if (!$ultima) {
+		$estado = Modulo1Html::chip(_t('Sin versiones guardadas'));
+		$clase = '';
+	} elseif ($vista['hay_cambios']) {
+		$estado = Modulo1Html::chip(_t('Cambió desde la última versión'), Modulo1Html::CHIP_AVISO);
+		$clase = ' m1-estado-aviso';
+	} else {
+		$estado = Modulo1Html::chip(_t('Sin cambios desde la última versión'), Modulo1Html::CHIP_OK);
+		$clase = ' m1-estado-ok';
+	}
+	$formulario = '<form method="post" class="m1-formulario"><input type="hidden" name="accion" value="version">'
+		.'<label for="nombre">'.Modulo1Html::e(_t('Nombre de la versión')).'</label><input type="text" name="nombre" id="nombre">'
+		.'<label for="descripcion">'.Modulo1Html::e(_t('Descripción (opcional)')).'</label><textarea name="descripcion" id="descripcion" rows="2"></textarea>'
+		.'<button type="submit">'.Modulo1Html::e(_t('Guardar versión')).'</button></form>';
+	echo '<div class="m1-estado'.$clase.'">'.$estado
+		.($ultima ? ' '.Modulo1Html::e(_t('Última versión: %1', Modulo1Html::textoDeVersion($ultima))) : '')
+		.Modulo1Html::seccion(_t('Guardar una versión del perfil'), '<p>'.Modulo1Html::e(_t('Si el perfil no cambió desde la última versión, no se crea otra.')).'</p>'.$formulario).'</div>';
+	echo Modulo1Html::barra(_t('Buscar en el perfil…'));
+	echo Modulo1Html::perfil($vista['perfil'], true);
+}
+echo Modulo1Html::pie();

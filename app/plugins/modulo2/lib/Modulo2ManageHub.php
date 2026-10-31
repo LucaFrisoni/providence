@@ -38,7 +38,7 @@ class Modulo2ManageHub {
 	private function section(string $id, array $entry) : ?array {
 		$base = ['id' => $id, 'description' => $entry['description'], 'status' => $entry['status'], 'owner' => $entry['owner'] ?? null];
 		if (isset($entry['internal'])) {
-			return $base + ['label' => $entry['label'], 'route' => array_merge([self::PLUGIN_MODULE], $entry['internal']), 'links' => []];
+			return $base + ['label' => $entry['label'], 'route' => array_merge([$entry['module'] ?? self::PLUGIN_MODULE], $entry['internal']), 'links' => []];
 		}
 		$item = $this->firstVisible($entry['keys']);
 		if (!$item) { return null; }
