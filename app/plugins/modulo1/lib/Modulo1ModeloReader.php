@@ -71,7 +71,7 @@ class Modulo1ModeloReader {
 		return [
 			'entidades' => $entidades,
 			'elementos' => self::armarElementos($this->leerFilas(self::SQL_ELEMENTOS, self::COLUMNAS_ELEMENTOS)),
-			'asignaciones' => self::armarAsignaciones($this->leerFilas(self::SQL_ASIGNACIONES, self::COLUMNAS_ASIGNACIONES), $entidades),
+			'asignaciones' => self::armarAsignaciones($this->leerFilas(self::SQL_ASIGNACIONES, self::COLUMNAS_ASIGNACIONES), $entidades, $this->leerEtiquetas($entidades)),
 			'campos' => self::leerCampos(),
 			'relaciones' => $this->leerRelaciones(),
 			'configuraciones' => $this->leerConfiguraciones()
