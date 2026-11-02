@@ -56,7 +56,7 @@ final class Modulo2ManageHubTest extends TestCase {
 					'objects' => ['default' => ['module' => 'system', 'controller' => 'Preferences', 'action' => 'EditDuplicationPrefs/objects'], 'requires' => ['action:can_duplicate_ca_objects' => 'OR']],
 					'places' => ['default' => ['module' => 'system', 'controller' => 'Preferences', 'action' => 'EditDuplicationPrefs/places'], 'requires' => ['action:can_duplicate_ca_places' => 'OR']]
 				]]]]];
-		$map = ['config' => ['title' => 'Configuración', 'sections' => ['preferences' => ['keys' => ['preferences'], 'description' => 'Preferencias', 'status' => 'planned']]]];
+		$map = ['config' => ['title' => 'Configuración', 'sections' => ['preferences' => ['keys' => ['preferences'], 'description' => 'Preferencias', 'status' => 'native']]]];
 		$hub = new Modulo2ManageHub($navigation, fn(string $action) => $action === 'can_duplicate_ca_places', fn() => null);
 
 		$links = $hub->groups($map)['config']['sections'][0]['links'];

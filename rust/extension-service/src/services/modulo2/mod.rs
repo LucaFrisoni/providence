@@ -4,6 +4,8 @@ pub mod catalog;
 pub mod changes;
 pub mod conf_writer;
 pub mod edits;
+pub mod preference_requests;
+pub mod preferences;
 pub mod requests;
 pub mod restores;
 pub mod state;

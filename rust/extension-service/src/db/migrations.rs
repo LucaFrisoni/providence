@@ -55,6 +55,30 @@ pub const MIGRATIONS: &[Migration] = &[
         name: "creando_tablas_modulo1",
         sql: include_str!("migrations/modulo1/0001_creando_tablas_modulo1.sql"),
     },
+    Migration {
+        module: MODULO2,
+        version: 5,
+        name: "versiones_borrables_modulo2",
+        sql: include_str!("migrations/modulo2/0005_versiones_borrables_modulo2.sql"),
+    },
+    Migration {
+        module: MODULO2,
+        version: 6,
+        name: "hash_de_archivos_modulo2",
+        sql: include_str!("migrations/modulo2/0006_hash_de_archivos_modulo2.sql"),
+    },
+    Migration {
+        module: MODULO2,
+        version: 7,
+        name: "numeracion_sin_saltos_modulo2",
+        sql: include_str!("migrations/modulo2/0007_numeracion_sin_saltos_modulo2.sql"),
+    },
+    Migration {
+        module: MODULO2,
+        version: 8,
+        name: "preferencias_modulo2",
+        sql: include_str!("migrations/modulo2/0008_preferencias_modulo2.sql"),
+    },
 ];
 
 /// Aplica las migraciones que faltan y devuelve los identificadores de las aplicadas.

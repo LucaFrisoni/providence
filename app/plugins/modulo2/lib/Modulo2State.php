@@ -41,8 +41,37 @@ class Modulo2State {
 	 * exportan si app.conf lo pide con configuration_export_user_logins)
 	 */
 	public static function exportDatabase() : string {
+		$key = self::databaseFingerprint();
+		if (ExternalCache::contains($key, Modulo2Constants::EXPORT_CACHE)) { return (string)ExternalCache::fetch($key, Modulo2Constants::EXPORT_CACHE); }
 		require_once(__CA_LIB_DIR__.'/ConfigurationExporter.php');
-		return self::withoutLogins(self::keepingTooltips(fn() => ConfigurationExporter::exportConfigurationAsXML()));
+		$xml = self::withoutLogins(self::keepingTooltips(fn() => ConfigurationExporter::exportConfigurationAsXML()));
+		ExternalCache::save($key, $xml, Modulo2Constants::EXPORT_CACHE, Modulo2Constants::EXPORT_CACHE_TTL);
+		return $xml;
+	}
+	# -------------------------------------------------------
+	/**
+	 * Suma de verificación de las tablas que exporta el perfil (unos milisegundos, contra un par de
+	 * segundos de la exportación): si no cambió, la exportación guardada sigue valiendo
+	 */
+	public static function databaseFingerprint() : string {
+		$db = new Db();
+		$result = $db->query('CHECKSUM TABLE '.join(', ', self::configurationTables($db)));
+		$sums = [];
+		while ($result->nextRow()) { $sums[] = $result->get('Table').'='.$result->get('Checksum'); }
+		return hash('sha256', join(';', $sums));
+	}
+	# -------------------------------------------------------
+	/** Tablas de la base de Providence con la configuración que exporta el perfil */
+	private static function configurationTables(Db $db) : array {
+		$result = $db->query('SELECT table_name AS t FROM information_schema.tables WHERE table_schema = DATABASE() ORDER BY table_name');
+		$tables = [];
+		while ($result->nextRow()) {
+			$table = (string)$result->get('t');
+			foreach (Modulo2Constants::EXPORTED_TABLE_PREFIXES as $prefix) {
+				if (strpos($table, $prefix) === 0 && !in_array($table, Modulo2Constants::NOT_EXPORTED_TABLES, true)) { $tables[] = $table; break; }
+			}
+		}
+		return $tables;
 	}
 	# -------------------------------------------------------
 	/**

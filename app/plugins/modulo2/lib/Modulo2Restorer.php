@@ -16,23 +16,24 @@ class Modulo2Restorer {
 	public function __construct(private Modulo2ServiceClient $client, private Modulo2LocalConfig $local, private Modulo2State $state) {}
 	# -------------------------------------------------------
 	/**
-	 * Restaura la versión. $expected_hash es el hash del estado cuando se abrió la pantalla.
+	 * Restaura la versión. $expected_hash es el hash del estado cuando se abrió la pantalla;
+	 * $save_current, nombre y nota de la versión del estado actual, solo si el usuario pidió guardarlo.
 	 * Devuelve ['applied', 'message', 'change', 'version', 'version_before', 'database_differs']
 	 *
 	 * @throws Modulo2ServiceException Si hay un conflicto, la versión no existe o el servicio no responde
 	 * @throws Modulo2ConfigException Si no se puede bloquear app/conf/local
 	 */
-	public function restore(int $version_id, string $expected_hash, Modulo2Operator $operator) : array {
-		return $this->local->withLock(fn() => $this->restoreLocked($version_id, $expected_hash, $operator));
+	public function restore(int $version_id, string $expected_hash, Modulo2Operator $operator, ?array $save_current = null) : array {
+		return $this->local->withLock(fn() => $this->restoreLocked($version_id, $expected_hash, $operator, $save_current));
 	}
 	# -------------------------------------------------------
-	private function restoreLocked(int $version_id, string $expected_hash, Modulo2Operator $operator) : array {
+	private function restoreLocked(int $version_id, string $expected_hash, Modulo2Operator $operator, ?array $save_current) : array {
 		$previous = $this->local->files();
 		$plan = $this->client->prepareRestore($version_id, [
 			'user' => $operator->user(),
 			'expected_hash' => $expected_hash,
 			'state' => $this->state->current(),
-			'version' => $operator->automaticVersion(_t('Antes de restaurar otra versión'))
+			'version' => $save_current
 		]);
 		$failure = $this->replaceAndVerify($plan['files'] ?? []);
 		if ($failure !== null) { $failure .= $this->rollback($previous); }
@@ -63,9 +64,9 @@ class Modulo2Restorer {
 	private function rollback(array $previous) : string {
 		try {
 			$this->local->replaceAll($previous);
-			return ' '._t('Los archivos se dejaron como estaban.');
+			return ' '.Modulo2I18n::t('The files were left as they were.');
 		} catch (Modulo2ConfigException $e) {
-			return ' '._t('Además, no se pudieron dejar los archivos como estaban: %1', $e->getMessage());
+			return ' '.Modulo2I18n::t('Also, the files could not be left as they were: %1', $e->getMessage());
 		}
 	}
 	# -------------------------------------------------------
