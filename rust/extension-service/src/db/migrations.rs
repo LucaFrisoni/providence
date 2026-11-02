@@ -50,12 +50,6 @@ pub const MIGRATIONS: &[Migration] = &[
 
     },
     Migration {
-        module: MODULO1,
-        version: 1,
-        name: "creando_tablas_modulo1",
-        sql: include_str!("migrations/modulo1/0001_creando_tablas_modulo1.sql"),
-    },
-    Migration {
         module: MODULO2,
         version: 5,
         name: "versiones_borrables_modulo2",
@@ -78,6 +72,12 @@ pub const MIGRATIONS: &[Migration] = &[
         version: 8,
         name: "preferencias_modulo2",
         sql: include_str!("migrations/modulo2/0008_preferencias_modulo2.sql"),
+    },
+    Migration {
+        module: MODULO1,
+        version: 1,
+        name: "creando_tablas_modulo1",
+        sql: include_str!("migrations/modulo1/0001_creando_tablas_modulo1.sql"),
     },
 ];
 
