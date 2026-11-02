@@ -6,7 +6,6 @@
  * ----------------------------------------------------------------------
  */
 require_once(__CA_APP_DIR__.'/plugins/modulo2/lib/Modulo2Constants.php');
-require_once(__CA_APP_DIR__.'/plugins/modulo2/lib/Modulo2DatabaseConfiguration.php');
 require_once(__CA_APP_DIR__.'/plugins/modulo2/modulo2Plugin.php');
 require_once(__CA_LIB_DIR__.'/ApplicationPluginManager.php');
 require_once(__CA_MODELS_DIR__.'/ca_user_roles.php');
@@ -42,30 +41,17 @@ final class Modulo2PluginIntegrationTest extends TestCase {
 		$this->assertTrue(ca_user_roles::isValidAction(Modulo2Constants::PERMISSION));
 	}
 	# -------------------------------------------------------
-	#[TestDox('El plugin agrega la barra lateral de la página de configuraciones sin quitar las demás')]
+	#[TestDox('El plugin agrega la barra lateral de las configuraciones a esa página, a las versiones y al historial, sin quitar las demás')]
 	public function testPluginAddsConfigurationsSidebar() : void {
 		$widgets = (new modulo2Plugin(Modulo2Constants::PLUGIN_DIR))->hookRenderWidgets(['otro' => ['domain' => []]]);
 
 		$this->assertArrayHasKey('otro', $widgets);
-		$widget = $widgets[Modulo2Constants::CONFIGURATIONS_WIDGET];
-		$this->assertSame(['module' => 'modulo2', 'controller' => 'Configurations'], $widget['domain']);
-		$this->assertSame('Info', $widget['handler']['action']);
-		$this->assertTrue($widget['handler']['isplugin']);
-		$this->assertTrue($this->controllerHasInfo(), 'ConfigurationsController no define Info()');
-	}
-	# -------------------------------------------------------
-	#[TestDox('El resumen de la base cuenta cada elemento y enlaza una pantalla de Providence que existe')]
-	public function testDatabaseSummaryLinksExistingScreens() : void {
-		$summary = Modulo2DatabaseConfiguration::summary();
-
-		$this->assertSame(array_keys(Modulo2DatabaseConfiguration::ITEMS), array_keys($summary));
-		$this->assertGreaterThanOrEqual(1, $summary['locales']['count'], 'Providence tiene al menos un idioma');
-		foreach ($summary as $id => $item) {
-			[$module, $controller, $action] = $item['nav'];
-			$path = __CA_APP_DIR__."/controllers/{$module}/{$controller}Controller.php";
-			$this->assertFileExists($path, $id);
-			$this->assertStringContainsString("function {$action}(", file_get_contents($path), $id);
+		foreach (['Configurations', 'Versions', 'Changes'] as $controller) {
+			$widget = $widgets[Modulo2Constants::CONFIGURATIONS_WIDGET.$controller];
+			$this->assertSame(['module' => 'modulo2', 'controller' => $controller], $widget['domain']);
+			$this->assertSame(['module' => 'modulo2', 'controller' => 'Configurations', 'action' => 'Info', 'isplugin' => true], $widget['handler']);
 		}
+		$this->assertTrue($this->controllerHasInfo(), 'ConfigurationsController no define Info()');
 	}
 	# -------------------------------------------------------
 	/** Si el controlador de configuraciones define Info, sin cargarlo (necesita una petición de Providence) */

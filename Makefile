@@ -8,7 +8,7 @@ RUST_DIR := rust/extension-service
 MODULE ?=
 
 .PHONY: help test test-unit test-integration test-rust test-rust-unit test-rust-integration \
-	test-php test-php-unit test-php-integration lint fmt up build-service
+	test-php test-php-unit test-php-integration lint fmt up build-service seed-demo
 
 help: ## Muestra las tareas disponibles
 	@grep -E '^[a-z-]+:.*## ' $(MAKEFILE_LIST) | awk -F':.*## ' '{printf "  %-24s %s\n", $$1, $$2}'
@@ -48,3 +48,6 @@ up: ## Levanta el entorno de Docker
 
 build-service: ## Reconstruye y reinicia solo el servicio Rust
 	docker compose up -d --build extension-service
+
+seed-demo: ## Carga registros y subtipos de ejemplo en el Providence de desarrollo (módulo 2)
+	docker compose exec -u www-data providence php app/plugins/modulo2/tests/support/seed_demo_data.php --confirm

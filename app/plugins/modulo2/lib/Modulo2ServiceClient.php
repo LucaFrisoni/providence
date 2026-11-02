@@ -69,7 +69,8 @@ class Modulo2ServiceClient {
 	 * @throws Modulo2ServiceException
 	 */
 	public function getCatalog() : array {
-		return $this->request('GET', Modulo2Constants::CATALOG_PATH);
+		// Los textos del catálogo los escribe el servicio en inglés; se muestran en el idioma del usuario
+		return Modulo2I18n::catalog($this->request('GET', Modulo2Constants::CATALOG_PATH));
 	}
 	# -------------------------------------------------------
 	/** Hash del estado y versión idéntica, si existe: ['hash' => ..., 'version' => ...|null] */
@@ -77,9 +78,13 @@ class Modulo2ServiceClient {
 		return $this->request('POST', Modulo2Constants::STATE_PATH, ['state' => self::stateJson($state)]);
 	}
 	# -------------------------------------------------------
-	/** Todas las versiones, de la más nueva a la más vieja */
-	public function getVersions() : array {
-		return $this->request('GET', Modulo2Constants::VERSIONS_PATH)['versions'] ?? [];
+	/**
+	 * Una página de versiones, de la más nueva a la más vieja: ['versions' => [...], 'next_before' => id o null].
+	 * $before es el último id ya mostrado y $search, un texto del nombre
+	 */
+	public function getVersions(int $limit, ?int $before = null, ?string $search = null) : array {
+		$query = http_build_query(array_filter(['limit' => $limit, 'before' => $before, 'search' => $search]));
+		return $this->request('GET', Modulo2Constants::VERSIONS_PATH.'?'.$query);
 	}
 	# -------------------------------------------------------
 	/** Una versión, sus .conf y el hash de su exportación de la base: ['version', 'files', 'database_hash'] */
@@ -97,18 +102,37 @@ class Modulo2ServiceClient {
 	}
 	# -------------------------------------------------------
 	/** Cambia el nombre de una versión; solo quien la creó (si no, Modulo2ServiceException con estado 403) */
+	/** Devuelve ['version' => ..., 'changed' => false si el nombre ya era ese] */
 	public function renameVersion(int $id, array $user, string $name) : array {
-		return $this->request('POST', Modulo2Constants::VERSIONS_PATH."/{$id}/name", ['user' => $user, 'name' => $name])['version'];
+		return $this->request('POST', Modulo2Constants::VERSIONS_PATH."/{$id}/name", ['user' => $user, 'name' => $name]);
 	}
 	# -------------------------------------------------------
 	/**
-	 * Prepara una edición (POST /edits): ['change_id', 'version_before', 'file', 'content', 'value'].
-	 * $edit lleva el estado en 'state' y las claves del archivo local en 'local'
+	 * Borra una versión; solo quien la creó (si no, estado 403) y si no es la de la configuración
+	 * actual, $state (si lo es, estado 409)
 	 */
-	public function prepareEdit(array $edit) : array {
-		$edit['state'] = self::stateJson($edit['state']);
-		$edit['local'] = (object)$edit['local'];
-		return $this->request('POST', Modulo2Constants::EDITS_PATH, $edit);
+	public function deleteVersion(int $id, array $user, array $state) : array {
+		return $this->request('POST', Modulo2Constants::VERSIONS_PATH."/{$id}/delete", ['user' => $user, 'state' => self::stateJson($state)])['version'];
+	}
+	# -------------------------------------------------------
+	/**
+	 * Prepara un guardado (POST /edits): ['change_ids', 'version_before', 'files' => [archivo => contenido o null],
+	 * 'values']. $save lleva el estado en 'state' y las claves de cada archivo local en 'local'
+	 */
+	public function prepareEdits(array $save) : array {
+		$save['state'] = self::stateJson($save['state']);
+		$save['local'] = (object)array_map(fn($entries) => (object)$entries, $save['local']);
+		return $this->request('POST', Modulo2Constants::EDITS_PATH, $save);
+	}
+	# -------------------------------------------------------
+	/**
+	 * Informa el resultado de un guardado. Si se aplicó, el servicio guarda $state como la versión $version.
+	 * Devuelve ['changes' => [...], 'version' => versión nueva o null]
+	 */
+	public function finishEdits(array $change_ids, array $user, string $result, ?string $message, ?array $state, ?array $version) : array {
+		$body = ['change_ids' => $change_ids, 'user' => $user, 'result' => $result, 'message' => $message,
+			'state' => $state === null ? null : self::stateJson($state), 'version' => $version];
+		return $this->request('POST', Modulo2Constants::EDITS_RESULT_PATH, $body);
 	}
 	# -------------------------------------------------------
 	/** Prepara la restauración de una versión: ['change_id', 'version_before', 'version', 'files', 'database_differs'] */
@@ -130,6 +154,56 @@ class Modulo2ServiceClient {
 	public function getChanges(int $limit, ?int $before = null) : array {
 		$query = http_build_query(array_filter(['limit' => $limit, 'before' => $before]));
 		return $this->request('GET', Modulo2Constants::CHANGES_PATH.'?'.$query);
+	}
+	# -------------------------------------------------------Preferencias de un usuario
+	/** Hash de las preferencias y la versión idéntica del usuario: ['hash', 'version' => ...|null] */
+	public function getPreferenceStateInfo(array $user, array $preferences) : array {
+		return $this->request('POST', Modulo2Constants::PREFERENCES_PATH.'/state', ['user' => $user, 'state' => self::preferencesJson($preferences)]);
+	}
+	# -------------------------------------------------------
+	/** Una página de las versiones del usuario: ['versions', 'next_before'] */
+	public function getPreferenceVersions(int $user_id, int $limit, ?int $before = null, ?string $search = null) : array {
+		$query = http_build_query(array_filter(['user' => $user_id, 'limit' => $limit, 'before' => $before, 'search' => $search]));
+		return $this->request('GET', Modulo2Constants::PREFERENCES_PATH.'/versions?'.$query);
+	}
+	# -------------------------------------------------------
+	/** Una versión del usuario con sus preferencias: ['version', 'preferences'] */
+	public function getPreferenceVersion(int $user_id, int $id) : array {
+		return $this->request('GET', Modulo2Constants::PREFERENCES_PATH."/versions/{$id}?user={$user_id}");
+	}
+	# -------------------------------------------------------
+	/** Guarda las preferencias como versión; si ya hay una idéntica, estado 409 con la versión en getData() */
+	public function createPreferenceVersion(array $user, array $version, array $preferences) : array {
+		$body = ['user' => $user, 'version' => $version, 'state' => self::preferencesJson($preferences)];
+		return $this->request('POST', Modulo2Constants::PREFERENCES_PATH.'/versions', $body)['version'];
+	}
+	# -------------------------------------------------------
+	/** ['version', 'changed' => false si el nombre ya era ese] */
+	public function renamePreferenceVersion(int $id, array $user, string $name) : array {
+		return $this->request('POST', Modulo2Constants::PREFERENCES_PATH."/versions/{$id}/name", ['user' => $user, 'name' => $name]);
+	}
+	# -------------------------------------------------------
+	/** Borra una versión del usuario, salvo la de las preferencias actuales (estado 409) */
+	public function deletePreferenceVersion(int $id, array $user, array $preferences) : array {
+		return $this->request('POST', Modulo2Constants::PREFERENCES_PATH."/versions/{$id}/delete", ['user' => $user, 'state' => self::preferencesJson($preferences)])['version'];
+	}
+	# -------------------------------------------------------
+	/** Prepara un guardado o una restauración: ['change_id', 'version_before', 'version', 'preferences'] */
+	public function preparePreferences(string $path, array $user, string $expected_hash, array $preferences, ?array $previous, array $extra = []) : array {
+		$body = $extra + ['user' => $user, 'expected_hash' => $expected_hash, 'state' => self::preferencesJson($preferences), 'version' => $previous];
+		return $this->request('POST', Modulo2Constants::PREFERENCES_PATH.'/'.$path, $body);
+	}
+	# -------------------------------------------------------
+	/** Informa el resultado; si se aplicó un guardado, el servicio guarda $version. ['change', 'version'] */
+	public function finishPreferences(int $change_id, array $user, string $result, ?string $message, array $changes, ?array $preferences, ?array $version) : array {
+		$body = ['user' => $user, 'result' => $result, 'message' => $message, 'changes' => $changes,
+			'state' => $preferences === null ? null : self::preferencesJson($preferences), 'version' => $version];
+		return $this->request('POST', Modulo2Constants::PREFERENCES_PATH."/changes/{$change_id}/result", $body);
+	}
+	# -------------------------------------------------------
+	/** Preferencias como objeto JSON aunque estén vacías */
+	private static function preferencesJson(array $preferences) : array {
+		return ['preferences' => (object)$preferences];
 	}
 	# -------------------------------------------------------
 	/**
@@ -153,15 +227,16 @@ class Modulo2ServiceClient {
 			$response = $this->client->request($method, $path, $options);
 			$data = json_decode((string)$response->getBody(), true, Modulo2Constants::JSON_MAX_DEPTH, JSON_THROW_ON_ERROR);
 		} catch (GuzzleException | JsonException $e) {
-			throw new Modulo2ServiceException(_t('No se pudo consultar el servicio del módulo 2: %1', $e->getMessage()), 0, [], $e);
+			throw new Modulo2ServiceException(Modulo2I18n::t('The configuration service could not be reached: %1', $e->getMessage()), 0, [], $e);
 		}
 		// Un objeto JSON se decodifica como array asociativo; una lista ([1, 2]) no es una respuesta válida
 		if (!is_array($data) || ($data && array_is_list($data))) {
-			throw new Modulo2ServiceException(_t('El servicio del módulo 2 devolvió una respuesta inesperada'));
+			throw new Modulo2ServiceException(Modulo2I18n::t('The configuration service returned an unexpected response'));
 		}
 		$status = $response->getStatusCode();
 		if ($status >= 400) {
-			throw new Modulo2ServiceException((string)($data['error'] ?? _t('El servicio del módulo 2 respondió con el error %1', $status)), $status, $data);
+			$message = isset($data['error']) ? Modulo2I18n::message((string)$data['error']) : Modulo2I18n::t('The configuration service answered with error %1', $status);
+			throw new Modulo2ServiceException($message, $status, $data);
 		}
 		return $data;
 	}

@@ -1,0 +1,264 @@
+# Traducciones propias de la instalación para pt_BR: los textos del tema ModernUI (diálogo al salir sin
+# guardar y ajustes de las pantallas de Providence). Providence las carga además de app/locale/pt_BR.
+# messages.mo se genera desde este archivo con gettext: msgfmt messages.po -o messages.mo
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Language: pt_BR\n"
+
+msgid "Leave without saving?"
+msgstr "Sair sem salvar?"
+
+msgid "This form has changes that are not saved. If you leave the page, they are discarded."
+msgstr "Este formulário tem alterações que não foram salvas. Se você sair da página, elas serão descartadas."
+
+msgid "Keep editing"
+msgstr "Continuar editando"
+
+msgid "Leave without saving"
+msgstr "Sair sem salvar"
+
+msgid "Type * to see all the records."
+msgstr "Digite * para ver todos os registros."
+
+msgid "The record was added to your watched items."
+msgstr "O registro foi adicionado aos itens que você acompanha."
+
+msgid "The record was removed from your watched items."
+msgstr "O registro foi removido dos itens que você acompanha."
+
+msgid "Filter…"
+msgstr "Filtrar…"
+
+# Textos de Providence con datos (%1) que su traducción no tiene
+
+msgid "%1 available to you"
+msgstr "%1 disponíveis para você"
+
+msgid "%1 created by users"
+msgstr "%1 criados por usuários"
+
+msgid "%1 created by the public"
+msgstr "%1 criados pelo público"
+
+msgid "%1 %2 are available"
+msgstr "%1 %2 disponíveis"
+
+msgid "%1 displays are available"
+msgstr "%1 visualizações disponíveis"
+
+msgid "%1 rules are available for editing"
+msgstr "%1 regras disponíveis para edição"
+
+msgid "%1 forms are available for editing"
+msgstr "%1 formulários disponíveis para edição"
+
+msgid "%1 elements are defined"
+msgstr "%1 elementos definidos"
+
+msgid "%1 user interfaces are defined"
+msgstr "%1 interfaces de usuário definidas"
+
+msgid "%1 teams are available"
+msgstr "%1 equipes disponíveis"
+
+msgid "%1 comments need moderation"
+msgstr "%1 comentários aguardando moderação"
+
+msgid "%1 comments total"
+msgstr "%1 comentários no total"
+
+msgid "%1 moderated comments"
+msgstr "%1 comentários moderados"
+
+msgid "%1 taggings need moderation"
+msgstr "%1 marcações aguardando moderação"
+
+msgid "%1 total taggings"
+msgstr "%1 marcações no total"
+
+msgid "%1 total unique tags"
+msgstr "%1 tags únicas no total"
+
+msgid "Lot contains %1 objects"
+msgstr "O lote contém %1 objetos"
+
+msgid "Maximum upload size is %1"
+msgstr "O tamanho máximo de envio é %1"
+
+msgid "Number of %1 in hierarchy: %2"
+msgstr "Quantidade na hierarquia (%1): %2"
+
+msgid "Click %1 names to explore. Click on an arrow icon to open a %1 for editing."
+msgstr "Clique nos nomes (%1) para explorar. Clique em uma seta para abrir um registro (%1) para edição."
+
+msgid "Use the controls below to create new %1 relative to this record in the hierarchy."
+msgstr "Use os controles abaixo para criar novos %1 em relação a este registro na hierarquia."
+
+msgid "Use the controls below to create new %1 relative to this %2 in the hierarchy."
+msgstr "Use os controles abaixo para criar novos %1 em relação a este registro (%2) na hierarquia."
+
+msgid "Create child record under this %1"
+msgstr "Criar registro filho sob este registro (%1)"
+
+msgid "Change %1 type"
+msgstr "Alterar o tipo (%1)"
+
+msgid "Your search found no %1"
+msgstr "A busca não encontrou resultados (%1)"
+
+msgid "Creating new %1"
+msgstr "Criando: %1"
+
+msgid "Quick add %1"
+msgstr "Adição rápida: %1"
+
+msgid "Deaccessioned %1"
+msgstr "%1 baixados do acervo"
+
+msgid "%1 public pages"
+msgstr "%1 páginas públicas"
+
+msgid "A tool for extraction of embedded metadata from audio and video files. See %1 for additional information."
+msgstr "Ferramenta para extrair os metadados incorporados em arquivos de áudio e vídeo. Mais informações em %1."
+
+msgid "A tool for extraction of embedded metadata in images, documents and other media. See %1 for additional information."
+msgstr "Ferramenta para extrair os metadados incorporados em imagens, documentos e outras mídias. Mais informações em %1."
+
+msgid "LibreOffice cannot be found: conversion to PDF and generation of page previews will not be performed; you can obtain LibreOffice at %1"
+msgstr "O LibreOffice não foi encontrado: não haverá conversão para PDF nem pré-visualizações de páginas. Você pode obter o LibreOffice em %1"
+
+msgid "MeshLab cannot be found: you will not be able to process 3D files; you can obtain MeshLab at %1"
+msgstr "O MeshLab não foi encontrado: não será possível processar arquivos 3D. Você pode obter o MeshLab em %1"
+
+msgid "To fully index Chinese-language content the Jieba PHP word segmenter (%1) should be installed."
+msgstr "Para indexar completamente conteúdos em chinês, instale o segmentador de palavras Jieba PHP (%1)."
+
+msgid "Try installing Jieba PHP. See See %1"
+msgstr "Tente instalar o Jieba PHP. Veja %1"
+
+msgid "%1 Statistics"
+msgstr "Estatísticas: %1"
+
+msgid "Show %1"
+msgstr "Mostrar: %1"
+
+msgid "Your %1"
+msgstr "Seus %1"
+
+msgid "1 %1 is available"
+msgstr "1 %1 disponível"
+
+msgid "%1 page"
+msgstr "%1 página"
+
+msgid "%1 pages"
+msgstr "%1 páginas"
+
+msgid "%1 public page"
+msgstr "%1 página pública"
+
+msgid "%1 exporters are available"
+msgstr "%1 exportadores disponíveis"
+
+msgid "Outstanding items: %1"
+msgstr "Itens pendentes: %1"
+
+msgid "Checkout for %1 (%2)"
+msgstr "Empréstimo para %1 (%2)"
+
+msgid "Items out (all users): %1"
+msgstr "Itens emprestados (todos os usuários): %1"
+
+msgid "%1 importers are available"
+msgstr "%1 importadores disponíveis"
+
+msgid "%1 rules are defined"
+msgstr "%1 regras definidas"
+
+msgid "%1 mappings are defined"
+msgstr "%1 mapeamentos definidos"
+
+msgid "%1 saved searches"
+msgstr "%1 buscas salvas"
+
+msgid "%1 (%2) - submitted on %3 by %4<br/>Status: %5"
+msgstr "%1 (%2) - enviado em %3 por %4<br/>Estado: %5"
+
+msgid "%1 by %2"
+msgstr "%1 por %2"
+
+msgid "%1 file"
+msgstr "%1 arquivo"
+
+msgid "%1 files"
+msgstr "%1 arquivos"
+
+msgid "%1 running"
+msgstr "%1 em execução"
+
+msgid "%1 stuck"
+msgstr "%1 bloqueadas"
+
+msgid "+ %1 additional download"
+msgstr "+ %1 download adicional"
+
+msgid "+ %1 additional downloads"
+msgstr "+ %1 downloads adicionais"
+
+msgid "+ %1 more completed job"
+msgstr "+ %1 tarefa concluída adicional"
+
+msgid "+ %1 more completed jobs"
+msgstr "+ %1 tarefas concluídas adicionais"
+
+msgid "+ %1 more queued job"
+msgstr "+ %1 tarefa em fila adicional"
+
+msgid "+ %1 more queued jobs"
+msgstr "+ %1 tarefas em fila adicionais"
+
+msgid "Changes to <strong>%1</strong> from %2"
+msgstr "Alterações a <strong>%1</strong> desde %2"
+
+msgid "Displaying the last %1 %2 public registrations"
+msgstr "Últimos %1 registros públicos (%2)"
+
+msgid "Email sent on %1"
+msgstr "E-mail enviado em %1"
+
+msgid "Item was deleted - row_id: %1; table number: %2"
+msgstr "O item foi excluído - row_id: %1; número da tabela: %2"
+
+msgid "Jobs completed in the last %1 hours"
+msgstr "Tarefas concluídas nas últimas %1 horas"
+
+msgid "Jobs completed in the last %1 hours (showing %2 of %3)"
+msgstr "Tarefas concluídas nas últimas %1 horas (%2 de %3)"
+
+msgid "Jobs queued for later processing (showing %1 of %2)"
+msgstr "Tarefas em fila para processamento posterior (%1 de %2)"
+
+msgid "Jobs stuck in the last %1 hours"
+msgstr "Tarefas bloqueadas nas últimas %1 horas"
+
+msgid "Jobs stuck in the last %1 hours (showing %2 of %3)"
+msgstr "Tarefas bloqueadas nas últimas %1 horas (%2 de %3)"
+
+msgid "Showing %1 <span style='font-weight:bold; text-transform:lowercase;'>%2</span> with status <span style='font-weight:bold; text-transform:lowercase;'>\"%3\"</span>"
+msgstr "%1 <span style='font-weight:bold; text-transform:lowercase;'>%2</span> com o estado <span style='font-weight:bold; text-transform:lowercase;'>\"%3\"</span>"
+
+msgid "Showing recently created %1"
+msgstr "%1 criados recentemente"
+
+msgid "Showing the last %1 <span style='font-weight:bold; text-transform:lowercase;'>%2</span> created"
+msgstr "Últimos %1 <span style='font-weight:bold; text-transform:lowercase;'>%2</span> criados"
+
+msgid "There are no running jobs, queued jobs or jobs completed in the last %1 hours."
+msgstr "Não há tarefas em execução, em fila nem concluídas nas últimas %1 horas."
+
+msgid "There have been no changes to <strong>%1</strong> from %2."
+msgstr "Não houve alterações a <strong>%1</strong> desde %2."
+
+msgid "Unknown change type '%1'"
+msgstr "Tipo de alteração desconhecido \"%1\""

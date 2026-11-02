@@ -1,7 +1,7 @@
 <?php
 /* ----------------------------------------------------------------------
  * app/plugins/modulo2/tests/unit/Modulo2EditorTest.php :
- * Pruebas unitarias de la aplicación de una edición y de una restauración: el servicio se simula con
+ * Pruebas unitarias de la aplicación de un guardado y de una restauración: el servicio se simula con
  * el MockHandler de Guzzle y app/conf/local es una carpeta temporal. El valor efectivo se lee de esa
  * carpeta sobre unos valores de distribución fijos, como haría Providence.
  * ----------------------------------------------------------------------
@@ -20,7 +20,11 @@ use PHPUnit\Framework\TestCase;
 final class Modulo2EditorTest extends TestCase {
 	# -------------------------------------------------------
 	/** Valores de app/conf (distribución) que usa la configuración simulada */
-	const DISTRIBUTION = ['ca_places_disable' => '0', 'menu_color' => 'ffffff'];
+	const DISTRIBUTION = ['ca_places_disable' => '0', 'menu_color' => 'ffffff', 'ca_objects_children_display_mode_in_results' => 'show',
+		'enable_library_services' => '0', 'enable_object_checkout' => '0',
+		'ca_occurrences_breakout_find_by_type_in_menu' => '1', 'ca_occurrences_breakout_find_by_type_in_submenu' => '0'];
+	/** Versión que se guarda si el guardado se aplica */
+	const VERSION = ['name' => 'Cambios de prueba', 'description' => null];
 	# -------------------------------------------------------
 	private string $dir;
 	private Modulo2LocalConfig $local;
@@ -38,80 +42,144 @@ final class Modulo2EditorTest extends TestCase {
 		@unlink($this->dir.'.lock');
 	}
 	# -------------------------------------------------------
-	#[TestDox('Una edición aceptada escribe el contenido del servicio, lo verifica e informa "applied"')]
-	public function testAcceptedEditIsWrittenAndReported() : void {
-		$editor = $this->editor($this->plan("ca_places_disable = 1\n", true), $this->finished('applied'));
+	#[TestDox('Un guardado aceptado escribe el contenido del servicio, lo verifica e informa "applied" con el estado y la versión nueva')]
+	public function testAcceptedSaveIsWrittenAndReported() : void {
+		$editor = $this->editor($this->plan(['app.conf' => "ca_places_disable = 1\n"], [true]), $this->finished('applied'));
 
-		$result = $editor->apply($this->edit(true), $this->operator());
+		$result = $editor->apply([$this->edit(true)], $this->operator(), self::VERSION);
 
 		$this->assertTrue($result['applied']);
+		$this->assertSame(7, $result['version']['number']);
 		$this->assertSame("ca_places_disable = 1\n", $this->local->read('app.conf'));
-		$this->assertSame(['result' => 'applied', 'message' => null, 'state' => null], $this->body(1));
+		$finish = $this->body(1);
+		$this->assertSame([[5], 'applied', null, self::VERSION], [$finish['change_ids'], $finish['result'], $finish['message'], $finish['version']]);
+		$this->assertSame(['app.conf' => "ca_places_disable = 1\n"], $finish['state']['files'], 'Estado final, para la versión nueva');
+	}
+	# -------------------------------------------------------
+	// Varios cambios del mismo archivo llegan juntos al servicio y se verifican uno por uno
+	#[TestDox('Varios cambios van en un solo pedido, con sus valores, y se aplican juntos')]
+	public function testSeveralEditsGoInOneRequest() : void {
+		$content = "ca_objects_children_display_mode_in_results = hide\nca_places_disable = 1\n";
+		$editor = $this->editor($this->plan(['app.conf' => $content], [true, 'hide']), $this->finished('applied'));
+		$choice = ['key' => 'ca_objects_children_display_mode_in_results', 'kind' => 'choice', 'value' => 'hide', 'expected' => 'show'] + $this->edit(true);
+
+		$result = $editor->apply([$this->edit(true), $choice], $this->operator(), self::VERSION);
+
+		$this->assertTrue($result['applied'], (string)$result['message']);
+		$items = $this->body(0)['edits'];
+		$this->assertSame(['ca_places_disable', 'ca_objects_children_display_mode_in_results'], array_column($items, 'key'));
+		$this->assertSame(['hide', 'show', 'show'], [$items[1]['value'], $items[1]['current'], $items[1]['distribution']]);
+		$this->assertCount(2, $this->history, 'Un pedido para preparar y otro para cerrar');
+	}
+	# -------------------------------------------------------
+	// La clave vinculada cambia junto con la de la configuración: no cuenta como "otra clave" que cambió
+	#[TestDox('Un cambio con claves vinculadas las escribe juntas y se verifica con todas')]
+	public function testLinkedKeysAreAppliedTogether() : void {
+		$content = "enable_library_services = 1\nenable_object_checkout = 1\n";
+		$editor = $this->editor($this->plan(['app.conf' => $content], [true]), $this->finished('applied'));
+		$library = ['key' => 'enable_library_services', 'linked' => ['enable_object_checkout']] + $this->edit(true);
+
+		$result = $editor->apply([$library], $this->operator(), self::VERSION);
+
+		$this->assertTrue($result['applied'], (string)$result['message']);
+		$this->assertSame([false, false], [$this->body(0)['edits'][0]['current'], $this->body(0)['edits'][0]['distribution']]);
+	}
+	# -------------------------------------------------------
+	// Las dos formas de mostrar los subtipos en "Encontrar" se excluyen: de fábrica los hechos usan la primera
+	#[TestDox('No guarda una configuración activa junto con la que excluye, salvo que esa se apague en el mismo guardado')]
+	public function testExcludedSettingsCannotBeOnTogether() : void {
+		$submenu = ['key' => 'ca_occurrences_breakout_find_by_type_in_submenu', 'excludes' => 'ca_occurrences_breakout_find_by_type_in_menu'] + $this->edit(true);
+		$menu_off = ['key' => 'ca_occurrences_breakout_find_by_type_in_menu', 'excludes' => 'ca_occurrences_breakout_find_by_type_in_submenu', 'expected' => true] + $this->edit(false);
+
+		try {
+			$this->editor()->apply([$submenu], $this->operator(), self::VERSION);
+			$this->fail('Se guardaron las dos activas');
+		} catch (Modulo2ConfigException $e) {
+			$this->assertSame([], $this->history, 'No se pidió nada al servicio');
+		}
+
+		$content = "ca_occurrences_breakout_find_by_type_in_menu = 0
+ca_occurrences_breakout_find_by_type_in_submenu = 1
+";
+		$editor = $this->editor($this->plan(['app.conf' => $content], [true, false]), $this->finished('applied'));
+		$result = $editor->apply([$submenu, $menu_off], $this->operator(), self::VERSION);
+		$this->assertTrue($result['applied'], (string)$result['message']);
 	}
 	# -------------------------------------------------------
 	// El servicio valida y registra: necesita el valor actual, el esperado, las claves del archivo y el estado
-	#[TestDox('El pedido al servicio lleva el usuario, sus riesgos, los valores, las claves locales y el estado como objetos')]
+	#[TestDox('El pedido al servicio lleva el usuario, sus riesgos, los valores, las claves locales por archivo y el estado')]
 	public function testRequestCarriesValuesAndState() : void {
 		file_put_contents($this->dir.'/app.conf', "menu_color = 000000\n");
-		$editor = $this->editor($this->plan("ca_places_disable = 1\nmenu_color = 000000\n", true), $this->finished('applied'));
+		$editor = $this->editor($this->plan(['app.conf' => "ca_places_disable = 1\nmenu_color = 000000\n"], [true]), $this->finished('applied'));
 
-		$editor->apply($this->edit(true), $this->operator());
+		$editor->apply([$this->edit(true)], $this->operator(), self::VERSION);
 
 		$request = $this->body(0);
+		$item = $request['edits'][0];
 		$this->assertSame(['id' => 1, 'name' => 'admin'], $request['user']);
 		$this->assertSame(['low', 'medium'], $request['allowed_risks']);
-		$this->assertSame([true, false, false, false], [$request['value'], $request['current'], $request['expected'], $request['distribution']]);
-		$this->assertSame(['menu_color' => '000000'], $request['local']);
+		$this->assertSame([true, false, false, false], [$item['value'], $item['current'], $item['expected'], $item['distribution']]);
+		$this->assertSame(['app.conf' => ['menu_color' => '000000']], $request['local']);
 		$this->assertSame(['app.conf' => "menu_color = 000000\n"], $request['state']['files']);
-		$this->assertStringContainsString('"local":{"menu_color"', (string)$this->history[0]['request']->getBody());
+		$this->assertNull($request['version'], 'Sin pedido del usuario no se guarda el estado anterior');
+	}
+	# -------------------------------------------------------
+	#[TestDox('Si el usuario pidió guardar el estado anterior, el pedido lleva su nombre')]
+	public function testPreviousVersionOnlyWhenRequested() : void {
+		$editor = $this->editor($this->plan(['app.conf' => "ca_places_disable = 1\n"], [true]), $this->finished('applied'));
+		$previous = ['name' => 'Antes de probar', 'description' => null];
+
+		$editor->apply([$this->edit(true)], $this->operator(), self::VERSION, $previous);
+
+		$this->assertSame($previous, $this->body(0)['version']);
 	}
 	# -------------------------------------------------------
 	#[TestDox('Sin archivo local, las claves y los archivos van como objetos JSON vacíos, no como listas')]
 	public function testEmptyLocalAndStateAreJsonObjects() : void {
-		$editor = $this->editor($this->plan("ca_places_disable = 1\n", true), $this->finished('applied'));
+		$editor = $this->editor($this->plan(['app.conf' => "ca_places_disable = 1\n"], [true]), $this->finished('applied'));
 
-		$editor->apply($this->edit(true), $this->operator());
+		$editor->apply([$this->edit(true)], $this->operator(), self::VERSION);
 
 		$raw = (string)$this->history[0]['request']->getBody();
-		$this->assertStringContainsString('"local":{}', $raw);
+		$this->assertStringContainsString('"local":{"app.conf":{}}', $raw);
 		$this->assertStringContainsString('"files":{}', $raw);
 	}
 	# -------------------------------------------------------
-	// No asumir que escribir el archivo alcanza: si Providence no usa el valor nuevo, se deshace
-	#[TestDox('Si Providence no toma el valor, deja el archivo como estaba e informa "failed" con el motivo')]
+	// No asumir que escribir el archivo alcanza: si Providence no usa el valor nuevo, se deshace todo
+	#[TestDox('Si Providence no toma un valor, deja el archivo como estaba e informa "failed" sin estado ni versión')]
 	public function testEditNotTakenIsRolledBack() : void {
 		file_put_contents($this->dir.'/app.conf', "menu_color = 000000\n");
-		$editor = $this->editor($this->plan("ca_places_disable = 0\nmenu_color = 000000\n", true), $this->finished('failed'));
+		$editor = $this->editor($this->plan(['app.conf' => "ca_places_disable = 0\nmenu_color = 000000\n"], [true]), $this->finished('failed'));
 
-		$result = $editor->apply($this->edit(true), $this->operator());
+		$result = $editor->apply([$this->edit(true)], $this->operator(), self::VERSION);
 
 		$this->assertFalse($result['applied']);
 		$this->assertSame("menu_color = 000000\n", $this->local->read('app.conf'));
-		$this->assertSame('failed', $this->body(1)['result']);
-		$this->assertStringContainsString(_t('El archivo se dejó como estaba.'), $this->body(1)['message']);
+		$this->assertSame(['failed', null], [$this->body(1)['result'], $this->body(1)['state']]);
+		$this->assertStringContainsString(_t('The files were left as they were.'), $this->body(1)['message']);
 	}
 	# -------------------------------------------------------
-	#[TestDox('Si al reescribir cambian otras claves del archivo, la edición falla y se deshace')]
+	#[TestDox('Si al reescribir cambian otras claves del archivo, el guardado falla y se deshace')]
 	public function testChangedOtherKeysAreRolledBack() : void {
 		file_put_contents($this->dir.'/app.conf', "menu_color = 000000\n");
-		$editor = $this->editor($this->plan("ca_places_disable = 1\nmenu_color = 111111\n", true), $this->finished('failed'));
+		$editor = $this->editor($this->plan(['app.conf' => "ca_places_disable = 1\nmenu_color = 111111\n"], [true]), $this->finished('failed'));
 
-		$this->assertFalse($editor->apply($this->edit(true), $this->operator())['applied']);
+		$this->assertFalse($editor->apply([$this->edit(true)], $this->operator(), self::VERSION)['applied']);
 		$this->assertSame("menu_color = 000000\n", $this->local->read('app.conf'));
 	}
 	# -------------------------------------------------------
-	#[TestDox('Un rechazo del servicio lanza la excepción con su código y no escribe ni informa nada')]
-	public function testRejectedEditWritesNothing() : void {
-		$editor = $this->editor(new Response(409, [], '{"error":"la configuración cambió","change_id":9}'));
+	#[TestDox('Un rechazo del servicio lanza la excepción con su código y el cambio rechazado, y no escribe ni informa nada')]
+	public function testRejectedSaveWritesNothing() : void {
+		$editor = $this->editor(new Response(409, [], '{"error":"the setting changed","change_id":9,"item":0}'));
 
 		try {
-			$editor->apply($this->edit(true), $this->operator());
+			$editor->apply([$this->edit(true)], $this->operator(), self::VERSION);
 			$this->fail('Se esperaba Modulo2ServiceException');
 		} catch (Modulo2ServiceException $e) {
-			$this->assertSame([409, 'la configuración cambió'], [$e->getStatus(), $e->getMessage()]);
+			$this->assertSame([409, 'the setting changed', 0], [$e->getStatus(), $e->getMessage(), $e->getData()['item']]);
 		}
 		$this->assertNull($this->local->read('app.conf'));
-		$this->assertCount(1, $this->history, 'Solo el pedido de edición');
+		$this->assertCount(1, $this->history, 'Solo el pedido del guardado');
 	}
 	# -------------------------------------------------------
 	#[TestDox('Una restauración reemplaza los .conf por los de la versión e informa el estado que quedó')]
@@ -169,13 +237,15 @@ final class Modulo2EditorTest extends TestCase {
 		return new Modulo2ServiceClient(Modulo2Constants::TEST_FAKE_SERVICE_URL, Modulo2Constants::TEST_TIMEOUT, $handler);
 	}
 	# -------------------------------------------------------
-	/** Respuesta de /edits: el contenido que hay que escribir y el valor que Providence tiene que leer */
-	private function plan(?string $content, $value) : Response {
-		return new Response(200, [], json_encode(['change_id' => 5, 'version_before' => ['id' => 3], 'file' => 'app.conf', 'content' => $content, 'value' => $value]));
+	/** Respuesta de /edits: el contenido de cada archivo y el valor que Providence tiene que leer en cada cambio */
+	private function plan(array $files, array $values) : Response {
+		return new Response(200, [], json_encode(['change_ids' => [5], 'version_before' => ['id' => 3], 'files' => $files, 'values' => $values]));
 	}
 	# -------------------------------------------------------
+	/** Respuesta del cierre del guardado (/edits/result), y del de una restauración */
 	private function finished(string $result) : Response {
-		return new Response(200, [], json_encode(['change' => ['id' => 5, 'result' => $result, 'message' => null]]));
+		$version = $result === 'applied' ? ['id' => 30, 'number' => 7] : null;
+		return new Response(200, [], json_encode(['changes' => [['id' => 5, 'result' => $result]], 'version' => $version, 'change' => ['id' => 5, 'result' => $result, 'message' => null]]));
 	}
 	# -------------------------------------------------------
 	private function edit($value) : array {
