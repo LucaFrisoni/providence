@@ -3,6 +3,7 @@
 
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\GuzzleException;
+use GuzzleHttp\HandlerStack;
 
 class Modulo1ServiceException extends Exception {}
 
@@ -27,11 +28,13 @@ class Modulo1ServiceClient {
 	const JSON_MAX_DEPTH = 512;
 	
 	private $client;
-	public function __construct(string $base_url, float $timeout) {
+	// el handler solo se pasa en las pruebas para simular las respuestas del servicio
+	public function __construct(string $base_url, float $timeout, ?HandlerStack $handler = null) {
 		$this->client = new Client([
 			'base_uri' => rtrim($base_url, '/').'/',
 			'timeout' => $timeout,
-			'connect_timeout' => $timeout
+			'connect_timeout' => $timeout,
+			'handler' => $handler
 		]);
 	}
 	

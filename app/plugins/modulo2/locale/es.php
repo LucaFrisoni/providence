@@ -492,4 +492,8 @@ return [
 	'Method used to calculate age of set. Age may be calculated as number of days since the set was created, or the number of days since the set was last edited or used in a search or for a report.' => 'Desde cuándo se cuenta la antigüedad de un conjunto: desde que se creó, o desde la última vez que se editó o se usó en una búsqueda o en un informe.',
 	'Days since creation' => 'Días desde la creación',
 	'Days since last use' => 'Días desde el último uso',
+
+	// Tarjeta del módulo 1 en el panel de gestión
+	'Information model' => 'Modelo de información',
+	'How the model is structured: entities, metadata elements, relationships, applied configurations, and the model profile with its decisions and versions.' => 'Cómo está armado el modelo: entidades, elementos de metadatos, relaciones, configuraciones aplicadas y el perfil del modelo con sus decisiones y versiones.',
 ];

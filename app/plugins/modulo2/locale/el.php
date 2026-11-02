@@ -461,4 +461,8 @@ return [
 	'Method used to calculate age of set. Age may be calculated as number of days since the set was created, or the number of days since the set was last edited or used in a search or for a report.' => 'Μέθοδος υπολογισμού της ηλικίας μιας ομάδας: ημέρες από τη δημιουργία της ή από την τελευταία επεξεργασία ή χρήση της σε αναζήτηση ή αναφορά.',
 	'Days since creation' => 'Ημέρες από τη δημιουργία',
 	'Days since last use' => 'Ημέρες από την τελευταία χρήση',
+
+	// Tarjeta del módulo 1 en el panel de gestión
+	'Information model' => 'Μοντέλο πληροφοριών',
+	'How the model is structured: entities, metadata elements, relationships, applied configurations, and the model profile with its decisions and versions.' => 'Πώς είναι δομημένο το μοντέλο: οντότητες, στοιχεία μεταδεδομένων, σχέσεις, εφαρμοσμένες ρυθμίσεις και το προφίλ του μοντέλου με τις αποφάσεις και τις εκδόσεις του.',
 ];

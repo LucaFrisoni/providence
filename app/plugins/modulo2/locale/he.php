@@ -461,4 +461,8 @@ return [
 	'Method used to calculate age of set. Age may be calculated as number of days since the set was created, or the number of days since the set was last edited or used in a search or for a report.' => 'שיטת חישוב גיל הסט: מספר הימים מאז יצירתו, או מאז הפעם האחרונה שנערך או שימש בחיפוש או בדוח.',
 	'Days since creation' => 'ימים מאז היצירה',
 	'Days since last use' => 'ימים מאז השימוש האחרון',
+
+	// Tarjeta del módulo 1 en el panel de gestión
+	'Information model' => 'מודל מידע',
+	'How the model is structured: entities, metadata elements, relationships, applied configurations, and the model profile with its decisions and versions.' => 'כיצד המודל בנוי: ישויות, רכיבי מטא-נתונים, קשרים, תצורות שהוחלו ופרופיל המודל על החלטותיו וגרסאותיו.',
 ];

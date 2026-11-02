@@ -461,4 +461,8 @@ return [
 	'Method used to calculate age of set. Age may be calculated as number of days since the set was created, or the number of days since the set was last edited or used in a search or for a report.' => 'Způsob výpočtu stáří skupiny: počet dní od jejího vytvoření, nebo od poslední úpravy či použití ve vyhledávání nebo sestavě.',
 	'Days since creation' => 'Dny od vytvoření',
 	'Days since last use' => 'Dny od posledního použití',
+
+	// Tarjeta del módulo 1 en el panel de gestión
+	'Information model' => 'Informační model',
+	'How the model is structured: entities, metadata elements, relationships, applied configurations, and the model profile with its decisions and versions.' => 'Jak je model strukturován: entity, prvky metadat, vztahy, použité konfigurace a profil modelu s jeho rozhodnutími a verzemi.',
 ];
