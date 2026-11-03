@@ -9,6 +9,15 @@ use PHPUnit\Framework\TestCase;
 #[TestDox('Módulo 1 · piezas de HTML')]
 final class Modulo1HtmlTest extends TestCase {
 	# -------------------------------------------------------
+	// Las pruebas leen los textos en castellano
+	protected function setUp() : void {
+		Modulo1I18n::forceLocale('es_AR');
+	}
+	# -------------------------------------------------------
+	protected function tearDown() : void {
+		Modulo1I18n::forceLocale(null);
+	}
+	# -------------------------------------------------------
 	#[TestDox('e() escapa el HTML y las comillas')]
 	public function testEscape() : void {
 		$this->assertSame('&lt;b&gt;&quot;x&quot; &amp; &#039;y&#039;', Modulo1Html::e('<b>"x" & \'y\''));

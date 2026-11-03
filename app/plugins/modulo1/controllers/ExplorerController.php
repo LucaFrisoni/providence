@@ -2,6 +2,7 @@
 
 //Explorador del modelo de información (módulo 1).
 
+require_once(__CA_APP_DIR__.'/plugins/modulo1/lib/Modulo1I18n.php');
 require_once(__CA_APP_DIR__.'/plugins/modulo1/lib/Modulo1ServiceClient.php');
 require_once(__CA_APP_DIR__.'/plugins/modulo1/lib/Modulo1ModeloReader.php');
 require_once(__CA_APP_DIR__.'/plugins/modulo1/lib/Modulo1Html.php');
@@ -94,10 +95,10 @@ class ExplorerController extends ActionController {
 		try {
 			if ($accion === 'decision') {
 				$cliente->registrarDecision($texto('referencia'), $texto('proposito'), $this->usuario());
-				$this->view->setVar('aviso', _t('Se actualizó la decisión.'));
+				$this->view->setVar('aviso', Modulo1I18n::t('The decision was updated.'));
 			} elseif ($accion === 'version') {
 				$resultado = $cliente->guardarVersion($modelo, $texto('nombre'), $texto('descripcion'), $this->usuario());
-				$this->view->setVar('aviso', $resultado['creada'] ? _t('Se guardó la versión «%1».', $resultado['version']['nombre']) : $resultado['mensaje']);
+				$this->view->setVar('aviso', $resultado['creada'] ? Modulo1I18n::t('The version «%1» was saved.', $resultado['version']['nombre']) : $resultado['mensaje']);
 			}
 		} catch (Modulo1ServiceException $e) {
 			$this->view->setVar('aviso', $e->getMessage());
@@ -108,15 +109,15 @@ class ExplorerController extends ActionController {
 	//Deja listo lo que usa la barra lateral (explorer_info_html.php), las pantallas del módulo, con su dirección, y cuál es la actual
 	private function preparar(string $pantalla) {
 		$grupos = [
-			[_t('Explorar el modelo'), [
-				'arbol' => [_t('Elementos de metadatos'), 'Index'],
-				'entidades' => [_t('Vista por tipo de entidad'), 'Entidades'],
-				'elementos' => [_t('Vista por elemento'), 'Elementos'],
-				'relaciones' => [_t('Vista de relaciones'), 'Relaciones']
+			[Modulo1I18n::t('Explore the model'), [
+				'arbol' => [Modulo1I18n::t('Metadata elements'), 'Index'],
+				'entidades' => [Modulo1I18n::t('View by entity type'), 'Entidades'],
+				'elementos' => [Modulo1I18n::t('View by element'), 'Elementos'],
+				'relaciones' => [Modulo1I18n::t('Relationships view'), 'Relaciones']
 			]],
-			[_t('Perfil y versiones'), [
-				'perfil' => [_t('Perfil del modelo'), 'Perfil'],
-				'versiones' => [_t('Versiones del perfil'), 'Versiones']
+			[Modulo1I18n::t('Profile and versions'), [
+				'perfil' => [Modulo1I18n::t('Model profile'), 'Perfil'],
+				'versiones' => [Modulo1I18n::t('Profile versions'), 'Versiones']
 			]]
 		];
 		$navegacion = [];

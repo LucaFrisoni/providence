@@ -1,6 +1,7 @@
 <?php
 // Piezas de HTML que comparten las vistas del módulo 1
 
+require_once(__CA_APP_DIR__.'/plugins/modulo1/lib/Modulo1I18n.php');
 class Modulo1Html {
 	//ipos de etiqueta de color
 	const CHIP_NEUTRO = 'neutro';
@@ -15,62 +16,92 @@ class Modulo1Html {
 		return htmlspecialchars((string)$texto, ENT_QUOTES, 'UTF-8');
 	}
 	
+	//Colores, letra y bordes: son los mismos del modulo 2 (variables --m2-*), asi las pantallas siguen el tema elegido en Mis preferencias
+	public static function variablesDeTema() : string {
+		$ui = defined('__CA_APP_DIR__') ? __CA_APP_DIR__.'/plugins/modulo2/lib/Modulo2Ui.php' : '';
+		if ($ui && is_file($ui)) {
+			require_once($ui);
+			return Modulo2Ui::buttonStyles().self::ajustesDeTema();
+		}
+		//sin el modulo 2 (por ejemplo, en pruebas aisladas) se usan los valores del tema moderno
+		return '<style>:root { --m2-accent: #138290; --m2-accent-dark: #0e6b75; --m2-accent-soft: #e8f5f6; --m2-text: #1d2b33; --m2-muted: #66757e; --m2-border: #e2e8eb; --m2-soft: #f5f8f9;
+			--m2-ok: #1f7a3a; --m2-ok-soft: #e6f5ea; --m2-warn: #8a5a00; --m2-warn-soft: #fff5d9; --m2-danger: #b42318; --m2-danger-soft: #fdeceb; --m2-info: #2f5f98; --m2-info-soft: #ebf3fc;
+			--m2-radius: 10px; --m2-shadow: 0 1px 2px rgba(16, 24, 40, .05), 0 1px 3px rgba(16, 24, 40, .07); --m2-shadow-lg: 0 12px 32px rgba(16, 24, 40, .18);
+			--m2-font: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; }</style>';
+	}
+
+	//Con el tema default de Providence las pantallas del modulo se ven como las de Providence (misma regla que el modulo 2: Modulo2Ui::modernTheme)
+	private static function ajustesDeTema() : string {
+		if (Modulo2Ui::modernTheme()) { return ''; }
+		return '<style>
+			.m1-pagina, #leftNav .m1-menu { font-size: 12px; font-family: var(--m2-font) !important; }
+			.m1-pagina h1 { font: normal 20px "DIN-Regular", Arial, sans-serif !important; letter-spacing: 0 !important; }
+			.m1-tarjeta, .m1-tabla, .m1-estado, .m1-seccion-grande, .m1-barra { box-shadow: none !important; border-radius: 0 !important; }
+			.m1-tarjeta:hover { border-color: var(--m2-border); }
+			.m1-formulario button, .m1-barra button { background: #eee; border-color: #aaa; color: #222; font-weight: bold; text-transform: uppercase; font-size: 11px; border-radius: 0; }
+			.m1-formulario button:hover, .m1-barra button:hover { background: #ddd; border-color: #aaa; }
+			#leftNav .m1-menu ul.arrow li a { border-radius: 0; text-transform: uppercase; font-size: 11px; }
+			#leftNav .m1-menu ul.arrow li.m1-actual a { background: #eee; color: #222; box-shadow: none; }
+		</style>';
+	}
+
 	//estilo de todas las pantallas del modulo
 	public static function estilos() : string {
-		return '<style>
+		return self::variablesDeTema().'<style>
+			.m1-pagina { font-family: var(--m2-font); color: var(--m2-text); font-size: 13px; line-height: 1.5; }
 			.m1-pagina { max-width: 1200px; }
-			.m1-intro { color: #555; }
-			.m1-barra { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; margin: 12px 0; padding: 8px 12px; background: #f7f7f7; border: 1px solid #e2e2e2; border-radius: 4px; }
-			.m1-barra input[type=search] { width: 320px; max-width: 100%; padding: 5px 8px; border: 1px solid #ccc; border-radius: 3px; }
-			.m1-barra a { color: #0b5e8a; }
-			.m1-ninguno { display: none; color: #888; }
+			.m1-intro { color: var(--m2-muted); }
+			.m1-barra { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; margin: 12px 0; padding: 8px 12px; background: var(--m2-soft); border: 1px solid var(--m2-border); border-radius: var(--m2-radius); }
+			.m1-barra input[type=search] { width: 320px; max-width: 100%; padding: 5px 8px; border: 1px solid var(--m2-border); border-radius: var(--m2-radius); background: #fff; color: var(--m2-text); }
+			.m1-barra a { color: var(--m2-accent-dark); }
+			.m1-ninguno { display: none; color: var(--m2-muted); }
 			.m1-oculto { display: none !important; }
-			.m1-grupo { margin: 20px 0 6px 0; padding-bottom: 4px; border-bottom: 2px solid #ccc; font-size: 15px; text-transform: uppercase; color: #444; }
+			.m1-grupo { margin: 20px 0 6px 0; padding-bottom: 4px; border-bottom: 2px solid var(--m2-border); font-size: 15px; text-transform: uppercase; color: var(--m2-text); }
 			.m1-grilla { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 12px; align-items: start; }
-			.m1-tarjeta { border: 1px solid #e2e2e2; border-radius: 6px; padding: 12px 14px; background: #fff; transition: box-shadow .15s, border-color .15s; }
-			.m1-tarjeta:hover { border-color: #b9dde1; box-shadow: 0 2px 8px rgba(19, 130, 144, .12); }
-			.m1-tarjeta h3 { margin: 0 0 4px 0; font-size: 15px; color: #0b5e8a; }
-			.m1-tarjeta p { margin: 6px 0; color: #555; }
-			.m1-codigo { color: #777; font-size: 12px; font-weight: normal; }
-			.m1-chip { display: inline-block; margin: 0 4px 2px 0; padding: 0 6px; border-radius: 3px; font-size: 10px; text-transform: uppercase; background: #eee; color: #555; }
-			.m1-chip-acento { background: #e3f4f6; color: #0e6b75; }
-			.m1-chip-ok { background: #d1f0d8; color: #1e5b2c; }
-			.m1-chip-aviso { background: #fff3cd; color: #664d03; }
-			.m1-chip-error { background: #f8d7da; color: #842029; }
-			.m1-chip-info { background: #eef4fb; color: #33547a; }
-			.m1-seccion { margin: 10px 0 0 0; padding-top: 6px; border-top: 1px dashed #e2e2e2; }
-			.m1-seccion > summary { cursor: pointer; font-size: 12px; color: #0b5e8a; }
-			.m1-seccion.m1-seccion-grande { margin: 12px 0; padding: 0 12px 8px 12px; border: 1px solid #e2e2e2; border-radius: 4px; }
-			.m1-seccion-grande > summary { padding: 8px 0; font-size: 15px; font-weight: bold; color: #444; }
+			.m1-tarjeta { border: 1px solid var(--m2-border); border-radius: var(--m2-radius); padding: 12px 14px; background: #fff; box-shadow: var(--m2-shadow); transition: box-shadow .15s, border-color .15s; }
+			.m1-tarjeta:hover { border-color: var(--m2-accent); box-shadow: var(--m2-shadow-lg); }
+			.m1-tarjeta h3 { margin: 0 0 4px 0; font-size: 15px; color: var(--m2-accent-dark); }
+			.m1-tarjeta p { margin: 6px 0; color: var(--m2-muted); }
+			.m1-codigo { color: var(--m2-muted); font-size: 12px; font-weight: normal; }
+			.m1-chip { display: inline-block; margin: 0 4px 2px 0; padding: 0 6px; border-radius: 3px; font-size: 10px; text-transform: uppercase; background: var(--m2-soft); color: var(--m2-muted); }
+			.m1-chip-acento { background: var(--m2-accent-soft); color: var(--m2-accent-dark); }
+			.m1-chip-ok { background: var(--m2-ok-soft); color: var(--m2-ok); }
+			.m1-chip-aviso { background: var(--m2-warn-soft); color: var(--m2-warn); }
+			.m1-chip-error { background: var(--m2-danger-soft); color: var(--m2-danger); }
+			.m1-chip-info { background: var(--m2-info-soft); color: var(--m2-info); }
+			.m1-seccion { margin: 10px 0 0 0; padding-top: 6px; border-top: 1px dashed var(--m2-border); }
+			.m1-seccion > summary { cursor: pointer; font-size: 12px; color: var(--m2-accent-dark); }
+			.m1-seccion.m1-seccion-grande { margin: 12px 0; padding: 0 12px 8px 12px; border: 1px solid var(--m2-border); border-radius: var(--m2-radius); }
+			.m1-seccion-grande > summary { padding: 8px 0; font-size: 15px; font-weight: bold; color: var(--m2-text); }
 			.m1-arbol ul { list-style: none; margin: 4px 0; padding-left: 1.4em; }
 			.m1-arbol summary { cursor: pointer; }
 			.m1-arbol li { margin: 2px 0; }
 			.m1-lista { margin: 6px 0 0 0; padding-left: 1.2em; font-size: 12px; }
 			.m1-tabla { border-collapse: collapse; margin: 4px 0 12px; width: 100%; }
-			.m1-tabla th, .m1-tabla td { border: 1px solid #ddd; padding: 4px 8px; text-align: left; vertical-align: top; }
-			.m1-tabla thead th { background: #f2f2f2; font-weight: normal; }
-			.m1-aviso { margin: 12px 0; padding: 8px 12px; border-radius: 4px; background: #e3f4f6; border-left: 4px solid #138290; }
-			.m1-aviso-error { background: #f8d7da; border-left-color: #842029; }
-			.m1-estado { margin: 12px 0; padding: 10px 14px; border: 1px solid #e2e2e2; border-radius: 6px; background: #fff; }
-			.m1-estado-ok { border-color: #8fcf9e; background: #f6fcf7; }
-			.m1-estado-aviso { border-color: #ffe08a; background: #fffaf0; }
-			.m1-formulario label { display: block; margin: 8px 0 2px; font-size: 12px; color: #444; }
-			.m1-formulario input[type=text], .m1-formulario textarea, .m1-formulario select { width: 100%; box-sizing: border-box; padding: 5px 8px; border: 1px solid #ccc; border-radius: 3px; }
-			.m1-formulario button, .m1-barra button { margin-top: 8px; padding: 4px 12px; border: 1px solid #0b5e8a; border-radius: 3px; background: #0b5e8a; color: #fff; cursor: pointer; }
-			.m1-formulario button:hover, .m1-barra button:hover { background: #138290; border-color: #138290; }
-			.m1-decision { margin-top: 8px; padding: 4px 8px; background: #eef4fb; border-left: 3px solid #5b8ec9; font-size: 12px; color: #33547a; }
+			.m1-tabla th, .m1-tabla td { border: 1px solid var(--m2-border); padding: 4px 8px; text-align: left; vertical-align: top; }
+			.m1-tabla thead th { background: var(--m2-soft); font-weight: normal; }
+			.m1-aviso { margin: 12px 0; padding: 8px 12px; border-radius: var(--m2-radius); background: var(--m2-accent-soft); border-left: 4px solid var(--m2-accent); }
+			.m1-aviso-error { background: var(--m2-danger-soft); border-left-color: var(--m2-danger); }
+			.m1-estado { margin: 12px 0; padding: 10px 14px; border: 1px solid var(--m2-border); border-radius: var(--m2-radius); background: #fff; }
+			.m1-estado-ok { border-color: var(--m2-ok); background: var(--m2-ok-soft); }
+			.m1-estado-aviso { border-color: var(--m2-warn); background: var(--m2-warn-soft); }
+			.m1-formulario label { display: block; margin: 8px 0 2px; font-size: 12px; color: var(--m2-text); }
+			.m1-formulario input[type=text], .m1-formulario textarea, .m1-formulario select { width: 100%; box-sizing: border-box; padding: 5px 8px; border: 1px solid var(--m2-border); border-radius: var(--m2-radius); background: #fff; color: var(--m2-text); }
+			.m1-formulario button, .m1-barra button { margin-top: 8px; padding: 6px 14px; border: 1px solid var(--m2-accent); border-radius: var(--m2-radius); background: var(--m2-accent); color: #fff; cursor: pointer; }
+			.m1-formulario button:hover, .m1-barra button:hover { background: var(--m2-accent-dark); border-color: var(--m2-accent-dark); }
+			.m1-decision { margin-top: 8px; padding: 4px 8px; background: var(--m2-info-soft); border-left: 3px solid var(--m2-info); font-size: 12px; color: var(--m2-info); }
 			.m1-decision blockquote { margin: 2px 0; padding: 0; }
-			.m1-sin-decision { margin: 0; color: #888; }
-			.m1-decision details > summary { cursor: pointer; color: #0b5e8a; margin-top: 2px; }
-			.m1-cambio-agregado { border-left: 4px solid #1e7b34; }
-			.m1-cambio-eliminado { border-left: 4px solid #842029; }
-			.m1-cambio-modificado { border-left: 4px solid #cc9a06; }
+			.m1-sin-decision { margin: 0; color: var(--m2-muted); }
+			.m1-decision details > summary { cursor: pointer; color: var(--m2-accent-dark); margin-top: 2px; }
+			.m1-cambio-agregado { border-left: 4px solid var(--m2-ok); }
+			.m1-cambio-eliminado { border-left: 4px solid var(--m2-danger); }
+			.m1-cambio-modificado { border-left: 4px solid var(--m2-warn); }
 			.m1-version { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 12px; }
-			.m1-version a { color: #0b5e8a; text-decoration: none; font-weight: bold; }
+			.m1-version a { color: var(--m2-accent-dark); text-decoration: none; font-weight: bold; }
 			#leftNav .m1-menu { padding-bottom: 8px; }
 			#leftNav .m1-menu ul.arrow { display: block; }
 			#leftNav .m1-menu ul.arrow li a { text-transform: none; }
-			#leftNav .m1-menu ul.arrow li.m1-actual a { background: #e3f4f6; color: #0e6b75; font-weight: bold; box-shadow: inset 4px 0 0 #138290; }
+			#leftNav .m1-menu ul.arrow li.m1-actual a { background: var(--m2-accent-soft); color: var(--m2-accent-dark); font-weight: bold; box-shadow: inset 4px 0 0 var(--m2-accent); }
 		</style>';
 	}
 	
@@ -136,8 +167,8 @@ class Modulo1Html {
 	public static function barra(string $placeholder, bool $buscador = true, bool $plegar = true) : string {
 		$html = '<div class="m1-barra">';
 		if ($buscador) { $html .= '<input type="search" id="m1-buscar" placeholder="'.self::e($placeholder).'" aria-label="'.self::e($placeholder).'"/>'; }
-		if ($plegar) { $html .= '<span><a href="#" data-m1-abrir="1">'.self::e(_t('Desplegar todo')).'</a> · <a href="#" data-m1-abrir="0">'.self::e(_t('Plegar todo')).'</a></span>'; }
-		return $html.'</div><p class="m1-ninguno" id="m1-ninguno">'.self::e(_t('Nada coincide con la búsqueda.')).'</p>';
+		if ($plegar) { $html .= '<span><a href="#" data-m1-abrir="1">'.self::e(Modulo1I18n::t('Expand all')).'</a> · <a href="#" data-m1-abrir="0">'.self::e(Modulo1I18n::t('Collapse all')).'</a></span>'; }
+		return $html.'</div><p class="m1-ninguno" id="m1-ninguno">'.self::e(Modulo1I18n::t('Nothing matches the search.')).'</p>';
 	}
 
 	//etiqueta de color
@@ -164,7 +195,7 @@ class Modulo1Html {
 	
 	// Parte desplegable con título
 	public static function seccion(string $titulo, string $contenido, bool $abierta = false, bool $grande = false) : string {
-		$cuerpo = $contenido ?: '<p>'.self::e(_t('Sin datos.')).'</p>';
+		$cuerpo = $contenido ?: '<p>'.self::e(Modulo1I18n::t('No data.')).'</p>';
 		return '<details class="m1-seccion m1-plegable'.($grande ? ' m1-seccion-grande' : '').'"'.($abierta ? ' open' : '').'><summary>'.self::e($titulo).'</summary>'.$cuerpo.'</details>';
 	}
 	
@@ -207,7 +238,7 @@ class Modulo1Html {
 	//entidades donde se usa un elemento, cada uso trae entidad, nombre_entidad, etiqueta y contenedor
 	 //si el elemento está dentro de un contenedor, se aclara con qué nombre aparece ese contenedor
 	public static function usos(array $usos) : string {
-		return self::tabla([_t('Entidad'), _t('Se presenta como'), _t('Dentro del contenedor')], array_map(function($uso) {
+		return self::tabla([Modulo1I18n::t('Entity'), Modulo1I18n::t('Presented as'), Modulo1I18n::t('Inside the container')], array_map(function($uso) {
 			return [$uso['nombre_entidad'].' ('.$uso['entidad'].')', $uso['etiqueta'], $uso['contenedor'] ?? '—'];
 		}, $usos));
 	}
@@ -215,10 +246,10 @@ class Modulo1Html {
 	//etiquetas y detalles de una relación, como la clase, multiplicidad, descripción 
 	public static function detalleDeRelacion(array $r) : string {
 		$html = self::chip($r['clase'], self::CHIP_ACENTO).self::chip($r['multiplicidad'], self::CHIP_INFO);
-		if ($r['por_defecto']) { $html .= self::chip(_t('Se propone por defecto'), self::CHIP_OK); }
+		if ($r['por_defecto']) { $html .= self::chip(Modulo1I18n::t('Proposed by default'), self::CHIP_OK); }
 		if ($r['descripcion'] !== '') { $html .= '<p>'.self::e($r['descripcion']).'</p>'; }
-		if ($r['tipos_origen']) { $html .= '<p>'.self::e(_t('Solo desde: %1', implode(', ', $r['tipos_origen']))).'</p>'; }
-		if ($r['tipos_destino']) { $html .= '<p>'.self::e(_t('Solo hacia: %1', implode(', ', $r['tipos_destino']))).'</p>'; }
+		if ($r['tipos_origen']) { $html .= '<p>'.self::e(Modulo1I18n::t('Only from: %1', implode(', ', $r['tipos_origen']))).'</p>'; }
+		if ($r['tipos_destino']) { $html .= '<p>'.self::e(Modulo1I18n::t('Only to: %1', implode(', ', $r['tipos_destino']))).'</p>'; }
 		return $html;
 	}
 
@@ -232,7 +263,7 @@ class Modulo1Html {
 			foreach ($lista as $r) {
 				$tarjetas .= self::tarjeta(
 					$r['tipo'].' → '.$r['nombre_destino'], $r['destino'], '',
-					'<p>'.self::e(_t('Se lee al revés como: %1', $r['inverso'])).'</p>'.self::detalleDeRelacion($r),
+					'<p>'.self::e(Modulo1I18n::t('Read in reverse as: %1', $r['inverso'])).'</p>'.self::detalleDeRelacion($r),
 					$origen.' '.$r['tipo'].' '.$r['inverso'].' '.$r['nombre_destino'].' '.$r['destino']
 				);
 			}
@@ -256,14 +287,14 @@ class Modulo1Html {
 	//Decisión institucional de una parte del perfil. si es editable trae el formulario para cambiarla
 	public static function decision(string $clave, $proposito, bool $editable) : string {
 		$hay = $proposito !== null && $proposito !== '';
-		$texto = $hay ? '<blockquote>'.nl2br(self::e($proposito)).'</blockquote>' : '<p class="m1-sin-decision">'.self::e(_t('Sin decisión registrada')).'</p>';
+		$texto = $hay ? '<blockquote>'.nl2br(self::e($proposito)).'</blockquote>' : '<p class="m1-sin-decision">'.self::e(Modulo1I18n::t('No decision recorded')).'</p>';
 		if (!$editable) { return '<div class="m1-decision">'.$texto.'</div>'; }
 		$formulario = '<form method="post" class="m1-formulario"><input type="hidden" name="accion" value="decision">'
 			.'<input type="hidden" name="referencia" value="'.self::e($clave).'">'
-			.'<label>'.self::e(_t('Propósito de la decisión (vacío para eliminarla)')).'</label>'
+			.'<label>'.self::e(Modulo1I18n::t('Purpose of the decision (empty to delete it)')).'</label>'
 			.'<textarea name="proposito" rows="3">'.self::e($proposito).'</textarea>'
-			.'<button type="submit">'.self::e(_t('Guardar decisión')).'</button></form>';
-		return '<div class="m1-decision">'.$texto.'<details><summary>'.self::e($hay ? _t('Editar decisión') : _t('Registrar decisión')).'</summary>'.$formulario.'</details></div>';
+			.'<button type="submit">'.self::e(Modulo1I18n::t('Save decision')).'</button></form>';
+		return '<div class="m1-decision">'.$texto.'<details><summary>'.self::e($hay ? Modulo1I18n::t('Edit decision') : Modulo1I18n::t('Record decision')).'</summary>'.$formulario.'</details></div>';
 	}
 	
 	//entidades del perfil, elementos asignados  y decisión
@@ -272,9 +303,9 @@ class Modulo1Html {
 		foreach ($entidades as $e) {
 			$asignados = array_map(function($a) { return $a['etiqueta'] === null ? $a['codigo'] : $a['codigo'].' («'.$a['etiqueta'].'»)'; }, $e['elementos']);
 			$tarjetas .= self::tarjeta($e['nombre'], $e['codigo'],
-				self::chip(_t('%1 campos', count($e['campos']))).self::chip(_t('%1 elementos', count($e['elementos'])), self::CHIP_ACENTO),
-				self::seccion(_t('Campos propios'), self::lista($e['campos'], function($c) { return $c; }))
-					.self::seccion(_t('Elementos asignados'), self::lista($asignados, function($a) { return $a; }))
+				self::chip(Modulo1I18n::t('%1 fields', count($e['campos']))).self::chip(Modulo1I18n::t('%1 elements', count($e['elementos'])), self::CHIP_ACENTO),
+				self::seccion(Modulo1I18n::t('Own fields'), self::lista($e['campos'], function($c) { return $c; }))
+					.self::seccion(Modulo1I18n::t('Assigned elements'), self::lista($asignados, function($a) { return $a; }))
 					.self::decision($e['clave'], $e['decision'], $editable),
 				$e['texto'].' '.implode(' ', $asignados));
 		}
@@ -283,7 +314,7 @@ class Modulo1Html {
 	
 	//Elementos de metadatos del perfil: tipo, contenedor y decisión
 	public static function perfilElementos(array $elementos, bool $editable) : string {
-		return self::tabla([_t('Elemento'), _t('Tipo'), _t('Contenedor'), _t('Decisión')], array_map(function($e) use ($editable) {
+		return self::tabla([Modulo1I18n::t('Element'), Modulo1I18n::t('Type'), Modulo1I18n::t('Container'), Modulo1I18n::t('Decision')], array_map(function($e) use ($editable) {
 			return [$e['texto'], $e['tipo'], $e['contenedor'] ?? '—', ['html' => self::decision($e['clave'], $e['decision'], $editable)]];
 		}, $elementos), function($fila) { return $fila[0].' '.$fila[1].' '.$fila[2]; });
 	}
@@ -300,7 +331,7 @@ class Modulo1Html {
 		$tarjetas = '';
 		foreach ($relaciones as $r) {
 			$tarjetas .= self::tarjeta($r['tipo'].': '.$r['origen'].' → '.$r['destino'], '', '',
-				'<p>'.self::e(_t('Se lee al revés como: %1', $r['inverso'])).'</p>'.self::detalleDeRelacion($r).self::decision($r['clave'], $r['decision'], $editable),
+				'<p>'.self::e(Modulo1I18n::t('Read in reverse as: %1', $r['inverso'])).'</p>'.self::detalleDeRelacion($r).self::decision($r['clave'], $r['decision'], $editable),
 				$r['texto'].' '.$r['inverso']);
 		}
 		return self::grilla($tarjetas);
@@ -318,9 +349,9 @@ class Modulo1Html {
 	
 	// Decisiones registradas: a qué parte se refieren, quién las tomó y si esa parte sigue existiendo 
 	public static function perfilDecisiones(array $decisiones) : string {
-		return self::tabla([_t('Parte del perfil'), _t('Propósito'), _t('Usuario'), _t('Fecha'), _t('Estado')], array_map(function($d) {
+		return self::tabla([Modulo1I18n::t('Part of the profile'), Modulo1I18n::t('Purpose'), Modulo1I18n::t('User'), Modulo1I18n::t('Date'), Modulo1I18n::t('Status')], array_map(function($d) {
 			return [$d['referencia'], $d['proposito'], $d['usuario'], $d['fecha'],
-				['html' => $d['vigente'] ? self::chip(_t('Vigente'), self::CHIP_OK) : self::chip(_t('La parte ya no existe en el modelo'), self::CHIP_AVISO)]];
+				['html' => $d['vigente'] ? self::chip(Modulo1I18n::t('Current'), self::CHIP_OK) : self::chip(Modulo1I18n::t('The part no longer exists in the model'), self::CHIP_AVISO)]];
 		}, $decisiones), function($fila) { return $fila[0].' '.$fila[1].' '.$fila[2]; });
 	}
 
@@ -328,12 +359,12 @@ class Modulo1Html {
 	public static function perfil(array $perfil, bool $editable) : string {
 		$componentes = $perfil['componentes'];
 		return '<div data-m1-bloque="1">'
-			.self::seccion(_t('Entidades'), self::perfilEntidades($componentes['entidades'], $editable), true, true)
-			.self::seccion(_t('Elementos de metadatos'), self::perfilElementos($componentes['elementos'], $editable), false, true)
-			.self::seccion(_t('Contenedores'), self::perfilContenedores($componentes['contenedores']), false, true)
-			.self::seccion(_t('Relaciones'), self::perfilRelaciones($perfil['relaciones'], $editable), false, true)
-			.self::seccion(_t('Configuraciones'), self::perfilConfiguraciones($perfil['configuraciones'], $editable), false, true)
-			.self::seccion(_t('Decisiones institucionales'), self::perfilDecisiones($perfil['decisiones']), true, true)
+			.self::seccion(Modulo1I18n::t('Entities'), self::perfilEntidades($componentes['entidades'], $editable), true, true)
+			.self::seccion(Modulo1I18n::t('Metadata elements'), self::perfilElementos($componentes['elementos'], $editable), false, true)
+			.self::seccion(Modulo1I18n::t('Containers'), self::perfilContenedores($componentes['contenedores']), false, true)
+			.self::seccion(Modulo1I18n::t('Relationships'), self::perfilRelaciones($perfil['relaciones'], $editable), false, true)
+			.self::seccion(Modulo1I18n::t('Configurations'), self::perfilConfiguraciones($perfil['configuraciones'], $editable), false, true)
+			.self::seccion(Modulo1I18n::t('Institutional decisions'), self::perfilDecisiones($perfil['decisiones']), true, true)
 			.'</div>';
 	}
 	
@@ -349,7 +380,7 @@ class Modulo1Html {
 		foreach ($versiones as $v) {
 			$tarjetas .= '<div class="m1-tarjeta"><div class="m1-version"><a href="?ver='.(int)$v['id'].'">'.self::e('#'.$v['id'].' · '.$v['nombre']).'</a>'
 				.'<span class="m1-codigo">'.self::e($v['fecha']).'</span></div>'
-				.'<p>'.self::e(_t('Guardada por %1', $v['usuario'])).'</p>'
+				.'<p>'.self::e(Modulo1I18n::t('Saved by %1', $v['usuario'])).'</p>'
 				.($v['descripcion'] === '' ? '' : '<p>'.self::e($v['descripcion']).'</p>').'</div>';
 		}
 		return $tarjetas === '' ? '' : self::grilla($tarjetas);
@@ -367,14 +398,14 @@ class Modulo1Html {
 	
 	//Resultado de comparar dos perfiles: partes agregadas, eliminadas y modificadas
 	public static function cambios(array $cambios) : string {
-		if ($cambios['sin_cambios']) { return '<p class="m1-aviso">'.self::e(_t('No hay diferencias.')).'</p>'; }
+		if ($cambios['sin_cambios']) { return '<p class="m1-aviso">'.self::e(Modulo1I18n::t('There are no differences.')).'</p>'; }
 		$modificados = array_map(function($m) {
 			return $m['texto'].': '.implode('; ', array_map(function($c) { return $c['campo'].': «'.$c['antes'].'» → «'.$c['despues'].'»'; }, $m['cambios']));
 		}, $cambios['modificados']);
 		$texto = function($parte) { return $parte['texto']; };
-		return self::bloqueDeCambios(_t('Agregado'), 'agregado', self::lista($cambios['agregados'], $texto), count($cambios['agregados']))
-			.self::bloqueDeCambios(_t('Eliminado'), 'eliminado', self::lista($cambios['eliminados'], $texto), count($cambios['eliminados']))
-			.self::bloqueDeCambios(_t('Modificado'), 'modificado', self::lista($modificados, function($t) { return $t; }), count($modificados));
+		return self::bloqueDeCambios(Modulo1I18n::t('Added'), 'agregado', self::lista($cambios['agregados'], $texto), count($cambios['agregados']))
+			.self::bloqueDeCambios(Modulo1I18n::t('Removed'), 'eliminado', self::lista($cambios['eliminados'], $texto), count($cambios['eliminados']))
+			.self::bloqueDeCambios(Modulo1I18n::t('Modified'), 'modificado', self::lista($modificados, function($t) { return $t; }), count($modificados));
 	}
 
 	// Una de las tres partes de una comparación con su cantidad

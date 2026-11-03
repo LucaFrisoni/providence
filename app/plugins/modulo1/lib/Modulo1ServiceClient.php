@@ -1,6 +1,7 @@
 <?php
 // Cliente HTTP de las rutas del módulo 1 en el servicio Rust de la extensión
 
+require_once(__CA_APP_DIR__.'/plugins/modulo1/lib/Modulo1I18n.php');
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\GuzzleException;
 use GuzzleHttp\HandlerStack;
@@ -116,13 +117,13 @@ class Modulo1ServiceClient {
 			$response = $this->client->request($metodo, $path, $opciones + ['http_errors' => false]);
 			$data = json_decode((string)$response->getBody(), true, self::JSON_MAX_DEPTH, JSON_THROW_ON_ERROR);
 		} catch (GuzzleException | JsonException $e) {
-			throw new Modulo1ServiceException(_t('No se pudo consultar el servicio del módulo 1: %1', $e->getMessage()), 0, $e);
+			throw new Modulo1ServiceException(Modulo1I18n::t('The module 1 service could not be reached: %1', $e->getMessage()), 0, $e);
 		}
 		if (!is_array($data)) {
-			throw new Modulo1ServiceException(_t('El servicio del módulo 1 devolvió una respuesta inesperada'));
+			throw new Modulo1ServiceException(Modulo1I18n::t('The module 1 service returned an unexpected response'));
 		}
 		if ($response->getStatusCode() !== self::HTTP_OK) {
-			throw new Modulo1ServiceException(_t('El servicio del módulo 1 rechazó el pedido: %1', $data['error'] ?? ''));
+			throw new Modulo1ServiceException(Modulo1I18n::t('The module 1 service rejected the request: %1', $data['error'] ?? ''));
 		}
 		return $data;
 	}
