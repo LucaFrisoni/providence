@@ -19,7 +19,7 @@ use std::collections::HashMap;
 
 use mysql::prelude::Queryable;
 
-use crate::constants::{MIGRATIONS_TABLE, MODULO2};
+use crate::constants::{MIGRATIONS_TABLE, MODULO1, MODULO2};
 use crate::types::db::{Migration, MigrationError};
 
 /// Todas las migraciones, agrupadas por módulo y en orden de versión.
@@ -47,6 +47,7 @@ pub const MIGRATIONS: &[Migration] = &[
         version: 4,
         name: "optimizando_indices_modulo2",
         sql: include_str!("migrations/modulo2/0004_optimizando_indices_modulo2.sql"),
+
     },
     Migration {
         module: MODULO2,
@@ -71,6 +72,12 @@ pub const MIGRATIONS: &[Migration] = &[
         version: 8,
         name: "preferencias_modulo2",
         sql: include_str!("migrations/modulo2/0008_preferencias_modulo2.sql"),
+    },
+    Migration {
+        module: MODULO1,
+        version: 1,
+        name: "creando_tablas_modulo1",
+        sql: include_str!("migrations/modulo1/0001_creando_tablas_modulo1.sql"),
     },
 ];
 

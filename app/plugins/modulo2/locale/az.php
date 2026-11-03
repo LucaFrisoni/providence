@@ -461,4 +461,8 @@ return [
 	'Method used to calculate age of set. Age may be calculated as number of days since the set was created, or the number of days since the set was last edited or used in a search or for a report.' => 'Dəstin yaşının hesablanma üsulu: yaradılmasından keçən günlərin sayı və ya son redaktəsindən, yaxud axtarışda və ya hesabatda son istifadəsindən keçən günlərin sayı.',
 	'Days since creation' => 'Yaradılmadan keçən günlər',
 	'Days since last use' => 'Son istifadədən keçən günlər',
+
+	// Tarjeta del módulo 1 en el panel de gestión
+	'Information model' => 'İnformasiya modeli',
+	'How the model is structured: entities, metadata elements, relationships, applied configurations, and the model profile with its decisions and versions.' => 'Modelin necə qurulduğu: varlıqlar, metaməlumat elementləri, münasibətlər, tətbiq olunan konfiqurasiyalar və qərarları ilə versiyaları olan model profili.',
 ];

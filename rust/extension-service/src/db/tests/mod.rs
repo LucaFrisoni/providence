@@ -4,5 +4,6 @@ mod access;
 mod config;
 pub(crate) mod environment;
 mod migrations;
+mod modulo1_schema;
 mod modulo2_dao;
 mod modulo2_schema;

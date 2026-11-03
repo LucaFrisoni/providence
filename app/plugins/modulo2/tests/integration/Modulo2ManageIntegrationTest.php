@@ -43,9 +43,15 @@ final class Modulo2ManageIntegrationTest extends TestCase {
 	# -------------------------------------------------------
 	private function assertActionExists(array $route, string $section) : void {
 		[$module, $controller, $action] = $route;
-		$path = ($module === Modulo2ManageHub::PLUGIN_MODULE)
-			? Modulo2Constants::PLUGIN_DIR."/controllers/{$controller}Controller.php"
-			: __CA_APP_DIR__."/controllers/{$module}/{$controller}Controller.php";
+		$pluginPath = __CA_APP_DIR__."/plugins/{$module}/controllers/{$controller}Controller.php";
+		if ($module === Modulo2ManageHub::PLUGIN_MODULE) {
+		    $path = Modulo2Constants::PLUGIN_DIR."/controllers/{$controller}Controller.php";
+		} elseif (is_file($pluginPath)) {
+		    // controlador de otro plugin (modulo1, modulo3...)
+		    $path = $pluginPath;
+		} else {
+		    $path = __CA_APP_DIR__."/controllers/{$module}/{$controller}Controller.php";
+		}
 		$this->assertFileExists($path, "{$section}: {$module}/{$controller}");
 		$method = explode('/', $action)[0];
 		$this->assertTrue(self::definesMethod($path, $method), "{$section}: {$controller}Controller::{$method}");

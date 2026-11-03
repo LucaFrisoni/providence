@@ -72,6 +72,8 @@ final class Modulo2ManageMap {
 	private static function dataSections() : array {
 		return [
 			'list_editor_menu_item' => self::native(['list_editor_menu_item'], Modulo2I18n::t('Lists and vocabularies, including the types of each data type and the order of their items.')) + ['owner' => 1],
+			'information_model' => self::internal(['Explorer', 'Index'], Modulo2I18n::t('Information model'),
+				Modulo2I18n::t('How the model is structured: entities, metadata elements, relationships, applied configurations, and the model profile with its decisions and versions.'), 'modulo1'),
 			'export' => self::native(['export'], Modulo2I18n::t('Metadata exporters to other formats.')) + ['owner' => 5]
 		];
 	}
@@ -103,8 +105,8 @@ final class Modulo2ManageMap {
 	}
 	# -------------------------------------------------------
 	/** Pantalla propia del módulo */
-	private static function internal(array $route, string $label, string $description) : array {
-		return ['internal' => $route, 'label' => $label, 'description' => $description, 'status' => self::STATUS_IMPROVED];
-	}
+	private static function internal(array $route, string $label, string $description, ?string $module = null) : array {
+		return ['internal' => $route, 'label' => $label, 'description' => $description, 'status' => self::STATUS_IMPROVED, 'module' => $module];
+ 	}
 	# -------------------------------------------------------
 }

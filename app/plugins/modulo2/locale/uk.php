@@ -461,4 +461,8 @@ return [
 	'Method used to calculate age of set. Age may be calculated as number of days since the set was created, or the number of days since the set was last edited or used in a search or for a report.' => 'Спосіб обчислення віку набору: кількість днів від його створення або від останнього редагування чи використання в пошуку або звіті.',
 	'Days since creation' => 'Днів від створення',
 	'Days since last use' => 'Днів від останнього використання',
+
+	// Tarjeta del módulo 1 en el panel de gestión
+	'Information model' => 'Інформаційна модель',
+	'How the model is structured: entities, metadata elements, relationships, applied configurations, and the model profile with its decisions and versions.' => 'Як побудована модель: сутності, елементи метаданих, зв’язки, застосовані конфігурації та профіль моделі з її рішеннями й версіями.',
 ];

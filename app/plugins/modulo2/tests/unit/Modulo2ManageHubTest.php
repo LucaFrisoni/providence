@@ -72,6 +72,18 @@ final class Modulo2ManageHubTest extends TestCase {
 		$this->assertSame(['modulo2', 'Configurations', 'Index'], $section['route']);
 		$this->assertSame('improved', $section['status']);
 	}
+	
+	// Una pantalla de otro plugin lleva su propio módulo en la ruta
+	#[TestDox('Una sección propia de otro plugin enlaza a su módulo')]
+	public function testInternalSectionOfAnotherPlugin() : void {
+		$map = ['data' => ['title' => 'Datos', 'sections' => [
+			'model' => ['internal' => ['Explorer', 'Index'], 'label' => 'Modelo', 'description' => 'Modelo', 'status' => 'improved', 'module' => 'modulo1']
+		]]];
+		$hub = new Modulo2ManageHub($this->navigation(), fn() => false, fn() => null);
+
+		$this->assertSame(['modulo1', 'Explorer', 'Index'], $hub->groups($map)['data']['sections'][0]['route']);
+	}
+
 	# -------------------------------------------------------
 	private function hubGroups(array $actions, array $config = []) : array {
 		$hub = new Modulo2ManageHub(

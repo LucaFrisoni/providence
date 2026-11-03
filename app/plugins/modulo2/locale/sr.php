@@ -461,4 +461,8 @@ return [
 	'Method used to calculate age of set. Age may be calculated as number of days since the set was created, or the number of days since the set was last edited or used in a search or for a report.' => 'Начин рачунања старости скупа: број дана од његовог прављења или од последњег уређивања или коришћења у претрази или извештају.',
 	'Days since creation' => 'Дана од прављења',
 	'Days since last use' => 'Дана од последњег коришћења',
+
+	// Tarjeta del módulo 1 en el panel de gestión
+	'Information model' => 'Информациони модел',
+	'How the model is structured: entities, metadata elements, relationships, applied configurations, and the model profile with its decisions and versions.' => 'Како је модел структуриран: ентитети, елементи метаподатака, односи, примењене конфигурације и профил модела са његовим одлукама и верзијама.',
 ];

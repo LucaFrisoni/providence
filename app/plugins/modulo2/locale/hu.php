@@ -461,4 +461,8 @@ return [
 	'Method used to calculate age of set. Age may be calculated as number of days since the set was created, or the number of days since the set was last edited or used in a search or for a report.' => 'A halmaz korának számítási módja: a létrehozása óta eltelt napok száma, vagy a legutóbbi szerkesztése, illetve keresésben vagy jelentésben való használata óta eltelt napok száma.',
 	'Days since creation' => 'A létrehozás óta eltelt napok',
 	'Days since last use' => 'A legutóbbi használat óta eltelt napok',
+
+	// Tarjeta del módulo 1 en el panel de gestión
+	'Information model' => 'Információs modell',
+	'How the model is structured: entities, metadata elements, relationships, applied configurations, and the model profile with its decisions and versions.' => 'A modell felépítése: entitások, metaadat-elemek, kapcsolatok, alkalmazott konfigurációk, valamint a modellprofil döntéseivel és verzióival.',
 ];

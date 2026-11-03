@@ -461,4 +461,8 @@ return [
 	'Method used to calculate age of set. Age may be calculated as number of days since the set was created, or the number of days since the set was last edited or used in a search or for a report.' => 'Methode zur Berechnung des Alters eines Sets: Tage seit seiner Erstellung oder Tage seit der letzten Bearbeitung oder Verwendung in einer Suche oder einem Bericht.',
 	'Days since creation' => 'Tage seit der Erstellung',
 	'Days since last use' => 'Tage seit der letzten Verwendung',
+
+	// Tarjeta del módulo 1 en el panel de gestión
+	'Information model' => 'Informationsmodell',
+	'How the model is structured: entities, metadata elements, relationships, applied configurations, and the model profile with its decisions and versions.' => 'Wie das Modell aufgebaut ist: Entitäten, Metadatenelemente, Beziehungen, angewandte Konfigurationen und das Modellprofil mit seinen Entscheidungen und Versionen.',
 ];
