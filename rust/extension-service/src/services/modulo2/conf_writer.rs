@@ -13,7 +13,7 @@ const INDENT: &str = "\t";
 /// Texto del archivo con las claves de `entries`, o None si no queda ninguna (el archivo se borra).
 pub fn write(entries: &Json) -> Result<Option<String>, String> {
     if !entries.is_object() {
-        return Err("las claves del archivo tienen que ser un objeto JSON".into());
+        return Err("the keys of the file must be a JSON object".into());
     }
     let mut keys: Vec<&str> = entries.entries().map(|(key, _)| key).collect();
     if keys.is_empty() {
@@ -24,7 +24,7 @@ pub fn write(entries: &Json) -> Result<Option<String>, String> {
     for key in keys {
         if !is_bare(key) {
             return Err(format!(
-                "la clave {key:?} no tiene un formato que Providence pueda leer"
+                "the key {key:?} does not have a format Providence can read"
             ));
         }
         text.push_str(&format!("{key} = {}\n", value(&entries[key], 0)?));
@@ -79,7 +79,7 @@ fn scalar(value: &Json) -> Result<String, String> {
         Json::Number(_) => Ok(value.dump()),
         Json::Bool(on) => Ok(if *on { "1" } else { "0" }.to_string()),
         Json::Null => Ok(String::new()),
-        _ => Err("Providence no admite listas ni bloques dentro de una lista".into()),
+        _ => Err("Providence does not accept lists or blocks inside a list".into()),
     }
 }
 

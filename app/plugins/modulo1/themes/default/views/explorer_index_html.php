@@ -3,11 +3,11 @@
  
 $arbol = $this->getVar('arbol');
 $error = $this->getVar('error');
-echo Modulo1Html::cabecera(_t('Elementos de metadatos'), _t('Todos los elementos de metadatos del modelo. Los contenedores agrupan a los elementos que tienen adentro.'));
+echo Modulo1Html::cabecera(Modulo1I18n::t('Metadata elements'), Modulo1I18n::t('All the metadata elements of the model. Containers group the elements they contain.'));
 if ($error) {
 	echo Modulo1Html::error($error);
 } else {
-	echo Modulo1Html::barra(_t('Buscar un elemento…'));
+	echo Modulo1Html::barra(Modulo1I18n::t('Search for an element…'));
 	echo '<div class="m1-arbol">'.Modulo1Html::arbol($arbol['elementos'], true).'</div>';
 }
 echo Modulo1Html::pie();

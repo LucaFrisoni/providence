@@ -2,17 +2,21 @@
 /* ----------------------------------------------------------------------
  * app/plugins/modulo2/themes/default/views/configurations_info_html.php :
  * Barra lateral de la vista de configuraciones, con el estilo del menú lateral de Providence
- * (por ejemplo, Administración → Mantenimiento): un buscador y el índice de secciones, agrupadas
- * por alcance, con la cantidad de configuraciones modificadas de cada una.
+ * (por ejemplo, Administración → Mantenimiento), en tres partes: las configuraciones (un buscador y el
+ * índice de secciones, agrupadas por alcance, con la cantidad de modificadas de cada una), las versiones
+ * y el historial.
  * El buscador filtra el índice y las secciones de la página por nombre de sección, nombre de
- * configuración o clave de Providence.
+ * configuración o clave de Providence. También se muestra en las versiones y el historial: ahí las
+ * secciones llevan a la página de configuraciones (sections_url) y se marca la página actual (current_page).
  * ----------------------------------------------------------------------
  */
 $catalog = $this->getVar('catalog');
+$sections_url = (string)$this->getVar('sections_url');
+$current = fn(string $page) => $this->getVar('current_page') === $page ? ' class="m2-current"' : '';
 $e = fn($text) => htmlspecialchars((string)$text, ENT_QUOTES, 'UTF-8');
 $groups = [
-	Modulo2Constants::SCOPE_DATA_TYPE => _t('Por tipo de dato'),
-	Modulo2Constants::SCOPE_GLOBAL => _t('De toda la instalación')
+	Modulo2Constants::SCOPE_DATA_TYPE => Modulo2I18n::t('By data type'),
+	Modulo2Constants::SCOPE_GLOBAL => Modulo2I18n::t('Whole installation')
 ];
 // Texto en el que busca el buscador: nombre de la sección y nombre y claves de sus configuraciones
 $search_text = function(array $section) {
@@ -24,19 +28,25 @@ $search_text = function(array $section) {
 };
 ?>
 <style>
-	#leftNav .m2-sidebar { padding-bottom: 8px; }
-	#leftNav .m2-search { padding: 8px 18px 4px 15px; }
-	#leftNav .m2-search input { width: 100%; box-sizing: border-box; padding: 4px 6px; border: 1px solid #ccc; border-radius: 3px; font-size: 12px; }
-	#leftNav .m2-sidebar ul.arrow li a { text-transform: none; }
-	#leftNav .m2-sidebar .m2-count { display: inline-block; min-width: 14px; margin-left: 4px; padding: 0 4px; border-radius: 7px; background: #fff3cd; color: #664d03; font-size: 10px; text-align: center; }
+	#leftNav .m2-sidebar { padding-bottom: 10px; font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; }
+	#leftNav .m2-search { padding: 8px 26px 6px 14px; }
+	#leftNav .m2-search input { width: 100%; box-sizing: border-box; padding: 6px 9px; border: 1px solid #cfd8dc; border-radius: 8px; font-size: 12px; transition: border-color .15s, box-shadow .15s; }
+	#leftNav .m2-search input:focus { outline: none; border-color: #138290; box-shadow: 0 0 0 3px rgba(19, 130, 144, .2); }
+	#leftNav .m2-sidebar ul.arrow li a { margin: 1px 8px; padding: 7px 10px 6px 22px; border-radius: 6px; font-family: inherit; text-transform: none; transition: background .15s, color .15s; }
+	#leftNav .m2-sidebar ul.arrow li a:hover { background: #f1f6f7; }
+	#leftNav .m2-sidebar .m2-count { display: inline-block; min-width: 14px; margin-left: 6px; padding: 0 6px; border-radius: 999px; background: #fff5d9; color: #8a5a00; font-size: 10px; font-weight: 600; text-align: center; }
 	#leftNav .m2-sidebar .m2-no-results { display: none; padding: 6px 15px; color: #888; font-size: 12px; }
 	#leftNav .m2-sidebar .m2-search-hidden { display: none; }
-	#leftNav .m2-sidebar ul.arrow li.m2-current a { background: #e3f4f6; color: #0e6b75; font-weight: bold; box-shadow: inset 4px 0 0 #138290; }
+	#leftNav .m2-sidebar .m2-division { margin: 16px 14px 4px 14px; font-size: 10.5px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: #138290; }
+	#leftNav .m2-sidebar .m2-division:first-child { margin-top: 6px; }
+	#leftNav .m2-sidebar ul.arrow li.m2-current a { background: #e8f5f6; color: #0e6b75; font-weight: 600; box-shadow: inset 3px 0 0 #138290; }
 	.m2-search-hidden { display: none; }
 </style>
+<?= Modulo2Ui::themeStyles(); ?>
 <div class="m2-sidebar" id="m2-sidebar">
-	<div class="m2-search"><input type="search" id="m2-search" placeholder="<?= $e(_t('Buscar configuración…')); ?>" aria-label="<?= $e(_t('Buscar configuración')); ?>"/></div>
-	<p class="m2-no-results" id="m2-no-results"><?= _t('Ninguna configuración coincide con la búsqueda.'); ?></p>
+	<div class="m2-division"><?= Modulo2I18n::t('Settings'); ?></div>
+	<div class="m2-search"><input type="search" id="m2-search" placeholder="<?= $e(Modulo2I18n::t('Search settings…')); ?>" aria-label="<?= $e(Modulo2I18n::t('Search settings')); ?>"/></div>
+	<p class="m2-no-results" id="m2-no-results"><?= Modulo2I18n::t('No setting matches the search.'); ?></p>
 <?php foreach ($groups as $scope => $title) { ?>
 	<div class="m2-sidebar-group">
 		<h2><a href="#" data-m2-toggle="m2-group-<?= $e($scope); ?>"><?= $e($title); ?> &rsaquo;</a></h2>
@@ -44,17 +54,19 @@ $search_text = function(array $section) {
 <?php 	foreach ($catalog['sections'] as $section) { ?>
 <?php 		if (($section['scope'] ?? Modulo2Constants::SCOPE_DATA_TYPE) !== $scope) { continue; } ?>
 <?php 		$modified = Modulo2CatalogMatrix::modifiedCount($section); ?>
-			<li data-m2-section="<?= $e($section['id']); ?>" data-m2-search="<?= $e($search_text($section)); ?>"><a href="#m2-section-<?= $e($section['id']); ?>"><?= $e($section['name']); ?><?= $modified ? '<span class="m2-count">'.$modified.'</span>' : ''; ?></a></li>
+			<li data-m2-section="<?= $e($section['id']); ?>" data-m2-search="<?= $e($search_text($section)); ?>"><a href="<?= $e($sections_url); ?>#m2-section-<?= $e($section['id']); ?>"><?= $e($section['name']); ?><?= $modified ? '<span class="m2-count">'.$modified.'</span>' : ''; ?></a></li>
 <?php 	} ?>
 		</ul>
 	</div>
 <?php } ?>
-	<div class="m2-sidebar-group">
-		<h2><a href="#" data-m2-toggle="m2-group-database"><?= _t('En la base de datos'); ?> &rsaquo;</a></h2>
-		<ul class="arrow" id="m2-group-database">
-			<li data-m2-section="database" data-m2-search="<?= $e(_t('Configuración en la base de datos').' '.implode(' ', Modulo2DatabaseConfiguration::labels())); ?>"><a href="#m2-section-database"><?= _t('Listas, metadatos, interfaces…'); ?></a></li>
-		</ul>
-	</div>
+	<div class="m2-division"><?= Modulo2I18n::t('Versions'); ?></div>
+	<ul class="arrow" style="display:block">
+		<li<?= $current('Versions'); ?>><a href="<?= $e($this->getVar('versions_url')); ?>"><?= Modulo2I18n::t('Configuration versions'); ?></a></li>
+	</ul>
+	<div class="m2-division"><?= Modulo2I18n::t('History'); ?></div>
+	<ul class="arrow" style="display:block">
+		<li<?= $current('Changes'); ?>><a href="<?= $e($this->getVar('history_url')); ?>"><?= Modulo2I18n::t('Change history'); ?></a></li>
+	</ul>
 </div>
 <script>
 	(function() {

@@ -37,7 +37,7 @@ fn insert(tx: &mut Transaction, name: &str, state: &State) -> u32 {
         name: name.into(),
         description: Some("prueba".into()),
     };
-    let id = versions::insert(tx, &info, true, &user(), &state.hash()).unwrap();
+    let id = versions::insert(tx, &info, true, &user(), state).unwrap();
     versions::insert_files(tx, id, state).unwrap();
     id
 }
@@ -96,7 +96,7 @@ fn versions_are_listed_newest_first() {
     let older = insert(&mut tx, "vieja", &unique_state());
     let newer = insert(&mut tx, "nueva", &unique_state());
 
-    let ids: Vec<u32> = versions::list(&mut tx)
+    let ids: Vec<u32> = versions::list(&mut tx, u32::MAX, None, None)
         .unwrap()
         .iter()
         .map(|v| v.id)

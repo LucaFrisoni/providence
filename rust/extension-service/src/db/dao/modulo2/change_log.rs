@@ -6,9 +6,16 @@ use mysql::Row;
 use crate::constants::{MAX_FILE_NAME_CHARS, MAX_NAME_CHARS};
 use crate::types::modulo2::versions::{Change, ChangeResult, NewChange, User};
 
+/// Columnas de un cambio, con el número de sus versiones (null si se borraron).
 const COLUMNS: &str =
-    "change_id, UNIX_TIMESTAMP(changed_at), user_id, user_name, action, file_name, config_key, \
-old_value, new_value, version_before_id, version_after_id, result, message";
+    "c.change_id, UNIX_TIMESTAMP(c.changed_at), c.user_id, c.user_name, c.action, c.file_name, \
+c.config_key, c.old_value, c.new_value, c.version_before_id, c.version_after_id, c.result, c.message, \
+vb.version_number, va.version_number";
+
+/// Cambios con sus versiones.
+const FROM: &str = "m2_change_log c \
+LEFT JOIN m2_versions vb ON vb.version_id = c.version_before_id \
+LEFT JOIN m2_versions va ON va.version_id = c.version_after_id";
 
 /// El texto recortado a `max` caracteres (no bytes), para columnas de largo fijo.
 pub fn truncated(text: &str, max: usize) -> String {
@@ -39,6 +46,18 @@ pub fn insert(conn: &mut impl Queryable, change: &NewChange) -> Result<u64, mysq
         .expect("INSERT con AUTO_INCREMENT devuelve el id"))
 }
 
+/// Anota la versión que quedó después de un cambio.
+pub fn set_version_after(
+    conn: &mut impl Queryable,
+    id: u64,
+    version: u32,
+) -> Result<(), mysql::Error> {
+    conn.exec_drop(
+        "UPDATE m2_change_log SET version_after_id = ? WHERE change_id = ?",
+        (version, id),
+    )
+}
+
 /// Cierra un cambio pendiente. Devuelve false si no existe o ya no estaba pendiente.
 pub fn finish(
     conn: &mut impl Queryable,
@@ -55,7 +74,7 @@ pub fn finish(
 
 pub fn find(conn: &mut impl Queryable, id: u64) -> Result<Option<Change>, mysql::Error> {
     let row: Option<Row> = conn.exec_first(
-        format!("SELECT {COLUMNS} FROM m2_change_log WHERE change_id = ?"),
+        format!("SELECT {COLUMNS} FROM {FROM} WHERE c.change_id = ?"),
         (id,),
     )?;
     Ok(row.map(change))
@@ -69,7 +88,9 @@ pub fn list(
     before: Option<u64>,
 ) -> Result<Vec<Change>, mysql::Error> {
     let rows: Vec<Row> = conn.exec(
-        format!("SELECT {COLUMNS} FROM m2_change_log WHERE change_id < ? ORDER BY change_id DESC LIMIT ?"),
+        format!(
+            "SELECT {COLUMNS} FROM {FROM} WHERE c.change_id < ? ORDER BY c.change_id DESC LIMIT ?"
+        ),
         (before.unwrap_or(u64::MAX), limit),
     )?;
     Ok(rows.into_iter().map(change).collect())
@@ -85,6 +106,7 @@ fn change(mut row: Row) -> Change {
     let (file, key, old_value, new_value) = (column(5), column(6), column(7), column(8));
     let (version_before, version_after, result, message) =
         (column(9), column(10), column(11), column(12));
+    let (before_number, after_number) = (column(13), column(14));
     Change {
         id: mysql::from_value(id),
         changed_at: mysql::from_value(changed_at),
@@ -101,5 +123,7 @@ fn change(mut row: Row) -> Change {
         version_after: mysql::from_value(version_after),
         result: mysql::from_value(result),
         message: mysql::from_value(message),
+        version_before_number: mysql::from_value(before_number),
+        version_after_number: mysql::from_value(after_number),
     }
 }

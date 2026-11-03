@@ -10,57 +10,56 @@ $groups = $this->getVar('groups') ?? [];
 $module_names = $this->getVar('module_names') ?? [];
 
 $e = fn($text) => htmlspecialchars((string)$text, ENT_QUOTES, 'UTF-8');
-$status_labels = [
-	Modulo2ManageMap::STATUS_IMPROVED => _t('Del módulo'),
-	Modulo2ManageMap::STATUS_PLANNED => _t('Mejora prevista'),
-	Modulo2ManageMap::STATUS_NATIVE => _t('Pantalla de Providence')
-];
 // Texto en el que busca el filtro: nombre, descripción y nombres de las páginas de la sección
 $search_text = fn(array $section) => join(' ', array_merge([$section['label'], $section['description']], array_column($section['links'], 'label')));
 ?>
+<?= Modulo2Ui::styles(); ?>
+<?= ($prepare_url = $this->getVar('prepare_versions_url')) ? Modulo2Ui::prepareVersionsScript($prepare_url) : ''; ?>
 <style>
 	.m2-manage { max-width: 1200px; }
-	.m2-manage-filter { margin: 12px 0; }
-	.m2-manage-filter input { width: 320px; max-width: 100%; padding: 5px 8px; border: 1px solid #ccc; border-radius: 3px; }
-	.m2-manage-group { margin: 20px 0 6px 0; padding-bottom: 4px; border-bottom: 2px solid #ccc; font-size: 15px; text-transform: uppercase; color: #444; }
-	.m2-manage-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 12px; }
-	.m2-manage-card { border: 1px solid #e2e2e2; border-radius: 6px; padding: 12px 14px; background: #fff; transition: box-shadow .15s, border-color .15s; }
-	.m2-manage-card:hover { border-color: #b9dde1; box-shadow: 0 2px 8px rgba(19, 130, 144, .12); }
-	.m2-manage-card h3 { margin: 0 0 4px 0; font-size: 15px; }
-	.m2-manage-card h3 a { color: #0b5e8a; text-decoration: none; }
-	.m2-manage-card h3 a:hover { color: #138290; }
-	.m2-manage-card p { margin: 6px 0; color: #555; }
-	.m2-manage-card ul { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 4px 12px; margin: 8px 0 0 0; padding: 8px 0 0 0; border-top: 1px dashed #e2e2e2; list-style: none; }
-	.m2-manage-card li a { color: #0b5e8a; font-size: 12px; text-decoration: underline; text-underline-offset: 2px; }
-	.m2-manage-card li a::before { content: "› "; text-decoration: none; display: inline-block; margin-right: 2px; color: #138290; }
-	.m2-manage-card li a:hover { color: #138290; text-decoration-thickness: 2px; }
-	.m2-manage-card.m2-manage-own { border-color: #8fcf9e; background: #f6fcf7; }
-	.m2-manage-status { display: inline-block; padding: 0 6px; border-radius: 3px; font-size: 10px; text-transform: uppercase; }
-	.m2-manage-status-improved { background: #d1f0d8; color: #1e5b2c; }
-	.m2-manage-status-planned { background: #fff3cd; color: #664d03; }
-	.m2-manage-status-native { background: #eee; color: #555; }
-	.m2-manage-owner { margin-top: 6px; padding: 4px 6px; background: #eef4fb; border-left: 3px solid #5b8ec9; font-size: 11px; color: #33547a; }
+	.m2-manage > p { margin: 0 0 4px 0; color: var(--m2-muted); font-size: 14px; }
+	.m2-manage-filter { margin: 16px 0 6px 0; }
+	.m2-manage-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 14px; align-items: start; }
+	.m2-manage-card { display: flex; flex-direction: column; padding: 16px 18px; border: 1px solid var(--m2-border); border-radius: var(--m2-radius); background: #fff;
+		box-shadow: var(--m2-shadow); transition: box-shadow .2s, border-color .2s, transform .2s; }
+	.m2-manage-card:hover { border-color: #b9dde1; box-shadow: 0 6px 18px rgba(19, 130, 144, .14); transform: translateY(-2px); }
+	.m2-manage-card h3 { margin: 0 0 4px 0; font: 650 15px/1.35 var(--m2-font); }
+	.m2-manage-card h3 a { color: var(--m2-text); text-decoration: none; }
+	.m2-manage-card h3 a::after { content: " →"; color: var(--m2-accent); opacity: 0; transition: opacity .15s; }
+	.m2-manage-card h3 a:hover { color: var(--m2-accent-dark); }
+	.m2-manage-card h3 a:hover::after { opacity: 1; }
+	.m2-manage-card p { margin: 6px 0 10px 0; color: var(--m2-muted); line-height: 1.5; }
+	/* Páginas de la sección: enlaces en dos columnas (cada una sigue su propio alto, sin huecos entre filas), cada uno con una
+	   flecha que avanza al pasar el mouse */
+	.m2-manage-card ul { columns: 2 140px; column-gap: 12px; margin: auto 0 0 0; padding: 10px 0 0 0; border-top: 1px solid var(--m2-border); list-style: none; }
+	.m2-manage-card li { break-inside: avoid; padding: 1px 0; }
+	.m2-manage-card li a { display: flex; align-items: center; gap: 8px; margin-left: -6px; padding: 4px 6px; border-radius: 6px; color: var(--m2-accent-dark);
+		font-size: 12.5px; font-weight: 500; text-decoration: none; transition: background .15s, color .15s; }
+	.m2-manage-card li a::before { content: ""; flex: none; width: 5px; height: 5px; border-top: 2px solid currentColor; border-right: 2px solid currentColor;
+		transform: rotate(45deg); opacity: .6; transition: transform .15s, opacity .15s; }
+	.m2-manage-card li a:hover { background: var(--m2-soft); color: var(--m2-accent); }
+	.m2-manage-card li a:hover::before { opacity: 1; transform: translateX(2px) rotate(45deg); }
+	.m2-manage-owner { margin-top: 10px; padding: 6px 10px; border-radius: 8px; background: var(--m2-info-soft); font-size: 11.5px; color: var(--m2-info); }
 	.m2-manage-hidden { display: none; }
-	.m2-manage-none { display: none; color: #888; }
+	.m2-manage-none { display: none; }
 </style>
 
 <div class="m2-manage" id="m2-manage">
-<h1><?= _t('Panel de gestión'); ?></h1>
-<p><?= _t('Todo lo que se administra en Providence, agrupado por tema: las secciones de Manage y las configuraciones que agrega este módulo. Solo aparece lo que tu usuario puede usar.'); ?></p>
+<h1><?= Modulo2I18n::t('Management panel'); ?></h1>
+<p><?= Modulo2I18n::t('Everything that is managed in Providence, grouped by topic. Only what your user can use is shown.'); ?></p>
 
 <div class="m2-manage-filter">
-	<input type="search" id="m2-manage-search" placeholder="<?= $e(_t('Buscar en el panel…')); ?>" aria-label="<?= $e(_t('Buscar en el panel')); ?>"/>
+	<input type="search" class="m2-search-input" id="m2-manage-search" placeholder="<?= $e(Modulo2I18n::t('Search…')); ?>" aria-label="<?= $e(Modulo2I18n::t('Search')); ?>"/>
 </div>
-<p class="m2-manage-none" id="m2-manage-none"><?= _t('Nada coincide con la búsqueda.'); ?></p>
+<p class="m2-manage-none m2-empty" id="m2-manage-none"><?= Modulo2I18n::t('Nothing matches the search.'); ?></p>
 
 <?php foreach ($groups as $group_id => $group) { ?>
 <div class="m2-manage-block" id="m2-manage-<?= $e($group_id); ?>">
 	<h2 class="m2-manage-group"><?= $e($group['title']); ?></h2>
 	<div class="m2-manage-grid">
 <?php 	foreach ($group['sections'] as $section) { ?>
-		<div class="m2-manage-card<?= ($section['status'] === Modulo2ManageMap::STATUS_IMPROVED) ? ' m2-manage-own' : ''; ?>" data-m2-search="<?= $e($search_text($section)); ?>">
+		<div class="m2-manage-card" data-m2-search="<?= $e($search_text($section)); ?>">
 			<h3><a href="<?= $e($section['url']); ?>"><?= $e($section['label']); ?></a></h3>
-			<span class="m2-manage-status m2-manage-status-<?= $e($section['status']); ?>"><?= $e($status_labels[$section['status']] ?? ''); ?></span>
 			<p><?= $e($section['description']); ?></p>
 <?php 		if ($section['links']) { ?>
 			<ul>
@@ -70,7 +69,7 @@ $search_text = fn(array $section) => join(' ', array_merge([$section['label'], $
 			</ul>
 <?php 		} ?>
 <?php 		if ($section['owner']) { ?>
-			<div class="m2-manage-owner"><?= $e(_t('La completa el %1. Por ahora enlaza a la pantalla de Providence.', $module_names[$section['owner']] ?? _t('módulo %1', $section['owner']))); ?></div>
+			<div class="m2-manage-owner"><?= $e(Modulo2I18n::t('It will be improved by %1.', $module_names[$section['owner']] ?? Modulo2I18n::t('module %1', $section['owner']))); ?></div>
 <?php 		} ?>
 		</div>
 <?php 	} ?>

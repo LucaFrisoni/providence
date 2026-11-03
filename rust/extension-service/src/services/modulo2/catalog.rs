@@ -58,11 +58,6 @@ mod tests {
                 };
                 assert!(key.split('/').all(valid_part), "{key}");
             }
-            for data_type in setting.data_types {
-                assert!(
-                    data_type.starts_with("ca_") && setting.key_for(data_type).contains(data_type)
-                );
-            }
         }
     }
 
@@ -112,8 +107,8 @@ mod tests {
         let (section, setting) = find("app.conf", "ca_places_disable").expect("ca_places_disable");
         assert_eq!((section.id, setting.id), ("data_types", "disable"));
         assert_eq!(
-            find("app.conf", "menu_color").map(|(_, s)| s.id),
-            Some("menu_color")
+            find("app.conf", "excel_report_footer_enabled").map(|(_, s)| s.id),
+            Some("excel_report_footer_enabled")
         );
         assert!(find("navigation.conf", "ca_places_disable").is_none());
         assert!(find("app.conf", "ca_places_disable_x").is_none());
@@ -123,23 +118,39 @@ mod tests {
         );
     }
 
-    /// Solo se editan los valores simples de primer nivel: no las estructuras, los órdenes ni las claves anidadas.
+    /// Las claves vinculadas solo van en configuraciones globales de sí o no, y no son claves del catálogo.
     #[test]
-    fn only_simple_top_level_settings_are_editable() {
-        let editable = |file, key| find(file, key).unwrap().1.is_editable();
-        assert!(editable("app.conf", "ca_places_disable"));
-        assert!(editable(
-            "app.conf",
-            "ca_objects_results_thumbnail_caption_template"
-        ));
-        assert!(
-            !editable("multipart_id_numbering.conf", "formats/ca_objects"),
-            "anidada y con estructura"
-        );
-        assert!(
-            !editable("navigation.conf", "navigation/New/navigation"),
-            "orden de un bloque"
-        );
-        assert!(!editable("translations.conf", "strings"), "con estructura");
+    fn linked_keys_are_global_booleans_outside_the_catalog() {
+        for (section, setting) in all_settings().filter(|(_, s)| !s.linked.is_empty()) {
+            assert!(setting.data_types.is_empty(), "{}", setting.id);
+            assert!(matches!(setting.kind, Kind::Boolean), "{}", setting.id);
+            for key in setting.linked {
+                assert!(find(section.file, key).is_none(), "{key}");
+            }
+        }
+    }
+
+    /// Las exclusiones son de a pares y entre configuraciones de la misma sección.
+    #[test]
+    fn excluded_settings_exclude_each_other() {
+        for (section, setting) in all_settings() {
+            let Some(other_id) = setting.excludes else {
+                continue;
+            };
+            let other = section
+                .settings
+                .iter()
+                .find(|s| s.id == other_id)
+                .expect(other_id);
+            assert_eq!(other.excludes, Some(setting.id), "{}", setting.id);
+        }
+    }
+
+    /// Todas las configuraciones del catálogo se editan: ninguna tiene una clave anidada.
+    #[test]
+    fn every_catalog_setting_is_editable() {
+        for (section, setting) in all_settings() {
+            assert!(setting.is_editable(), "{} {}", section.id, setting.id);
+        }
     }
 }

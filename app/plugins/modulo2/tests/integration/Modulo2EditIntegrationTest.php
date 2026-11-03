@@ -22,6 +22,8 @@ use PHPUnit\Framework\TestCase;
 #[TestDox('Módulo 2 · ediciones contra la configuración real de Providence')]
 final class Modulo2EditIntegrationTest extends TestCase {
 	# -------------------------------------------------------
+	const VERSION = ['name' => 'Prueba', 'description' => null];
+	# -------------------------------------------------------
 	private Modulo2LocalConfig $local;
 	/** Archivos de app/conf/local antes de la prueba */
 	private array $previous_files;
@@ -51,26 +53,26 @@ final class Modulo2EditIntegrationTest extends TestCase {
 		$this->assertSame($expected, $entries);
 	}
 	# -------------------------------------------------------
-	#[TestDox('Una edición aplicada cambia el valor que usa Providence, y volver al valor por defecto borra el archivo')]
+	#[TestDox('Un guardado aplicado cambia el valor que usa Providence, y volver al valor por defecto borra el archivo')]
 	public function testAppliedEditChangesTheEffectiveValue() : void {
 		$header = "# Archivo escrito por el módulo 2\n";
-		$on = $this->editor($this->plan($header."ca_places_disable = 1\n", true), $this->finished())->apply($this->edit(false), $this->operator());
+		$on = $this->editor($this->plan($header."ca_places_disable = 1\n", [true]), $this->finished())->apply([$this->edit(false)], $this->operator(), self::VERSION);
 
 		$this->assertTrue($on['applied'], (string)$on['message']);
 		$this->assertTrue($this->effective('ca_places_disable'));
 
-		$reset = $this->editor($this->plan(null, false), $this->finished())->apply(['reset' => true] + $this->edit(true), $this->operator());
+		$reset = $this->editor($this->plan(null, [false]), $this->finished())->apply([['reset' => true] + $this->edit(true)], $this->operator(), self::VERSION);
 		$this->assertTrue($reset['applied'], (string)$reset['message']);
 		$this->assertNull($this->local->read('app.conf'));
 		$this->assertFalse($this->effective('ca_places_disable'));
 	}
 	# -------------------------------------------------------
 	// No se da por aplicado un cambio porque se escribió el archivo: se pregunta a Providence qué valor usa
-	#[TestDox('Si Providence no lee el valor esperado, la edición se deshace y se informa "failed"')]
+	#[TestDox('Si Providence no lee el valor esperado, el guardado se deshace y se informa "failed"')]
 	public function testEditNotReadByProvidenceIsRolledBack() : void {
 		$this->local->write('app.conf', "menu_color = 000000\n");
 
-		$result = $this->editor($this->plan("ca_places_disable = 0\nmenu_color = 000000\n", true), $this->finished())->apply($this->edit(false), $this->operator());
+		$result = $this->editor($this->plan("ca_places_disable = 0\nmenu_color = 000000\n", [true]), $this->finished())->apply([$this->edit(false)], $this->operator(), self::VERSION);
 
 		$this->assertFalse($result['applied']);
 		$this->assertStringContainsString('true', $result['message'], 'El motivo dice qué valor se esperaba');
@@ -95,12 +97,12 @@ final class Modulo2EditIntegrationTest extends TestCase {
 		return new Modulo2Editor($client, $this->local, new Modulo2State($this->local), new Modulo2ConfigValues());
 	}
 	# -------------------------------------------------------
-	private function plan(?string $content, bool $value) : Response {
-		return new Response(200, [], json_encode(['change_id' => 1, 'version_before' => ['id' => 1], 'file' => 'app.conf', 'content' => $content, 'value' => $value]));
+	private function plan(?string $content, array $values) : Response {
+		return new Response(200, [], json_encode(['change_ids' => [1], 'version_before' => ['id' => 1], 'files' => ['app.conf' => $content], 'values' => $values]));
 	}
 	# -------------------------------------------------------
 	private function finished() : Response {
-		return new Response(200, [], '{"change":{"id":1,"result":"applied"}}');
+		return new Response(200, [], '{"changes":[{"id":1,"result":"applied"}],"version":null}');
 	}
 	# -------------------------------------------------------
 	private function edit(bool $expected) : array {
@@ -114,7 +116,7 @@ final class Modulo2EditIntegrationTest extends TestCase {
 	/** Valor que usa Providence ahora, normalizado como booleano */
 	private function effective(string $key) : bool {
 		Modulo2ConfigValues::clearCaches();
-		return (new Modulo2ConfigValues())->entryValues('app.conf', $key, Modulo2Constants::KIND_BOOLEAN)['current'];
+		return (new Modulo2ConfigValues())->entryValues(['file' => 'app.conf', 'key' => $key, 'kind' => Modulo2Constants::KIND_BOOLEAN])['current'];
 	}
 	# -------------------------------------------------------
 }

@@ -15,10 +15,10 @@ final class Modulo2SettingsDiffTest extends TestCase {
 	# -------------------------------------------------------
 	#[TestDox('Lista solo las configuraciones cuyo valor cambia, con el valor antes y después')]
 	public function testListsOnlyChangedSettings() : void {
-		$changes = $this->diff()->changes(['app.conf' => "ca_places_disable = 1\n"], ['app.conf' => "ca_places_disable = 1\nmenu_color = 000000\n"]);
+		$changes = $this->diff()->changes(['app.conf' => "ca_places_disable = 1\n"], ['app.conf' => "ca_places_disable = 1\nreport_header_enabled = 0\n"]);
 
 		$this->assertCount(1, $changes);
-		$this->assertSame(['menu_color', 'ffffff', '000000'], [$changes[0]['entry']['key'], $changes[0]['before'], $changes[0]['after']]);
+		$this->assertSame(['report_header_enabled', true, false], [$changes[0]['entry']['key'], $changes[0]['before'], $changes[0]['after']]);
 	}
 	# -------------------------------------------------------
 	// Sin archivo local rige el valor de Providence: volver a él es un cambio que hay que mostrar
@@ -37,10 +37,10 @@ final class Modulo2SettingsDiffTest extends TestCase {
 	private function diff() : Modulo2SettingsDiff {
 		$catalog = ['sections' => [['id' => 's', 'name' => 'S', 'file' => 'app.conf', 'scope' => 'global', 'settings' => [
 			['id' => 'ca_places_disable', 'label' => 'Activo', 'kind' => 'boolean', 'entries' => [['key' => 'ca_places_disable']]],
-			['id' => 'menu_color', 'label' => 'Color', 'kind' => 'color', 'entries' => [['key' => 'menu_color']]]
+			['id' => 'report_header_enabled', 'label' => 'Encabezado', 'kind' => 'boolean', 'entries' => [['key' => 'report_header_enabled']]]
 		]]]];
 		$distribution = new class {
-			public function get($key) { return ['ca_places_disable' => '0', 'menu_color' => 'ffffff'][$key] ?? null; }
+			public function get($key) { return ['ca_places_disable' => '0', 'report_header_enabled' => '1'][$key] ?? null; }
 		};
 		return new Modulo2SettingsDiff($catalog, fn($file) => $distribution);
 	}

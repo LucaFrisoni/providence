@@ -7,7 +7,9 @@ use crate::db::dao::modulo2::{change_log, versions};
 use crate::json::Json;
 use crate::json_object;
 use crate::types::modulo2::operations::{Prepared, Rejection, RejectionReason, RestoreRequest};
-use crate::types::modulo2::versions::{ChangeAction, ChangeResult, NewChange, State, Version};
+use crate::types::modulo2::versions::{
+    ChangeAction, ChangeResult, NewChange, Saved, State, Version,
+};
 
 /// Prepara la restauración: conflicto si el estado cambió; si no, guarda el actual y queda pendiente.
 /// None si la versión no existe.
@@ -23,7 +25,7 @@ pub fn prepare(
     if request.state.hash() != request.expected_hash {
         let rejection = Rejection::new(
             RejectionReason::Conflict,
-            "la configuración cambió desde que se abrió la pantalla: volver a abrirla",
+            "the configuration changed after the page was opened: open it again",
         );
         let change_id = log_conflict(conn, request, &target, &rejection.message)?;
         return Ok(Some(Prepared::Rejected(rejection, Some(change_id))));
@@ -31,7 +33,7 @@ pub fn prepare(
     if request.state.conf_files() == target_state.conf_files() {
         let rejection = Rejection::new(
             RejectionReason::Invalid,
-            "la configuración ya es la de esa versión",
+            "the configuration is already the one in that version",
         );
         return Ok(Some(Prepared::Rejected(rejection, None)));
     }
@@ -52,24 +54,30 @@ fn log_conflict(
     change_log::insert(conn, &change)
 }
 
-/// Guarda el estado actual, registra la restauración pendiente y devuelve los archivos a escribir.
+/// Guarda el estado actual si el usuario lo pidió, registra la restauración pendiente y devuelve los
+/// archivos a escribir.
 fn log_pending(
     conn: &mut impl Queryable,
     request: &RestoreRequest,
     target: &Version,
     target_state: &State,
 ) -> Result<Json, mysql::Error> {
-    let before =
-        version_service::save(conn, &request.version, true, &request.user, &request.state)?;
+    let before = version_service::previous(
+        conn,
+        request.version.as_ref(),
+        &request.user,
+        &request.state,
+    )?;
+    let before = before.as_ref().map(Saved::version);
     let change = NewChange {
-        version_before: Some(before.version().id),
+        version_before: before.map(|v| v.id),
         version_after: Some(target.id),
         ..NewChange::new(&request.user, ChangeAction::Restore, ChangeResult::Pending)
     };
     let change_id = change_log::insert(conn, &change)?;
     Ok(json_object! {
         change_id: change_id,
-        version_before: to_json::version(before.version()),
+        version_before: before.map(to_json::version),
         version: to_json::version(target),
         files: to_json::conf_files(target_state),
         database_differs: database_differs(&request.state, target_state),
@@ -105,10 +113,10 @@ mod tests {
                 json_object! { "app.conf": format!("# {}\n", unique_text()) },
                 Json::Null,
             ),
-            version: VersionInfo {
+            version: Some(VersionInfo {
                 name: "antes de restaurar".into(),
                 description: None,
-            },
+            }),
         }
     }
 
