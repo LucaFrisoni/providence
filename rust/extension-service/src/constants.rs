@@ -289,3 +289,49 @@ pub const MODULO1_TABLES: [&str; 2] = ["m1_decisions", "m1_profile_versions"];
 #[cfg(test)]
 pub const MODULO2_TABLES: [&str; 3] = ["m2_versions", "m2_version_files", "m2_change_log"];
 
+//------- constantes para el modulo3
+pub const SEGMENTO_AMBITOS: &str = "ambitos";
+pub const SEGMENTO_EDITAR: &str = "editar";
+pub const SEGMENTO_ELIMINAR: &str = "eliminar";
+pub const SEGMENTO_HISTORIAL: &str = "historial";
+
+/// Nombres de los campos de los pedidos y las respuestas de los ámbitos 
+pub const CAMPO_AMBITOS: &str = "ambitos";
+pub const CAMPO_AMBITO: &str = "ambito";
+pub const CAMPO_NIVEL: &str = "nivel";
+pub const CAMPO_RUTA: &str = "ruta";
+pub const CAMPO_CANTIDAD_HIJOS: &str = "cantidad_hijos";
+pub const CAMPO_CREADO_POR: &str = "creado_por";
+pub const CAMPO_CREADO: &str = "creado";
+pub const CAMPO_MODIFICADO_POR: &str = "modificado_por";
+pub const CAMPO_MODIFICADO: &str = "modificado";
+pub const CAMPO_HISTORIAL: &str = "historial";
+pub const CAMPO_DETALLE: &str = "detalle";
+
+//tipos de ámbito
+pub const TIPO_AMBITO_INSTITUCION: &str = "institucion";
+pub const TIPO_AMBITO_AREA: &str = "area";
+pub const TIPO_AMBITO_UNIDAD: &str = "unidad";
+
+//qué se hizo con un ámbito, esto se guarda en el historial
+pub const ACCION_AMBITO_CREADO: &str = "creado";
+pub const ACCION_AMBITO_MODIFICADO: &str = "modificado";
+pub const ACCION_AMBITO_ELIMINADO: &str = "eliminado";
+
+//largo de los textos de un ámbito en caracteres
+//El código solo admite letras minúsculas sin acento, números y guion bajo, y se usará para nombrar el grupo, los roles y el source en Providence
+pub const MIN_CODIGO_AMBITO: usize = 2;
+pub const MAX_CODIGO_AMBITO: usize = 50;
+pub const MAX_NOMBRE_AMBITO: usize = 255;
+pub const MAX_DESCRIPCION_AMBITO: usize = 2000;
+pub const MAX_NOMBRE_USUARIO: usize = 255;
+
+pub const LIMITE_HISTORIAL: u32 = 100;
+pub const LIMITE_MAXIMO_HISTORIAL: u32 = 500;
+
+//separador entre los nombres de la ruta de un ámbito
+pub const SEPARADOR_RUTA: &str = " › ";
+
+//tablas que crea la migración del módulo 3 (solo para las pruebas)
+#[cfg(test)]
+pub const MODULO3_TABLES: [&str; 2] = ["m3_scopes", "m3_scope_log"];

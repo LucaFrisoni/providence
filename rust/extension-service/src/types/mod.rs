@@ -4,3 +4,4 @@ pub mod db;
 pub mod http;
 pub mod modulo1;
 pub mod modulo2;
+pub mod modulo3;

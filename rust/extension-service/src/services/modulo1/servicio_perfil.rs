@@ -11,11 +11,12 @@ use crate::constants::{
     CAMPO_ID, CAMPO_MENSAJE, CAMPO_MODELO, CAMPO_NOMBRE, CAMPO_PERFIL, CAMPO_PROPOSITO,
     CAMPO_REFERENCIA, CAMPO_REFERENCIAS, CAMPO_ULTIMA_VERSION, CAMPO_USUARIO, CAMPO_VERSION,
     CAMPO_VERSIONES, HTTP_BAD_REQUEST, HTTP_INTERNAL_ERROR, MAX_DESCRIPCION_VERSION,
-    MAX_NOMBRE_VERSION, MAX_PROPOSITO, MAX_REFERENCIA, MENSAJE_SIN_BASE, MENSAJE_SIN_CAMBIOS,
+    MAX_NOMBRE_VERSION, MAX_PROPOSITO, MAX_REFERENCIA, MENSAJE_SIN_CAMBIOS,
 };
 use crate::db::dao::modulo1::almacen::{
-    Almacen, ErrorAlmacen, NuevaVersion, Usuario, VersionGuardada,
+    Almacen, NuevaVersion, Usuario, VersionGuardada,
 };
+use crate::services::pedidos::{fallo, leer_id, leer_json, texto_opcional, texto_requerido};
 use crate::types::http::ApiResponse;
 
 //resultado de un servicio: el json de la respuesta, o la respuesta de error
@@ -179,40 +180,6 @@ fn version_json(version: &VersionGuardada) -> Json {
     json.insert(CAMPO_USUARIO, Json::from(version.usuario.as_str()));
     json.insert(CAMPO_FECHA, Json::from(version.fecha.as_str()));
     json
-}
-
-fn fallo(error: ErrorAlmacen) -> ApiResponse {
-    eprintln!("error de la base: {error}");
-    ApiResponse::error(HTTP_INTERNAL_ERROR, MENSAJE_SIN_BASE)
-}
-
-fn leer_json(cuerpo: &str) -> Result<Json, ApiResponse> {
-    Json::parse(cuerpo).map_err(|e| {
-        ApiResponse::error(HTTP_BAD_REQUEST, &format!("pedido con formato inválido: {e}"),)
-    })
-}
-//eel numero de una version
-fn leer_id(datos: &Json, campo: &str) -> Result<u32, ApiResponse> {
-    datos[campo]
-        .as_u32()
-        .filter(|id| *id > 0)
-        .ok_or_else(|| ApiResponse::error(HTTP_BAD_REQUEST, &format!("falta el número '{campo}'")))
-}
-
-fn texto_requerido(datos: &Json, campo: &str, maximo: usize) -> Result<String, ApiResponse> {
-    let texto = texto_opcional(datos, campo, maximo)?;
-    if texto.is_empty() {
-        return Err(ApiResponse::error(HTTP_BAD_REQUEST, &format!("falta el texto '{campo}'"),));
-    }
-    Ok(texto)
-}
-
-fn texto_opcional(datos: &Json, campo: &str, maximo: usize) -> Result<String, ApiResponse> {
-    let texto = datos[campo].as_str().unwrap_or("").trim().to_string();
-    if texto.chars().count() > maximo {
-        return Err(ApiResponse::error(HTTP_BAD_REQUEST, &format!("'{campo}' supera los {maximo} caracteres"),));
-    }
-    Ok(texto)
 }
 
 //quién hace el cambio, el id y el nombre del usuario de Providence
