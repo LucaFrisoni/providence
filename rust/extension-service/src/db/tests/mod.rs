@@ -7,3 +7,4 @@ mod migrations;
 mod modulo1_schema;
 mod modulo2_dao;
 mod modulo2_schema;
+mod modulo3_schema;

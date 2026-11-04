@@ -2,3 +2,4 @@
 //! sin reglas de negocio. Una carpeta por módulo.
 pub mod modulo1;
 pub mod modulo2;
+pub mod modulo3;
