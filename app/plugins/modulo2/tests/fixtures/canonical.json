@@ -1,0 +1,18 @@
+{
+	"ca_places_disable": "1",
+	"menu_color": "a1b2c3",
+	"texto_vacio": "",
+	"acentos": "Ñandú — «comillas»",
+	"ca_objects_results_thumbnail_caption_template": "^ca_objects.idno <br/> \"cita\" \\ barra, coma = igual {llave} [corchete]",
+	"quicksearch_default_results": ["ca_objects", "ca_entities"],
+	"lista_con_espacios": ["con espacio", "a,b"],
+	"lista_vacia": [],
+	"bloque": {
+		"z": "1",
+		"a": {
+			"con espacio": "x y",
+			"lista": ["p", "q"]
+		},
+		"vacio": {}
+	}
+}

@@ -1,0 +1,279 @@
+# Traducciones propias de la instalación para hu_HU: los textos del tema ModernUI (diálogo al salir sin
+# guardar y ajustes de las pantallas de Providence). Providence las carga además de app/locale/hu_HU.
+# messages.mo se genera desde este archivo con gettext: msgfmt messages.po -o messages.mo
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Language: hu_HU\n"
+
+msgid "Leave without saving?"
+msgstr "Kilép mentés nélkül?"
+
+msgid "This form has changes that are not saved. If you leave the page, they are discarded."
+msgstr "Ezen az űrlapon nem mentett módosítások vannak. Ha elhagyja az oldalt, elvesznek."
+
+msgid "Keep editing"
+msgstr "Szerkesztés folytatása"
+
+msgid "Leave without saving"
+msgstr "Kilépés mentés nélkül"
+
+msgid "Type * to see all the records."
+msgstr "Írjon be *-ot az összes rekord megtekintéséhez."
+
+msgid "The record was added to your watched items."
+msgstr "A rekord felkerült a figyelt elemei közé."
+
+msgid "The record was removed from your watched items."
+msgstr "A rekord lekerült a figyelt elemei közül."
+
+msgid "Filter…"
+msgstr "Szűrés…"
+
+# Textos de Providence con datos (%1) que su traducción no tiene
+
+msgid "%1 available to you"
+msgstr "Ön számára elérhető: %1"
+
+msgid "%1 created by users"
+msgstr "Felhasználók által létrehozott: %1"
+
+msgid "%1 created by the public"
+msgstr "A nyilvánosság által létrehozott: %1"
+
+msgid "%1 %2 are available"
+msgstr "Elérhető (%2): %1"
+
+msgid "%1 displays are available"
+msgstr "Elérhető megjelenítések: %1"
+
+msgid "%1 rules are available for editing"
+msgstr "Szerkeszthető szabályok: %1"
+
+msgid "%1 forms are available for editing"
+msgstr "Szerkeszthető űrlapok: %1"
+
+msgid "%1 elements are defined"
+msgstr "Meghatározott elemek: %1"
+
+msgid "%1 user interfaces are defined"
+msgstr "Meghatározott felhasználói felületek: %1"
+
+msgid "%1 teams are available"
+msgstr "Elérhető csapatok: %1"
+
+msgid "%1 comments need moderation"
+msgstr "Moderálásra váró hozzászólások: %1"
+
+msgid "%1 comments total"
+msgstr "Összes hozzászólás: %1"
+
+msgid "%1 moderated comments"
+msgstr "Moderált hozzászólások: %1"
+
+msgid "%1 taggings need moderation"
+msgstr "Moderálásra váró címkézések: %1"
+
+msgid "%1 total taggings"
+msgstr "Összes címkézés: %1"
+
+msgid "%1 total unique tags"
+msgstr "Összes egyedi címke: %1"
+
+msgid "Lot contains %1 objects"
+msgstr "A tételben lévő objektumok száma: %1"
+
+msgid "Maximum upload size is %1"
+msgstr "A feltöltés legnagyobb mérete: %1"
+
+msgid "Number of %1 in hierarchy: %2"
+msgstr "Szám a hierarchiában (%1): %2"
+
+msgid "Click %1 names to explore. Click on an arrow icon to open a %1 for editing."
+msgstr "Kattintson a nevekre (%1) a böngészéshez. Kattintson egy nyílra egy rekord (%1) szerkesztéséhez."
+
+msgid "Use the controls below to create new %1 relative to this record in the hierarchy."
+msgstr "Az alábbi vezérlőkkel új rekordokat (%1) hozhat létre ehhez a rekordhoz képest a hierarchiában."
+
+msgid "Use the controls below to create new %1 relative to this %2 in the hierarchy."
+msgstr "Az alábbi vezérlőkkel új rekordokat (%1) hozhat létre ehhez a rekordhoz (%2) képest a hierarchiában."
+
+msgid "Create child record under this %1"
+msgstr "Alárendelt rekord létrehozása e rekord (%1) alatt"
+
+msgid "Change %1 type"
+msgstr "Típus módosítása (%1)"
+
+msgid "Your search found no %1"
+msgstr "A keresés nem talált eredményt (%1)"
+
+msgid "Creating new %1"
+msgstr "Létrehozás: %1"
+
+msgid "Quick add %1"
+msgstr "Gyors hozzáadás: %1"
+
+msgid "Deaccessioned %1"
+msgstr "Állományból kivezetett: %1"
+
+msgid "%1 public pages"
+msgstr "Nyilvános oldalak: %1"
+
+msgid "A tool for extraction of embedded metadata from audio and video files. See %1 for additional information."
+msgstr "Eszköz a hang- és videofájlokba ágyazott metaadatok kinyerésére. További információ: %1."
+
+msgid "A tool for extraction of embedded metadata in images, documents and other media. See %1 for additional information."
+msgstr "Eszköz a képekbe, dokumentumokba és más médiába ágyazott metaadatok kinyerésére. További információ: %1."
+
+msgid "LibreOffice cannot be found: conversion to PDF and generation of page previews will not be performed; you can obtain LibreOffice at %1"
+msgstr "A LibreOffice nem található: nem történik PDF-konvertálás és oldalelőnézet-készítés. A LibreOffice itt szerezhető be: %1"
+
+msgid "MeshLab cannot be found: you will not be able to process 3D files; you can obtain MeshLab at %1"
+msgstr "A MeshLab nem található: nem lehet 3D-fájlokat feldolgozni. A MeshLab itt szerezhető be: %1"
+
+msgid "To fully index Chinese-language content the Jieba PHP word segmenter (%1) should be installed."
+msgstr "A kínai nyelvű tartalom teljes indexeléséhez telepíteni kell a Jieba PHP szószegmentálót (%1)."
+
+msgid "Try installing Jieba PHP. See See %1"
+msgstr "Próbálja telepíteni a Jieba PHP-t. Lásd: %1"
+
+msgid "%1 Statistics"
+msgstr "Statisztika: %1"
+
+msgid "Show %1"
+msgstr "Megjelenítés: %1"
+
+msgid "Your %1"
+msgstr "Az Ön elemei: %1"
+
+msgid "1 %1 is available"
+msgstr "Elérhető: 1 (%1)"
+
+msgid "%1 page"
+msgstr "Oldalak: %1"
+
+msgid "%1 pages"
+msgstr "Oldalak: %1"
+
+msgid "%1 public page"
+msgstr "Nyilvános oldalak: %1"
+
+msgid "%1 exporters are available"
+msgstr "Elérhető exportálók: %1"
+
+msgid "Outstanding items: %1"
+msgstr "Ki nem vett tételek: %1"
+
+msgid "Checkout for %1 (%2)"
+msgstr "Kölcsönzés: %1 (%2)"
+
+msgid "Items out (all users): %1"
+msgstr "Kikölcsönzött tételek (minden felhasználó): %1"
+
+msgid "%1 importers are available"
+msgstr "Elérhető importálók: %1"
+
+msgid "%1 rules are defined"
+msgstr "Meghatározott szabályok: %1"
+
+msgid "%1 mappings are defined"
+msgstr "Meghatározott leképezések: %1"
+
+msgid "%1 saved searches"
+msgstr "Mentett keresések: %1"
+
+msgid "%1 (%2) - submitted on %3 by %4<br/>Status: %5"
+msgstr "%1 (%2) – beküldte %4, %3<br/>Állapot: %5"
+
+msgid "%1 by %2"
+msgstr "%1 – %2"
+
+msgid "%1 file"
+msgstr "Fájlok: %1"
+
+msgid "%1 files"
+msgstr "Fájlok: %1"
+
+msgid "%1 stuck"
+msgstr "Elakadt: %1"
+
+msgid "%1 tagged %2 with \"%3\""
+msgstr "%1 felcímkézte ezt: %2, címke: „%3”"
+
+msgid "+ %1 additional download"
+msgstr "+ további letöltések: %1"
+
+msgid "+ %1 additional downloads"
+msgstr "+ további letöltések: %1"
+
+msgid "+ %1 more completed job"
+msgstr "+ további befejezett feladatok: %1"
+
+msgid "+ %1 more completed jobs"
+msgstr "+ további befejezett feladatok: %1"
+
+msgid "+ %1 more queued job"
+msgstr "+ további sorban álló feladatok: %1"
+
+msgid "+ %1 more queued jobs"
+msgstr "+ további sorban álló feladatok: %1"
+
+msgid "Added %1 to '%2'"
+msgstr "%1 hozzáadva ehhez: „%2”"
+
+msgid "Changes to <strong>%1</strong> from %2"
+msgstr "<strong>%1</strong> változásai ettől: %2"
+
+msgid "Displaying the last %1 %2 comments"
+msgstr "Legutóbbi hozzászólások: %1 (%2)"
+
+msgid "Displaying the last %1 %2 public registrations"
+msgstr "Legutóbbi nyilvános regisztrációk: %1 (%2)"
+
+msgid "Displaying the last %1 %2 tags"
+msgstr "Legutóbbi címkék: %1 (%2)"
+
+msgid "Email sent on %1"
+msgstr "E-mail elküldve: %1"
+
+msgid "Item was deleted - row_id: %1; table number: %2"
+msgstr "A tétel törölve – row_id: %1; táblaszám: %2"
+
+msgid "Jobs completed in the last %1 hours (showing %2 of %3)"
+msgstr "Az elmúlt %1 órában befejezett feladatok (%2 / %3)"
+
+msgid "Jobs queued for later processing (showing %1 of %2)"
+msgstr "Későbbi feldolgozásra váró feladatok (%1 / %2)"
+
+msgid "Jobs stuck in the last %1 hours"
+msgstr "Az elmúlt %1 órában elakadt feladatok"
+
+msgid "Jobs stuck in the last %1 hours (showing %2 of %3)"
+msgstr "Az elmúlt %1 órában elakadt feladatok (%2 / %3)"
+
+msgid "Showing %1 <span style='font-weight:bold; text-transform:lowercase;'>%2</span> with status <span style='font-weight:bold; text-transform:lowercase;'>\"%3\"</span>"
+msgstr "%1 <span style='font-weight:bold; text-transform:lowercase;'>%2</span>, állapot: <span style='font-weight:bold; text-transform:lowercase;'>„%3”</span>"
+
+msgid "Showing recently created %1"
+msgstr "Legutóbb létrehozott: %1"
+
+msgid "Showing the last %1 <span style='font-weight:bold; text-transform:lowercase;'>%2</span> created"
+msgstr "Az utolsó %1 létrehozott <span style='font-weight:bold; text-transform:lowercase;'>%2</span>"
+
+msgid "There are no %1 comments"
+msgstr "Nincsenek hozzászólások (%1)"
+
+msgid "There are no %1 tags."
+msgstr "Nincsenek címkék (%1)."
+
+msgid "There are no running jobs, queued jobs or jobs completed in the last %1 hours."
+msgstr "Az elmúlt %1 órában nincs futó, sorban álló vagy befejezett feladat."
+
+msgid "There have been no changes to <strong>%1</strong> from %2."
+msgstr "<strong>%1</strong> nem változott ettől: %2."
+
+msgid "Unknown change type '%1'"
+msgstr "Ismeretlen változástípus: „%1”"
+
+msgid "Updated %1 to '%2'"
+msgstr "%1 frissítve erre: „%2”"
